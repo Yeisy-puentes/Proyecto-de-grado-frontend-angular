@@ -1,0 +1,18 @@
+:host { display: contents; }
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-red-600, #dc2626);
+  animation: field-error-in 0.15s ease-out;
+}
+.field-error svg { flex-shrink: 0; }
+
+@keyframes field-error-in {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: none; }
+}

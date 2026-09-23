@@ -1,0 +1,98 @@
+<div class="u-container u-stack-6">
+
+  <!-- KPI cards -->
+  <div class="u-grid u-grid-cols-1 md:u-grid-cols-2 lg:u-grid-cols-4 u-gap-6">
+
+    <div class="stat-card">
+      <div class="stat-card__top">
+        <div class="stat-card__icon stat-card__icon--blue">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        
+      </div>
+      <h3 class="stat-card__title">Arreglos Activos</h3>
+      <p class="stat-card__value">{{ activeRepairs() }}</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card__top">
+        <div class="stat-card__icon stat-card__icon--orange">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <span class="stat-card__trend">Prioridad</span>
+      </div>
+      <h3 class="stat-card__title">Entregas Hoy</h3>
+      <p class="stat-card__value">{{ deliveriesToday() }}</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card__top">
+        <div class="stat-card__icon stat-card__icon--green">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        
+      </div>
+      <h3 class="stat-card__title">Ingresos Totales</h3>
+      <p class="stat-card__value">{{ totalRevenue() | cop }}</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card__top">
+        <div class="stat-card__icon stat-card__icon--purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        
+      </div>
+      <h3 class="stat-card__title">Clientes Registrados</h3>
+      <p class="stat-card__value">{{ totalClients() }}</p>
+    </div>
+
+  </div>
+
+  <!-- Chart + status -->
+  <div class="u-grid u-grid-cols-1 lg:u-grid-cols-3 u-gap-6">
+
+    <!-- Main chart -->
+    <div class="card card-pad u-col-span-2">
+      <h3 class="u-text-lg u-font-bold u-text-dark u-mb-4">Tendencia de Ingresos</h3>
+      <div class="chart-box">
+        <app-line-chart [points]="revenueTrend()" />
+      </div>
+    </div>
+
+    <!-- Status breakdown -->
+    <div class="card card-pad">
+      <h3 class="u-text-lg u-font-bold u-text-dark u-mb-4">Estado de Arreglos</h3>
+      <div class="u-stack-4">
+        @for (item of statusSummary(); track item.status) {
+          <div class="u-flex u-justify-between u-items-center">
+            <div class="u-flex u-items-center u-gap-3">
+              <span [class]="'status-dot status-dot--lg status-dot--' + statusClass(item.status)"></span>
+              <span class="status-label">{{ item.label }}</span>
+            </div>
+            <span class="status-count">{{ item.count }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="u-pt-6 u-mt-8 u-border-t">
+        <h4 class="u-text-sm u-font-semibold u-uppercase u-mb-3 upcoming-title">Próximas Entregas</h4>
+        <div class="u-stack-3">
+          @for (repair of upcomingDeliveries(); track repair.id) {
+            <div class="u-flex u-justify-between u-items-center u-text-sm">
+              <div class="u-flex u-items-center u-gap-3">
+                <span [class]="'status-dot status-dot--' + statusClass(repair.status)"></span>
+                <span class="u-font-medium upcoming-name">{{ repair.clientName }}</span>
+              </div>
+              <span class="upcoming-date">{{ fromDateKey(repair.deliveryDate!) | date: 'd MMM' }}</span>
+            </div>
+          } @empty {
+            <p class="u-text-sm u-text-faint">No hay entregas pendientes.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

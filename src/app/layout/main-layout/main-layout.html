@@ -1,0 +1,15 @@
+<div class="app-shell">
+  <div
+    class="sidebar-backdrop"
+    [class.is-visible]="layout.mobileSidebarOpen()"
+    (click)="layout.closeMobileSidebar()"
+  ></div>
+  <app-sidebar />
+
+  <main class="main">
+    <app-topbar />
+    <div class="page-content">
+      <router-outlet />
+    </div>
+  </main>
+</div>

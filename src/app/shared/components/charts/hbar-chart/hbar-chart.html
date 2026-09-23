@@ -1,0 +1,13 @@
+@if (rows().length) {
+  <svg [attr.viewBox]="viewBox()" preserveAspectRatio="xMinYMin meet">
+    @for (row of rows(); track $index) {
+      <text x="4" [attr.y]="row.y + 20" fill="#334155" font-size="12">{{ row.label.length > 18 ? row.label.slice(0, 17) + '…' : row.label }}</text>
+      <rect [attr.x]="row.barX" [attr.y]="row.y" [attr.width]="row.width" height="30" [attr.fill]="color()" rx="4">
+        <title>{{ row.label }}: {{ row.value }}</title>
+      </rect>
+      <text [attr.x]="row.barX + row.width + 8" [attr.y]="row.y + 20" fill="#64748b" font-size="12">{{ row.value }}</text>
+    }
+  </svg>
+} @else {
+  <p class="chart-empty">Sin datos para el período.</p>
+}

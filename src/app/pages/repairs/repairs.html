@@ -1,0 +1,310 @@
+<div class="u-container u-stack-6">
+
+  <div class="section-header">
+    <div>
+      <h2>Gestión de Arreglos</h2>
+      <p>Control y seguimiento de órdenes de trabajo</p>
+    </div>
+    <button class="btn btn--primary" type="button" (click)="openNewRepair()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo Arreglo
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card card-pad-sm u-stack-4">
+    <div class="u-flex u-flex-col sm:u-flex-row u-gap-4 u-items-center u-justify-between">
+      <div class="input-icon search-box">
+        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input
+          type="text"
+          class="input"
+          placeholder="Buscar por cliente, ID, cédula o descripción..."
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+      </div>
+      <button class="btn btn--outline btn--outline-thin" type="button" (click)="showAdvancedFilters.set(!showAdvancedFilters())">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filtros Avanzados
+        <svg class="chevron" [class.is-open]="showAdvancedFilters()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+
+    <!-- Filtros avanzados (colapsables) -->
+    @if (showAdvancedFilters()) {
+      <div class="u-grid u-grid-cols-1 md:u-grid-cols-3 u-gap-4 u-pt-4 u-border-t">
+        <div class="field">
+          <label class="u-text-xs u-uppercase filter-label" for="filter-repair-status">Estado</label>
+          <select id="filter-repair-status" class="select" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+            <option value="all">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="en_proceso">En Proceso</option>
+            <option value="listo">Listo</option>
+            <option value="entregado">Entregado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="u-text-xs u-uppercase filter-label" for="filter-repair-client">Cliente</label>
+          <select id="filter-repair-client" class="select" (change)="onClientFilterChange($any($event.target).value)">
+            <option value="all">Todos los clientes</option>
+            @for (client of clients(); track client.id) {
+              <option [value]="client.id" [selected]="clientFilter() === client.id">{{ client.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label class="u-text-xs u-uppercase filter-label" for="filter-repair-date">Fecha de Entrega</label>
+          <input type="date" id="filter-repair-date" class="input" [value]="dateFilter()" (change)="dateFilter.set($any($event.target).value)" />
+        </div>
+      </div>
+    }
+
+    <!-- Filtros rápidos tipo pill -->
+    <div class="u-flex u-items-center u-gap-2 pill-filters">
+      @for (pill of pillFilters; track pill.value) {
+        <button
+          type="button"
+          class="pill-btn"
+          [class.is-active]="statusFilter() === pill.value"
+          (click)="statusFilter.set(pill.value)"
+        >
+          {{ pill.label }}
+          @if (pill.value !== 'all') {
+            <span class="pill-btn__count">{{ countByStatus(pill.value) }}</span>
+          }
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Tabla de arreglos -->
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Referencia / Cliente</th>
+            <th>Descripción</th>
+            <th>Fecha Entrega</th>
+            <th>Estado</th>
+            <th>Método</th>
+            <th>Pago</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (repair of filteredRepairs(); track repair.id) {
+            <tr>
+              <td>
+                <div class="u-font-bold u-text-navy">{{ repair.code }}</div>
+                <div class="cell-client">{{ repair.clientName }}</div>
+              </td>
+              <td class="u-truncate cell-description" [title]="repair.description">{{ repair.description }}</td>
+              <td>
+                @if (repair.deliveryDate) {
+                  <div class="u-flex u-items-center u-gap-2 cell-date">
+                    <svg width="16" height="16" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {{ fromDateKey(repair.deliveryDate) | date: 'd MMM, y' }}
+                  </div>
+                  @if (repair.deliveryTime) {
+                    <div class="u-text-xs u-text-faint u-mt-1 cell-time">{{ repair.deliveryTime | time12 }}</div>
+                  }
+                } @else {
+                  <span class="u-text-xs u-text-faint">Sin fecha</span>
+                }
+              </td>
+              <td><app-status-badge [status]="repair.status" /></td>
+              <td>
+                @if (lastMethod(repair); as method) {
+                  <span [class]="'badge badge--pago-' + method">{{ paymentLabel(method) }}</span>
+                } @else {
+                  <span class="u-text-xs u-text-faint">—</span>
+                }
+              </td>
+              <td>
+                <div class="u-flex u-flex-col">
+                  <span class="u-font-medium cell-amount">{{ repair.paid | cop }}</span>
+                  <span class="u-text-xs u-text-faint">de {{ repair.cost | cop }}</span>
+                  <div class="progress-bar">
+                    <div class="progress-bar__fill" [class.is-complete]="paidPercent(repair) >= 100" [style.width.%]="paidPercent(repair)"></div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-right">
+                <div class="row-actions">
+                  <button class="btn btn--icon btn--ghost" title="Editar" type="button" (click)="openEditRepair(repair)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+                  </button>
+                  <button class="btn btn--icon btn--ghost" title="Eliminar" type="button" (click)="deleteRepair(repair)">
+                    <svg width="18" height="18" class="icon-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty-row">
+                {{ loading() ? 'Cargando arreglos...' : 'No se encontraron arreglos con los filtros actuales.' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ MODAL: Nuevo / Editar Arreglo ============ -->
+@if (repairModalOpen()) {
+  <div class="modal-overlay" (click)="closeRepairModal()">
+    <div class="modal modal--lg" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h3 class="modal__title">{{ editing() ? 'Editar Arreglo ' + editing()!.code : 'Nuevo Arreglo' }}</h3>
+        <button class="modal__close" type="button" aria-label="Cerrar" (click)="closeRepairModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form class="modal__body" appFormValidation #f="ngForm" (ngSubmit)="f.valid && submitRepair()">
+        <div class="u-grid u-grid-cols-1 md:u-grid-cols-2 u-gap-6">
+
+          <!-- Búsqueda de cliente -->
+          <div class="field u-col-span-2">
+            <label for="repair-client-search">Buscar Cliente</label>
+            <div class="u-flex u-gap-2 client-search-row">
+              <div class="u-flex-1 u-relative client-search-container">
+                <div class="input-icon">
+                  <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input
+                    type="text"
+                    id="repair-client-search"
+                    name="clientSearch"
+                    class="input input--thick"
+                    placeholder="Ingrese cédula, teléfono o nombre del cliente"
+                    autocomplete="off"
+                    [ngModel]="clientQuery()"
+                    (ngModelChange)="onClientQueryChange($event)"
+                  />
+                </div>
+
+                @if (clientQuery().trim().length >= 2 && !selectedClient()) {
+                  <div class="suggestions-box">
+                    <div class="suggestions-box__header">
+                      <p>{{ searchingClients() ? 'Buscando...' : clientSuggestions().length === 1 ? '1 coincidencia encontrada' : clientSuggestions().length + ' coincidencias encontradas' }}</p>
+                    </div>
+                    @for (client of clientSuggestions(); track client.id) {
+                      <button type="button" class="suggestion-item" (click)="selectClient(client)">
+                        <p class="suggestion-item__name">{{ client.name }}</p>
+                        <div class="suggestion-item__meta">
+                          <span class="u-flex u-items-center u-gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>{{ client.cedula }}</span>
+                          <span class="u-flex u-items-center u-gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ client.phone }}</span>
+                        </div>
+                      </button>
+                    }
+                  </div>
+                }
+
+                @if (selectedClient(); as client) {
+                  <div class="client-found-box">
+                    <div class="client-found-box__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                    <div class="u-flex-1">
+                      <p class="u-font-semibold u-text-dark">{{ client.name }}</p>
+                      <p class="u-text-sm u-text-muted">Cédula: {{ client.cedula }} • Tel: {{ client.phone }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <button type="button" class="btn btn--cyan btn-new-client" title="Crear nuevo cliente" (click)="newClientModalOpen.set(true)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Nuevo Cliente
+              </button>
+            </div>
+          </div>
+
+          <div class="u-col-span-2 form-row form-row--3">
+            <div class="field">
+              <label for="repair-status">Estado</label>
+              <select id="repair-status" name="status" class="select" [(ngModel)]="form.status">
+                <option value="pendiente">Pendiente</option>
+                <option value="en_proceso">En Proceso</option>
+                <option value="listo">Listo</option>
+                <option value="entregado">Entregado</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="repair-received-date">Fecha de Recepción</label>
+              <input type="date" id="repair-received-date" name="receivedDate" class="input" required [(ngModel)]="form.receivedDate" #receivedDateCtrl="ngModel" />
+              <app-field-error [control]="receivedDateCtrl" [form]="f" />
+            </div>
+            <div class="field">
+              <label for="repair-received-time">Hora de Recepción</label>
+              <input type="time" id="repair-received-time" name="receivedTime" class="input" required [(ngModel)]="form.receivedTime" #receivedTimeCtrl="ngModel" />
+              <app-field-error [control]="receivedTimeCtrl" [form]="f" />
+            </div>
+          </div>
+
+          <div class="field u-col-span-2">
+            <label for="repair-description">Descripción del Arreglo</label>
+            <textarea id="repair-description" name="description" class="textarea" rows="3" required [(ngModel)]="form.description" #descriptionCtrl="ngModel"></textarea>
+            <app-field-error [control]="descriptionCtrl" [form]="f" [messages]="{ required: 'Describe el arreglo a realizar.' }" />
+          </div>
+
+          <div class="field">
+            <label for="repair-cost">Costo Total ($)</label>
+            <input type="number" id="repair-cost" name="cost" class="input" required min="0" [(ngModel)]="form.cost" #costCtrl="ngModel" />
+            <app-field-error [control]="costCtrl" [form]="f" [messages]="{ required: 'Ingresa el costo total.', min: 'El costo no puede ser negativo.' }" />
+          </div>
+
+          @if (editing(); as repair) {
+            <div class="field">
+              <label>Pagado</label>
+              <p class="paid-summary">{{ repair.paid | cop }} <span class="u-text-faint">· saldo {{ repair.balance | cop }}</span></p>
+              <p class="field-hint">Los pagos se registran desde el detalle del cliente.</p>
+            </div>
+          } @else {
+            <div class="field">
+              <label for="repair-paid">Abono inicial ($)</label>
+              <input type="number" id="repair-paid" name="initialPayment" class="input" min="0" [(ngModel)]="form.initialPayment" #paidCtrl="ngModel" />
+              <app-field-error [control]="paidCtrl" [form]="f" [messages]="{ min: 'El abono no puede ser negativo.' }" />
+            </div>
+
+            <div class="field u-col-span-2">
+              <label>Método de Pago</label>
+              <app-payment-method-selector layout="grid" [(value)]="form.paymentMethod" />
+              <p class="field-hint">Requerido solo si se registra un abono</p>
+            </div>
+          }
+
+          <div class="u-col-span-2 form-row form-row--2">
+            <div class="field">
+              <label for="repair-delivery-date">Fecha de Entrega Estimada</label>
+              <input type="date" id="repair-delivery-date" name="deliveryDate" class="input" [min]="form.receivedDate" [(ngModel)]="form.deliveryDate" />
+            </div>
+            <div class="field">
+              <label for="repair-delivery-time">Hora de Entrega</label>
+              <input type="time" id="repair-delivery-time" name="deliveryTime" class="input" [disabled]="!form.deliveryDate" [(ngModel)]="form.deliveryTime" />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal__footer">
+          <button type="button" class="btn btn--ghost" (click)="closeRepairModal()">Cancelar</button>
+          <button type="submit" class="btn btn--navy" [disabled]="saving()">{{ saving() ? 'Guardando...' : editing() ? 'Guardar Cambios' : 'Registrar Arreglo' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ============ MODAL: Nuevo Cliente (desde Arreglos) ============ -->
+@if (newClientModalOpen()) {
+  <app-client-form-modal
+    idPrefix="ncr"
+    (save)="createClient($event)"
+    (close)="newClientModalOpen.set(false)"
+  />
+}

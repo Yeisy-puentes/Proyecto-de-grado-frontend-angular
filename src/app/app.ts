@@ -1,12 +1,12 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ConfirmDialog } from './shared/components/confirm-dialog/confirm-dialog';
+import { ToastContainer } from './shared/components/toast/toast';
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ToastContainer, ConfirmDialog],
   selector: 'app-root',
-  styleUrl: './app.css',
   templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class App {
-  protected readonly title = signal('fronted-interfajas');
-}
+export class App {}

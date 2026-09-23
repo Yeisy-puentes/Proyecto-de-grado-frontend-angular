@@ -1,1 +1,12 @@
-/* You can add global styles to this file, and also import other style files */
+/* ============================================================
+   STYLES.CSS — Estilos globales (design system de Interfajas)
+   Los estilos propios de cada vista viven en el .css de su componente.
+   ============================================================ */
+
+@import './styles/01-variables.css';
+@import './styles/02-base.css';
+@import './styles/03-utilities.css';
+@import './styles/04-page.css';
+@import './styles/05-components.css';
+@import './styles/06-tables-modals.css';
+@import './styles/07-charts.css';

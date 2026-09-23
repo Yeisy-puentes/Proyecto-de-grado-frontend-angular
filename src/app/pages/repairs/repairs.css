@@ -1,0 +1,50 @@
+:host { display: block; }
+
+.search-box { width: 100%; max-width: 24rem; }
+
+.btn--outline-thin { border-width: 1px; }
+
+.chevron { transition: transform var(--transition-fast); }
+.chevron.is-open { transform: rotate(180deg); }
+
+.filter-label { color: var(--color-slate-600); }
+
+.pill-filters {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.cell-client { color: var(--color-slate-500); }
+.cell-description { max-width: 16rem; }
+.cell-date { color: var(--color-slate-700); }
+.cell-time { padding-left: 1.5rem; }
+.cell-amount { color: var(--color-slate-700); }
+
+.icon-danger { color: var(--color-red-500); }
+
+.empty-row {
+  text-align: center;
+  padding: var(--space-8) 0;
+  color: var(--color-slate-400);
+}
+
+.paid-summary {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-800);
+  padding: 0.5rem 0;
+}
+
+/* Fila buscador + "Nuevo Cliente": el botón conserva su tamaño y queda alineado
+   con el input aunque debajo aparezca el cliente encontrado o las sugerencias. */
+.client-search-row { align-items: flex-start; }
+.btn-new-client {
+  flex-shrink: 0;
+  height: 3rem; /* mismo alto que .input--thick */
+}
+
+/* Filas internas del formulario: Estado + fecha/hora de recepción, y fecha/hora de entrega */
+.form-row { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+@media (min-width: 640px) {
+  .form-row--2 { grid-template-columns: repeat(2, 1fr); }
+  .form-row--3 { grid-template-columns: repeat(3, 1fr); }
+}
