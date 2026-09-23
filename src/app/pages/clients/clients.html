@@ -1,0 +1,89 @@
+<div class="u-container u-stack-6">
+
+  <div class="section-header">
+    <div>
+      <h2>Cartera de Clientes</h2>
+      <p>Base de datos de usuarios registrados</p>
+    </div>
+    <button class="btn btn--primary" type="button" (click)="newClientModalOpen.set(true)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo Cliente
+    </button>
+  </div>
+
+  <div class="card card-pad-sm">
+    <div class="input-icon search-box">
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input
+        type="text"
+        class="input"
+        placeholder="Buscar por nombre, correo, cédula o teléfono..."
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  <!-- Grid de clientes -->
+  <div class="u-grid u-grid-cols-1 md:u-grid-cols-2 lg:u-grid-cols-3 u-gap-6">
+    @for (client of filteredClients(); track client.id) {
+      <div class="card card-pad card-hover">
+        <div class="u-flex u-items-center u-gap-4 u-mb-4">
+          <div class="client-avatar">{{ client.name.charAt(0) }}</div>
+          <div>
+            <h3 class="u-font-bold u-text-dark">{{ client.name }}</h3>
+            <span class="u-text-xs u-text-faint">ID: {{ client.id }}</span>
+          </div>
+        </div>
+        <div class="u-stack-3 u-text-sm client-info">
+          <div class="u-flex u-items-center u-gap-3">
+            <svg width="16" height="16" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            <div><span class="u-text-xs u-text-faint">CC: </span><span>{{ client.cedula }}</span></div>
+          </div>
+          <div class="u-flex u-items-center u-gap-3">
+            <svg width="16" height="16" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span class="u-truncate">{{ client.email }}</span>
+          </div>
+          <div class="u-flex u-items-center u-gap-3">
+            <svg width="16" height="16" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span>{{ client.phone }}</span>
+          </div>
+          <div class="u-flex u-items-center u-gap-3">
+            <svg width="16" height="16" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="u-truncate">{{ client.address }}</span>
+          </div>
+        </div>
+        <div class="u-flex u-justify-end u-gap-2 u-mt-6 u-pt-4 u-border-t">
+          <button class="btn btn--cyan btn--sm" type="button" (click)="editingClient.set(client)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg> Editar
+          </button>
+          <a [routerLink]="['/clientes', client.id]" class="btn btn--navy btn--sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Ver Detalle
+          </a>
+        </div>
+      </div>
+    } @empty {
+      <p class="empty-state u-col-span-3">{{ loading() ? 'Cargando clientes...' : 'No se encontraron clientes.' }}</p>
+    }
+  </div>
+</div>
+
+<!-- ============ MODAL: Editar Cliente ============ -->
+@if (editingClient(); as client) {
+  <app-client-form-modal
+    mode="edit"
+    idPrefix="edit-client"
+    [client]="client"
+    (save)="updateClient($event)"
+    (close)="editingClient.set(null)"
+  />
+}
+
+<!-- ============ MODAL: Nuevo Cliente ============ -->
+@if (newClientModalOpen()) {
+  <app-client-form-modal
+    idPrefix="new-client"
+    (save)="createClient($event)"
+    (close)="newClientModalOpen.set(false)"
+  />
+}

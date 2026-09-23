@@ -1,0 +1,29 @@
+/* ============================================================
+   PAGE.CSS — Encabezado de sección estándar (compartido por las páginas)
+   ============================================================ */
+
+/* ---- Encabezado de sección estándar ---- */
+.section-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-6);
+}
+.section-header h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-brand-navy-dark);
+}
+.section-header p {
+  font-size: var(--font-size-sm);
+  color: var(--color-slate-500);
+}
+
+@media (min-width: 640px) {
+  .section-header {
+    flex-direction: row;
+    align-items: center;
+  }
+}

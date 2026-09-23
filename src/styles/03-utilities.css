@@ -1,0 +1,133 @@
+/* ============================================================
+   UTILITIES.CSS — Utilidades de layout reutilizables
+   (equivalentes a las utilidades de Tailwind usadas en el diseño
+   original: flex, grid, spacing, texto)
+   ============================================================ */
+
+/* ---- Display / Flex ---- */
+.u-flex        { display: flex; }
+.u-inline-flex { display: inline-flex; }
+.u-grid        { display: grid; }
+.u-hidden      { display: none; }
+
+.u-flex-col      { flex-direction: column; }
+.u-flex-1        { flex: 1 1 0%; }
+.u-flex-wrap     { flex-wrap: wrap; }
+.u-items-center  { align-items: center; }
+.u-items-start   { align-items: flex-start; }
+.u-items-end     { align-items: flex-end; }
+.u-justify-center  { justify-content: center; }
+.u-justify-between { justify-content: space-between; }
+.u-justify-end     { justify-content: flex-end; }
+
+.u-gap-1 { gap: var(--space-1); }
+.u-gap-2 { gap: var(--space-2); }
+.u-gap-3 { gap: var(--space-3); }
+.u-gap-4 { gap: var(--space-4); }
+.u-gap-5 { gap: var(--space-5); }
+.u-gap-6 { gap: var(--space-6); }
+
+/* ---- Grid ---- */
+.u-grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.u-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.u-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.u-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.u-col-span-2  { grid-column: span 2 / span 2; }
+
+/* ---- Spacing helpers (margin/padding puntuales) ---- */
+.u-mt-1 { margin-top: var(--space-1); }
+.u-mt-2 { margin-top: var(--space-2); }
+.u-mt-3 { margin-top: var(--space-3); }
+.u-mt-4 { margin-top: var(--space-4); }
+.u-mt-6 { margin-top: var(--space-6); }
+.u-mt-8 { margin-top: var(--space-8); }
+.u-mb-1 { margin-bottom: var(--space-1); }
+.u-mb-2 { margin-bottom: var(--space-2); }
+.u-mb-3 { margin-bottom: var(--space-3); }
+.u-mb-4 { margin-bottom: var(--space-4); }
+.u-mb-6 { margin-bottom: var(--space-6); }
+.u-ml-auto { margin-left: auto; }
+
+.u-stack-3 > * + * { margin-top: var(--space-3); }
+.u-stack-4 > * + * { margin-top: var(--space-4); }
+.u-stack-6 > * + * { margin-top: var(--space-6); }
+
+.u-p-4 { padding: var(--space-4); }
+.u-p-6 { padding: var(--space-6); }
+.u-pt-4 { padding-top: var(--space-4); }
+.u-pt-6 { padding-top: var(--space-6); }
+.u-pb-2 { padding-bottom: var(--space-2); }
+
+.u-border-t { border-top: 1px solid var(--border-color); }
+.u-border-b { border-bottom: 1px solid var(--border-color); }
+
+/* ---- Texto ---- */
+.u-text-xs   { font-size: var(--font-size-xs); }
+.u-text-sm   { font-size: var(--font-size-sm); }
+.u-text-base { font-size: var(--font-size-base); }
+.u-text-lg   { font-size: var(--font-size-lg); }
+.u-text-xl   { font-size: var(--font-size-xl); }
+.u-text-2xl  { font-size: var(--font-size-2xl); }
+
+.u-font-medium   { font-weight: var(--font-weight-medium); }
+.u-font-semibold { font-weight: var(--font-weight-semibold); }
+.u-font-bold     { font-weight: var(--font-weight-bold); }
+
+.u-text-center { text-align: center; }
+.u-text-right  { text-align: right; }
+.u-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.u-italic { font-style: italic; }
+.u-uppercase { text-transform: uppercase; letter-spacing: 0.05em; }
+.u-capitalize { text-transform: capitalize; }
+
+/* ---- Colores de texto semánticos ---- */
+.u-text-navy     { color: var(--color-brand-navy-dark); }
+.u-text-blue     { color: var(--color-brand-blue); }
+.u-text-cyan     { color: var(--color-brand-cyan); }
+.u-text-muted    { color: var(--color-slate-500); }
+.u-text-faint    { color: var(--color-slate-400); }
+.u-text-dark     { color: var(--color-slate-800); }
+.u-text-white    { color: var(--color-white); }
+.u-text-green    { color: var(--color-green-600); }
+.u-text-orange   { color: var(--color-orange-600); }
+.u-text-red      { color: var(--color-red-600); }
+
+/* ---- Contenedor de página ---- */
+.u-container {
+  max-width: 80rem; /* 1280px, equivalente a max-w-7xl */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.u-relative { position: relative; }
+.u-w-full { width: 100%; }
+
+/* ---- Responsive ---- */
+@media (min-width: 640px) {
+  .sm\:u-flex-row { flex-direction: row; }
+  .sm\:u-hidden-off { display: block; }
+}
+
+@media (min-width: 768px) {
+  .md\:u-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .lg\:u-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lg\:u-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lg\:u-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  .u-grid-cols-1,
+  .u-grid-cols-2,
+  .u-grid-cols-3,
+  .u-grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  .u-col-span-2 { grid-column: span 1 / span 1; }
+}

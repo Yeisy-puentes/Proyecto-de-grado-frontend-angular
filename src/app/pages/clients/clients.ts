@@ -1,0 +1,67 @@
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { Client, ClientFormData } from '../../core/models/client.model';
+import { ClientService } from '../../core/services/client.service';
+import { ToastService } from '../../core/services/toast.service';
+import { apiErrorMessage } from '../../core/utils/http-error';
+import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
+
+@Component({
+  selector: 'app-clients',
+  imports: [RouterLink, ClientFormModal],
+  templateUrl: './clients.html',
+  styleUrl: './clients.css',
+})
+export class Clients implements OnInit {
+  private readonly clientService = inject(ClientService);
+  private readonly toast = inject(ToastService);
+
+  protected readonly loading = this.clientService.loading;
+  protected readonly search = signal('');
+  protected readonly newClientModalOpen = signal(false);
+  protected readonly editingClient = signal<Client | null>(null);
+
+  async ngOnInit(): Promise<void> {
+    try {
+      await this.clientService.load();
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'No se pudieron cargar los clientes'));
+    }
+  }
+
+  protected readonly filteredClients = computed(() => {
+    const term = this.search().trim().toLowerCase();
+    return this.clientService
+      .clients()
+      .filter(
+        (c) =>
+          !term ||
+          c.name.toLowerCase().includes(term) ||
+          c.email.toLowerCase().includes(term) ||
+          c.cedula.includes(term) ||
+          c.phone.includes(term),
+      );
+  });
+
+  protected async createClient(data: ClientFormData): Promise<void> {
+    try {
+      const client = await this.clientService.create(data);
+      this.newClientModalOpen.set(false);
+      this.toast.success(`Cliente ${client.name} creado.`);
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'No se pudo crear el cliente'));
+    }
+  }
+
+  protected async updateClient(data: ClientFormData): Promise<void> {
+    const client = this.editingClient();
+    if (!client) return;
+    try {
+      await this.clientService.update(client.id, data);
+      this.editingClient.set(null);
+      this.toast.success('Cliente actualizado.');
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'No se pudo actualizar el cliente'));
+    }
+  }
+}

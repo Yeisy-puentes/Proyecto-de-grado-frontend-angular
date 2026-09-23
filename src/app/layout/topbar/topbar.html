@@ -1,0 +1,66 @@
+<header class="topbar">
+  <div class="u-flex u-items-center u-gap-4">
+    <button class="btn-menu-mobile" type="button" aria-label="Abrir menú" (click)="layout.openMobileSidebar()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    </button>
+    <h1 class="topbar__title">Gestión de Arreglos</h1>
+  </div>
+
+  <div class="topbar__right">
+    <div class="notif" [class.is-open]="notifOpen()">
+      <button class="notif__btn" type="button" aria-label="Notificaciones" (click)="toggleNotif()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        @if (todayRepairs().length > 0) {
+          <span class="notif__badge">{{ todayRepairs().length }}</span>
+        }
+      </button>
+
+      <div class="notif__panel">
+        <div class="notif__header">
+          <div>
+            <h3>Arreglos de Hoy</h3>
+            <p>{{ today | date: "EEEE d 'de' MMMM" }}</p>
+          </div>
+          <button class="notif__close" type="button" aria-label="Cerrar" (click)="notifOpen.set(false)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="notif__list">
+          @for (repair of todayRepairs(); track repair.id) {
+            <div class="notif__item">
+              <div class="u-flex u-justify-between u-gap-3">
+                <app-status-badge [status]="repair.status" />
+                <span class="u-text-xs u-text-faint">{{ repair.deliveryTime ? (repair.deliveryTime | time12) : 'Entrega hoy' }}</span>
+              </div>
+              <p class="u-font-semibold u-text-dark u-mt-2">{{ repair.clientName }}</p>
+              <p class="u-text-xs u-text-muted u-mt-1 u-truncate">{{ repair.description }}</p>
+              <div class="u-flex u-justify-between u-mt-2">
+                <span class="u-text-xs u-text-faint">ID: {{ repair.code }}</span>
+                @if (repair.balance > 0) {
+                  <span class="notif__balance">Saldo: {{ repair.balance | cop }}</span>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="notif__empty">
+              <p class="u-font-medium">Sin entregas para hoy</p>
+            </div>
+          }
+        </div>
+
+        <div class="notif__footer">
+          <a routerLink="/agenda" (click)="notifOpen.set(false)">Ver agenda completa →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar__user">
+      <div class="u-text-right topbar__user-text">
+        <p class="topbar__user-name">{{ auth.user()?.nombre_completo }}</p>
+        <p class="topbar__user-role">{{ auth.user()?.nombre_rol }}</p>
+      </div>
+      <div class="avatar">{{ auth.userInitial() }}</div>
+    </div>
+  </div>
+</header>

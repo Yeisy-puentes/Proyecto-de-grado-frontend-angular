@@ -1,0 +1,87 @@
+/* ============================================================
+   LOGIN — Estilos específicos de la página de inicio de sesión
+   ============================================================ */
+
+/* ---------------- LOGIN ---------------- */
+.login-page {
+  min-height: 100vh;
+  background-color: var(--color-slate-50);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 28rem;
+  background-color: var(--color-white);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+.login-card__header {
+  background-color: var(--color-brand-navy-dark);
+  padding: var(--space-8);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.login-card__header-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.login-card__logo {
+  height: 4rem;
+  object-fit: contain;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.login-card__header h2 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-white); }
+.login-card__header p { color: var(--color-blue-200, #bfdbfe); margin-top: var(--space-2); }
+
+.login-card__deco {
+  position: absolute;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  filter: blur(24px);
+  opacity: 0.2;
+  mix-blend-mode: multiply;
+}
+.login-card__deco--tl { top: 0; left: 0; background-color: var(--color-blue-500); transform: translate(-50%, -50%); }
+.login-card__deco--br { bottom: 0; right: 0; background-color: #22d3ee; transform: translate(50%, 50%); }
+
+.login-form {
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.login-form__fields { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.login-card__footer {
+  background-color: var(--color-slate-50);
+  padding: var(--space-4);
+  text-align: center;
+  border-top: 1px solid var(--color-slate-100);
+}
+.login-card__footer p { font-size: var(--font-size-xs); color: var(--color-slate-500); }
+
+
+.login-error {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-red-50, #fef2f2);
+  border: 1px solid var(--color-red-200, #fecaca);
+  color: var(--color-red-700, #b91c1c);
+  font-size: var(--font-size-sm);
+}

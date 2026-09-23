@@ -1,0 +1,164 @@
+:host { display: contents; }
+
+.topbar {
+  height: var(--header-height);
+  background-color: var(--color-white);
+  border-bottom: 1px solid var(--color-slate-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+.topbar__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-brand-navy-dark);
+}
+
+.btn-menu-mobile {
+  display: none;
+  padding: var(--space-2);
+  color: var(--color-slate-500);
+  border-radius: var(--radius-lg);
+}
+
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.topbar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--color-slate-200);
+}
+.topbar__user-name { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-slate-800); }
+.topbar__user-role { font-size: var(--font-size-xs); color: var(--color-slate-500); text-transform: capitalize; }
+.avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-brand-cyan);
+  color: var(--color-white);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Notification bell ---- */
+.notif {
+  position: relative;
+}
+.notif__btn {
+  position: relative;
+  padding: var(--space-2);
+  color: var(--color-slate-500);
+  border-radius: var(--radius-full);
+  transition: background-color var(--transition-fast);
+}
+.notif__btn:hover { background-color: var(--color-slate-100); }
+.notif__badge {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  background-color: var(--color-red-500);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-white);
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+}
+.notif__panel {
+  position: absolute;
+  right: 0;
+  top: 3rem;
+  width: 24rem;
+  max-width: 90vw;
+  background-color: var(--color-white);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--color-slate-200);
+  z-index: 50;
+  overflow: hidden;
+  display: none;
+}
+.notif.is-open .notif__panel { display: block; }
+.notif__header {
+  background: linear-gradient(to right, var(--color-brand-navy-dark), var(--color-brand-blue));
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-white);
+}
+.notif__header h3 { font-weight: var(--font-weight-bold); }
+.notif__header p { font-size: var(--font-size-xs); color: var(--color-blue-100, #dbeafe); margin-top: 0.125rem; text-transform: capitalize; }
+.notif__close {
+  padding: 0.375rem;
+  border-radius: var(--radius-lg);
+  color: var(--color-white);
+}
+.notif__close:hover { background-color: rgba(255,255,255,0.2); }
+.notif__list {
+  max-height: 26rem;
+  overflow-y: auto;
+}
+.notif__item {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-slate-100);
+  transition: background-color var(--transition-fast);
+}
+.notif__item:hover { background-color: var(--color-slate-50); }
+.notif__item:last-child { border-bottom: none; }
+.notif__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) 0;
+  color: var(--color-slate-400);
+  text-align: center;
+}
+.notif__footer {
+  padding: var(--space-3) var(--space-5);
+  background-color: var(--color-slate-50);
+  border-top: 1px solid var(--color-slate-100);
+}
+.notif__footer a {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-brand-blue);
+}
+.notif__footer a:hover { color: var(--color-brand-blue-dark); }
+
+@media (max-width: 767px) {
+  .btn-menu-mobile { display: block; }
+  .topbar__title { display: none; }
+  .topbar__user-text { display: none; }
+}
+
+@media (max-width: 480px) {
+  .topbar { padding: 0 var(--space-4); }
+}
+
+.notif__balance {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-orange-600);
+  background: var(--color-orange-50);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+}

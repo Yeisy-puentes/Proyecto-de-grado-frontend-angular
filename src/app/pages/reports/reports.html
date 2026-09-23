@@ -1,0 +1,285 @@
+<div class="u-container u-stack-6">
+
+  <div class="section-header">
+    <div>
+      <h2>Informes y Reportes</h2>
+      <p>Análisis y estadísticas del negocio</p>
+    </div>
+    <div class="u-flex u-gap-3">
+      <button class="btn btn--emerald btn--sm" type="button" [disabled]="exporting()" (click)="export('excel')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/></svg>
+        Exportar Excel
+      </button>
+      <button class="btn btn--navy btn--sm" type="button" [disabled]="exporting()" (click)="export('pdf')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><polyline points="9.5 15.5 12 18 14.5 15.5"/></svg>
+        Exportar PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Toolbar unificada: filtro de fechas + tabs -->
+  <div class="card">
+    <div class="u-flex u-flex-wrap u-items-center u-gap-3 u-border-b toolbar">
+      <div class="u-flex u-items-center u-gap-2">
+        <input type="date" class="input toolbar__date" aria-label="Desde" [value]="dateFrom()" (change)="setDateFrom($any($event.target).value)" />
+        <span class="u-text-faint u-text-sm">—</span>
+        <input type="date" class="input toolbar__date" aria-label="Hasta" [value]="dateTo()" (change)="setDateTo($any($event.target).value)" />
+      </div>
+      <div class="toolbar__divider"></div>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="applyPreset('month')">Este mes</button>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="applyPreset('3months')">3 meses</button>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="applyPreset('year')">Este año</button>
+      <span class="u-ml-auto u-text-xs u-text-faint">
+        @if (loading()) { Cargando... } @else { {{ toDate(dateFrom()) | date: 'd MMM y' }} → {{ toDate(dateTo()) | date: 'd MMM y' }} }
+      </span>
+    </div>
+
+    <div class="u-flex u-items-center u-gap-1 report-tabs" id="report-tabs">
+      @for (tab of tabs; track tab.value) {
+        <button type="button" class="report-tab" [class.is-active]="activeTab() === tab.value" (click)="activeTab.set(tab.value)">
+          @switch (tab.value) {
+            @case ('summary') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+            }
+            @case ('income') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            }
+            @case ('repairs') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            }
+            @case ('clients') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            }
+          }
+          {{ tab.label }}
+          @if (activeTab() === tab.value) {
+            <span class="report-tab__dot"></span>
+          }
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="u-grid u-grid-cols-2 lg:u-grid-cols-4 u-gap-4">
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+      <div class="kpi-card__value">{{ totals().count }}</div>
+      <div class="kpi-card__label">Arreglos en período</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="kpi-card__value">{{ totals().paid | cop }}</div>
+      <div class="kpi-card__label">Ingresos cobrados</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--yellow"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="kpi-card__value">{{ totals().pending | cop }}</div>
+      <div class="kpi-card__label">Saldo pendiente</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--cyan"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="kpi-card__value">{{ totals().activeClients }}</div>
+      <div class="kpi-card__label">Clientes activos</div>
+    </div>
+  </div>
+
+  @switch (activeTab()) {
+    @case ('summary') {
+      <!-- ===== TAB: RESUMEN GENERAL ===== -->
+      <div class="report-panel">
+        <div class="u-grid u-grid-cols-1 lg:u-grid-cols-2 u-gap-6">
+          <div class="card chart-card">
+            <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
+              <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              Ingresos mensuales
+            </h3>
+            <div class="chart-box">
+              <app-line-chart [points]="monthlyIncome()" />
+            </div>
+          </div>
+          <div class="card chart-card">
+            <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
+              <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              Arreglos por estado
+            </h3>
+            <div class="chart-box chart-box--220 chart-box--center">
+              <svg width="180" height="180" viewBox="0 0 42 42">
+                @for (segment of statusBreakdown(); track segment.status) {
+                  @if (segment.count > 0) {
+                    <circle
+                      r="15.9" cx="21" cy="21" fill="transparent" stroke-width="8"
+                      [attr.stroke]="statusColors[segment.status]"
+                      [attr.stroke-dasharray]="segment.percent + ' ' + (100 - segment.percent)"
+                      [attr.stroke-dashoffset]="segment.offset"
+                    ></circle>
+                  }
+                }
+              </svg>
+            </div>
+            <div class="chart-legend-row">
+              @for (segment of statusBreakdown(); track segment.status) {
+                <span class="chart-legend-row__item">
+                  <span class="chart-legend-row__swatch" [style.background]="statusColors[segment.status]"></span>{{ statusLabels[segment.status] }} {{ segment.percent }}%
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    @case ('income') {
+      <!-- ===== TAB: INGRESOS ===== -->
+      <div class="report-panel u-stack-6">
+        <div class="card chart-card">
+          <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
+            <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Ingresos vs Pendiente por mes
+          </h3>
+          <div class="chart-box chart-box--260">
+            <app-bar-chart [labels]="incomeChart().labels" [series]="incomeChart().series" [format]="formatMoney" />
+          </div>
+          <div class="chart-legend-row">
+            <span class="chart-legend-row__item"><span class="chart-legend-row__swatch" style="background:#2563eb"></span>Cobrado</span>
+            <span class="chart-legend-row__item"><span class="chart-legend-row__swatch" style="background:#f97316"></span>Pendiente</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Detalle de arreglos — ingresos</h3></div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Referencia</th><th>Cliente</th><th>Fecha</th><th class="text-right">Costo</th><th class="text-right">Cobrado</th><th class="text-right">Pendiente</th></tr></thead>
+              <tbody>
+                @for (row of ingresos()?.detalle ?? []; track row.id_arreglo) {
+                  <tr>
+                    <td class="u-text-xs cell-ref">{{ repairCode(row.id_arreglo) }}</td>
+                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
+                    <td class="cell-muted">{{ day(row.fecha_ingreso) | date: 'dd/MM/y' }}</td>
+                    <td class="text-right">{{ num(row.valor) | cop }}</td>
+                    <td class="text-right u-text-green u-font-medium">{{ num(row.pagado) | cop }}</td>
+                    <td class="text-right u-font-medium" [class.u-text-orange]="num(row.pendiente) > 0" [class.cell-zero]="num(row.pendiente) === 0">{{ num(row.pendiente) | cop }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="6" class="cell-zero">Sin arreglos en el período.</td></tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="cell-total-label">Total</td>
+                  <td class="text-right">{{ num(ingresos()?.totales?.valor) | cop }}</td>
+                  <td class="text-right u-text-green">{{ num(ingresos()?.totales?.pagado) | cop }}</td>
+                  <td class="text-right u-text-orange">{{ num(ingresos()?.totales?.pendiente) | cop }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    @case ('repairs') {
+      <!-- ===== TAB: ARREGLOS ===== -->
+      <div class="report-panel u-stack-6">
+        <div class="summary-grid">
+          @for (segment of statusBreakdown(); track segment.status) {
+            <div class="summary-box">
+              <div class="summary-box__value" [style.color]="statusColors[segment.status]">{{ segment.count }}</div>
+              <div class="summary-box__label">{{ statusLabels[segment.status] }}</div>
+            </div>
+          }
+        </div>
+        <div class="card chart-card">
+          <h3 class="u-font-semibold u-text-dark u-mb-4">Arreglos por mes</h3>
+          <div class="chart-box chart-box--240">
+            <app-bar-chart [labels]="repairsChart().labels" [series]="repairsChart().series" />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Listado de arreglos en el período</h3></div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Referencia</th><th>Cliente</th><th>Descripción</th><th>Estado</th><th>Recibido</th><th>Entrega</th></tr></thead>
+              <tbody>
+                @for (row of arreglos()?.listado ?? []; track row.id_arreglo) {
+                  <tr>
+                    <td class="u-text-xs cell-ref">{{ repairCode(row.id_arreglo) }}</td>
+                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
+                    <td class="u-truncate cell-desc">{{ row.descripcion }}</td>
+                    <td>
+                      <span
+                        class="status-pill"
+                        [style.color]="statusColors[statusKey(row.nombre_estado)]"
+                        [style.background]="statusColors[statusKey(row.nombre_estado)] + '20'"
+                      >{{ statusLabels[statusKey(row.nombre_estado)] }}</span>
+                    </td>
+                    <td class="cell-muted">{{ day(row.fecha_ingreso) | date: 'dd/MM/y' }}</td>
+                    <td class="cell-muted">{{ row.fecha_entrega ? (day(row.fecha_entrega) | date: 'dd/MM/y') : '—' }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="6" class="cell-zero">Sin arreglos en el período.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    @case ('clients') {
+      <!-- ===== TAB: CLIENTES ===== -->
+      <div class="report-panel u-stack-6">
+        <div class="card chart-card">
+          <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
+            <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Clientes más activos en el período
+          </h3>
+          <div class="chart-box chart-box--240">
+            <app-hbar-chart [items]="topClients()" />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Resumen por cliente</h3></div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Cliente</th><th class="text-right">Arreglos</th><th class="text-right">Total facturado</th><th class="text-right">Total cobrado</th><th class="text-right">Saldo</th></tr></thead>
+              <tbody>
+                @for (row of clientes()?.resumenPorCliente ?? []; track row.id_cliente) {
+                  <tr>
+                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
+                    <td class="text-right">{{ num(row.total_arreglos) }}</td>
+                    <td class="text-right">{{ num(row.total_facturado) | cop }}</td>
+                    <td class="text-right u-text-green u-font-medium">{{ num(row.total_cobrado) | cop }}</td>
+                    <td class="text-right u-font-medium" [class.u-text-orange]="num(row.saldo) > 0" [class.cell-zero]="num(row.saldo) === 0">{{ num(row.saldo) | cop }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5" class="cell-zero">Sin clientes con arreglos en el período.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Todos los clientes registrados</h3></div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Email</th></tr></thead>
+              <tbody>
+                @for (client of clientes()?.todosClientes ?? []; track client.id_cliente) {
+                  <tr>
+                    <td class="u-font-medium">{{ client.nombre_completo }}</td>
+                    <td class="cell-muted">{{ client.cedula }}</td>
+                    <td class="cell-muted">{{ client.telefono }}</td>
+                    <td class="cell-muted">{{ client.correo }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+</div>

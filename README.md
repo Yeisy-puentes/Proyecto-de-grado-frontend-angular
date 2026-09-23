@@ -1,4 +1,31 @@
-# FrontedInterfajas
+# Interfajas — Frontend (Angular)
+
+Frontend del sistema de gestión de arreglos textiles. Consume el backend
+`Proyecto-de-grado-backend-node` (Node + Express + MySQL).
+
+## Conexión con el backend
+
+1. Levanta el backend (`npm run dev` en `Proyecto-de-grado-backend-node`, puerto 3000).
+2. La URL de la API está en `src/environments/environment.development.ts` (desarrollo)
+   y `src/environments/environment.ts` (producción): `http://localhost:3000/api`.
+3. `npm start` y abre `http://localhost:4200` → inicia sesión con un usuario de la tabla `usuarios`.
+
+El token JWT se guarda en `localStorage` y se envía en cada petición
+(`core/auth/auth.interceptor.ts`). Si expira (401), la app vuelve al login.
+
+| Vista            | Endpoints                                                                 |
+|------------------|---------------------------------------------------------------------------|
+| Login            | `POST /auth/login`                                                        |
+| Dashboard        | `GET /arreglos`, `GET /clientes`, `GET /reportes/resumen`                 |
+| Arreglos         | `GET/POST/PUT/DELETE /arreglos`, `GET /clientes?buscar=`, `GET/POST /pagos` |
+| Clientes         | `GET/POST/PUT /clientes`                                                  |
+| Detalle cliente  | `GET /clientes/:id`, `GET /pagos?id_arreglo=`, `POST /pagos`, `PUT /arreglos/:id`, `POST /arreglos/:id/notificar` |
+| Agenda           | `GET /arreglos` (recordatorios en `localStorage`, el backend no los tiene aún) |
+| Informes         | `GET /reportes/{resumen,ingresos,arreglos,clientes}`, `GET /reportes/{excel,pdf}` |
+| Catálogos        | `GET /estados`, `GET /tipos-pago`                                         |
+
+---
+
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.8.
 

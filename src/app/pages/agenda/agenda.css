@@ -1,0 +1,348 @@
+/* ============================================================
+   AGENDA — Estilos específicos de la vista de calendario
+   ============================================================ */
+
+.calendar-card {
+  background-color: var(--color-white);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-slate-200);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.calendar-nav {
+  background: linear-gradient(to right, var(--color-brand-navy-dark), var(--color-brand-blue));
+  padding: var(--space-5);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.calendar-nav__btn {
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  color: var(--color-white);
+  display: flex;
+}
+.calendar-nav__btn:hover { background-color: rgba(255,255,255,0.2); }
+.calendar-nav__title { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); text-transform: capitalize; text-align: center; }
+.calendar-nav__subtitle { font-size: var(--font-size-sm); color: var(--color-blue-100, #dbeafe); margin-top: 0.25rem; text-align: center; }
+.calendar-nav__today {
+  padding: 0.375rem 0.75rem;
+  font-size: var(--font-size-sm);
+  background-color: rgba(255,255,255,0.2);
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-white);
+}
+.calendar-nav__today:hover { background-color: rgba(255,255,255,0.3); }
+
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background-color: var(--color-slate-50);
+  border-bottom: 1px solid var(--color-slate-200);
+}
+.calendar-legend__label { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-slate-500); text-transform: uppercase; letter-spacing: 0.05em; }
+.calendar-legend__item { display: flex; align-items: center; gap: 0.375rem; font-size: var(--font-size-xs); color: var(--color-slate-600); }
+
+.calendar-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--color-slate-200);
+  background-color: var(--color-slate-50);
+}
+
+@media (max-width: 640px) {
+  .calendar-weekdays,
+  .calendar-grid {
+    min-width: 560px;
+  }
+}
+.calendar-weekdays span {
+  padding: var(--space-3);
+  text-align: center;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
+  color: var(--color-slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.calendar-day {
+  min-height: 96px;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-slate-100);
+  border-right: 1px solid var(--color-slate-100);
+  background-color: var(--color-white);
+  transition: background-color var(--transition-fast);
+}
+.calendar-day:hover { background-color: var(--color-slate-50); }
+.calendar-day.is-outside { background-color: rgba(248,250,252,0.6); opacity: 0.5; }
+.calendar-day.has-events { cursor: pointer; }
+
+.calendar-day__number {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
+  width: fit-content;
+  color: var(--color-slate-700);
+}
+.calendar-day__number.is-today {
+  width: 1.75rem;
+  height: 1.75rem;
+  background-color: var(--color-brand-blue);
+  color: var(--color-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.calendar-day.is-outside .calendar-day__number { color: var(--color-slate-400); }
+
+.calendar-day__events { display: flex; flex-direction: column; gap: 0.25rem; }
+.calendar-day__event-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-slate-600);
+  line-height: 1;
+}
+
+/* ---- Vista de día ---- */
+.day-view { padding: var(--space-5); }
+.day-view__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-5);
+}
+@media (min-width: 640px) {
+  .day-view__toolbar { flex-direction: row; align-items: center; }
+}
+.day-view__filters { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.day-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border: 1px solid var(--color-slate-200);
+  background-color: var(--color-white);
+  color: var(--color-slate-600);
+  transition: all var(--transition-base);
+}
+.day-filter-chip:hover { border-color: var(--color-slate-300); }
+.day-filter-chip.is-active { background-color: var(--color-brand-navy-dark); color: var(--color-white); border-color: var(--color-brand-navy-dark); }
+.day-filter-chip__count { color: var(--color-slate-400); margin-left: 0.125rem; }
+.day-filter-chip.is-active .day-filter-chip__count { color: rgba(255,255,255,0.8); }
+
+.add-reminder-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-brand-cyan);
+  font-weight: var(--font-weight-medium);
+}
+.add-reminder-link:hover { color: var(--color-brand-cyan-dark); }
+
+.event-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) 0;
+  color: var(--color-slate-400);
+  text-align: center;
+}
+.event-empty p:first-of-type { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); }
+.event-empty p:last-of-type { font-size: var(--font-size-sm); margin-top: 0.25rem; }
+
+/* ---- Tarjeta de arreglo (vista día, diseño Figma) ---- */
+.repair-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+.repair-card:hover { border-color: var(--color-blue-200); box-shadow: var(--shadow-sm); }
+.repair-card.is-expanded {
+  border-color: var(--color-blue-300, #93c5fd);
+  box-shadow: 0 4px 6px -1px rgb(219 234 254), 0 2px 4px -2px rgb(219 234 254);
+}
+
+.repair-card__summary { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--space-5); }
+.repair-card__strip { width: 0.25rem; align-self: stretch; border-radius: var(--radius-full); flex-shrink: 0; }
+.repair-card__main { flex: 1 1 0%; min-width: 0; }
+.repair-card__meta { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 0.125rem; }
+.repair-card__clock { color: var(--color-brand-blue); flex-shrink: 0; }
+.repair-card__time { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); color: var(--color-brand-navy-dark); }
+
+.repair-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+.repair-card__status--pendiente  { background: var(--color-yellow-50, #fefce8); color: var(--color-yellow-700, #a16207); }
+.repair-card__status--en-proceso { background: var(--color-blue-50); color: var(--color-blue-700); }
+.repair-card__status--listo      { background: var(--color-green-50); color: var(--color-green-700); }
+.repair-card__status--entregado  { background: var(--color-slate-100); color: var(--color-slate-600); }
+.repair-card__status-dot { width: 0.375rem; height: 0.375rem; border-radius: 50%; }
+
+.repair-card__client {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  color: var(--color-slate-800);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.repair-card__desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-slate-400);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repair-card__side { display: flex; align-items: center; gap: var(--space-3); flex-shrink: 0; }
+.repair-card__balance { text-align: right; color: var(--color-orange-500); }
+.repair-card__balance.is-paid { color: var(--color-green-600); }
+.repair-card__balance-label { font-size: var(--font-size-xs); color: var(--color-slate-400); line-height: 1; margin-bottom: 0.125rem; }
+.repair-card__balance-value { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); line-height: 1; }
+@media (max-width: 639px) { .repair-card__balance { display: none; } }
+.repair-card__chevron { color: var(--color-slate-400); transition: transform 0.2s; }
+.repair-card__chevron.is-open { transform: rotate(180deg); }
+
+.repair-card__detail {
+  border-top: 1px solid var(--color-slate-100);
+  background-color: rgb(248 250 252 / 0.6);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  cursor: default;
+  user-select: text;
+}
+.repair-card__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
+@media (min-width: 640px) { .repair-card__grid { grid-template-columns: repeat(4, 1fr); } }
+.repair-card__field { display: flex; flex-direction: column; gap: 0.125rem; }
+.repair-card__field-label { display: flex; align-items: center; gap: 0.25rem; font-size: var(--font-size-xs); color: var(--color-slate-400); }
+.repair-card__field-value { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-slate-800); }
+.repair-card__field-value--bold { font-weight: var(--font-weight-bold); }
+.repair-card__field-value--muted { color: var(--color-slate-700); }
+.repair-card__id {
+  font-size: var(--font-size-xs);
+  font-family: monospace;
+  color: var(--color-slate-600);
+  background: var(--color-white);
+  border: 1px solid var(--color-slate-200);
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  width: fit-content;
+}
+.repair-card__text { font-size: var(--font-size-sm); color: var(--color-slate-700); }
+
+.repair-card__pay-row { display: flex; justify-content: space-between; font-size: var(--font-size-xs); color: var(--color-slate-400); margin-bottom: 0.25rem; }
+.repair-card__pay-status { color: var(--color-orange-500); font-weight: var(--font-weight-semibold); }
+.repair-card__pay-status.is-paid { color: var(--color-green-600); }
+.repair-card__bar { height: 0.375rem; background: var(--color-slate-200); border-radius: var(--radius-full); overflow: hidden; }
+.repair-card__bar-fill { height: 100%; border-radius: var(--radius-full); background: #fb923c; transition: width 0.2s; }
+.repair-card__bar-fill.is-paid { background: var(--color-green-500); }
+
+.repair-card__actions { display: flex; gap: var(--space-2); padding-top: 0.25rem; }
+.repair-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5rem 1rem;
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition-fast);
+}
+.repair-card__btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.repair-card__btn--blue { background: var(--color-blue-600); }
+.repair-card__btn--blue:hover:not(:disabled) { background: var(--color-blue-700); }
+.repair-card__btn--green { background: var(--color-green-600); }
+.repair-card__btn--green:hover:not(:disabled) { background: var(--color-green-700); }
+
+/* ---- Tarjeta de recordatorio (diseño Figma) ---- */
+.reminder-card { border: 1px solid; border-radius: var(--radius-xl); padding: var(--space-4); }
+.reminder-card--blue   { background: var(--color-blue-100);   border-color: var(--color-blue-200);   color: var(--color-blue-800, #1e40af); }
+.reminder-card--green  { background: var(--color-green-100);  border-color: var(--color-green-200);  color: var(--color-green-800, #166534); }
+.reminder-card--yellow { background: var(--color-yellow-100); border-color: var(--color-yellow-200, #fef08a); color: var(--color-yellow-800, #854d0e); }
+.reminder-card--red    { background: var(--color-red-100);    border-color: var(--color-red-200);    color: var(--color-red-800, #991b1b); }
+.reminder-card--purple { background: var(--color-purple-100); border-color: var(--color-purple-200, #e9d5ff); color: var(--color-purple-800, #6b21a8); }
+.reminder-card__top { display: flex; justify-content: space-between; align-items: flex-start; }
+.reminder-card__time-row { display: flex; align-items: center; gap: var(--space-2); }
+.reminder-card__tag {
+  font-size: var(--font-size-xs);
+  color: var(--color-slate-400);
+  background: rgb(255 255 255 / 0.6);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+.reminder-card__delete { padding: 0.375rem; border-radius: var(--radius-lg); color: var(--color-slate-400); }
+.reminder-card__delete:hover { color: var(--color-red-500); background-color: rgb(255 255 255 / 0.6); }
+.reminder-card__title { font-weight: var(--font-weight-bold); margin-top: var(--space-2); }
+.reminder-card__desc { font-size: var(--font-size-sm); margin-top: 0.125rem; opacity: 0.75; }
+
+/* Color swatch selector (formulario recordatorio) */
+.color-swatch-group { display: flex; gap: var(--space-2); }
+.color-swatch {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+.color-swatch:hover { transform: scale(1.05); }
+.color-swatch.is-selected { border-color: var(--color-slate-600); transform: scale(1.1); }
+.color-swatch--blue   { background-color: var(--color-blue-100); }
+.color-swatch--green  { background-color: var(--color-green-100); }
+.color-swatch--yellow { background-color: var(--color-yellow-100); }
+.color-swatch--red    { background-color: var(--color-red-100); }
+.color-swatch--purple { background-color: var(--color-purple-100); }
+
+/* ---- Ajustes de la versión Angular ---- */
+:host { display: block; }
+
+.section-header--flush { margin-bottom: 0; }
+
+.calendar-day { cursor: pointer; }
+
+.status-dot--sm { width: 0.5rem; height: 0.5rem; }
+
+
+.event-empty__icon { opacity: 0.4; margin-bottom: 0.75rem; }
+
+/* Chip activo: el punto de color se aclara (como en Figma) */
+.day-filter-chip.is-active .status-dot { background-color: rgb(255 255 255 / 0.7); }

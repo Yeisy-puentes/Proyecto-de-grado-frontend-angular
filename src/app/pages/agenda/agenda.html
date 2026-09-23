@@ -1,0 +1,290 @@
+<div class="u-container u-stack-4">
+
+  <div class="section-header section-header--flush">
+    <div>
+      <h2>Agenda de Entregas</h2>
+      <p>Calendario de compromisos y recordatorios</p>
+    </div>
+    <div class="u-flex u-items-center u-gap-3">
+      <div class="tab-toggle-group">
+        <button type="button" class="tab-toggle" [class.is-active]="view() === 'month'" (click)="setView('month')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Mes
+        </button>
+        <button type="button" class="tab-toggle" [class.is-active]="view() === 'day'" (click)="setView('day')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg> Día
+        </button>
+      </div>
+      <button type="button" class="btn btn--cyan btn--sm" (click)="openReminderModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Recordatorio
+      </button>
+    </div>
+  </div>
+
+  <div class="calendar-card">
+
+    <div class="calendar-nav">
+      <button class="calendar-nav__btn" type="button" aria-label="Anterior" (click)="prev()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        @if (view() === 'month') {
+          <h3 class="calendar-nav__title">{{ currentMonth() | date: 'MMMM y' | titlecase }}</h3>
+          <p class="calendar-nav__subtitle">{{ monthDeliveries() }} entregas este mes</p>
+        } @else {
+          <h3 class="calendar-nav__title">{{ selectedDateValue() | date: "EEEE d 'de' MMMM y" | titlecase }}</h3>
+          <p class="calendar-nav__subtitle">{{ dayCounts().repairs }} entrega(s) · {{ dayCounts().reminders }} recordatorio(s)</p>
+        }
+      </div>
+      <div class="u-flex u-items-center u-gap-2">
+        <button class="calendar-nav__today" type="button" (click)="goToday()">Hoy</button>
+        <button class="calendar-nav__btn" type="button" aria-label="Siguiente" (click)="next()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+    </div>
+
+    <div class="calendar-legend">
+      <span class="calendar-legend__label">Referencias:</span>
+      <div class="calendar-legend__item"><span class="status-dot status-dot--pendiente"></span>Pendiente</div>
+      <div class="calendar-legend__item"><span class="status-dot status-dot--en-proceso"></span>En Taller</div>
+      <div class="calendar-legend__item"><span class="status-dot status-dot--listo"></span>Listo</div>
+      <div class="calendar-legend__item"><span class="status-dot status-dot--recordatorio"></span>Recordatorio</div>
+    </div>
+
+    @if (view() === 'month') {
+      <!-- ===== VISTA MES ===== -->
+      <div class="calendar-scroll">
+        <div class="calendar-weekdays">
+          @for (weekday of weekdays; track weekday) {
+            <span>{{ weekday }}</span>
+          }
+        </div>
+        <div class="calendar-grid">
+          @for (day of calendarDays(); track day.key) {
+            <div
+              class="calendar-day"
+              [class.is-outside]="day.isOutside"
+              [class.has-events]="day.events.length > 0"
+              (click)="openDay(day.key)"
+            >
+              <div class="calendar-day__number" [class.is-today]="day.isToday">{{ day.day }}</div>
+              @if (day.events.length > 0) {
+                <div class="calendar-day__events">
+                  @for (event of day.events; track event.type) {
+                    <div class="calendar-day__event-row">
+                      <span [class]="'status-dot status-dot--sm status-dot--' + statusClass(event.type)"></span>{{ event.label }}
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <!-- ===== VISTA DÍA ===== -->
+      <div class="day-view">
+        <div class="day-view__toolbar">
+          <div class="day-view__filters">
+            <button type="button" class="day-filter-chip" [class.is-active]="dayFilter() === 'all'" (click)="dayFilter.set('all')">Todos</button>
+            @for (filter of dayFilters(); track filter.value) {
+              <button type="button" class="day-filter-chip" [class.is-active]="dayFilter() === filter.value" (click)="dayFilter.set(filter.value)">
+                <span [class]="'status-dot status-dot--' + filter.dot"></span>{{ filter.label }}
+                <span class="day-filter-chip__count">({{ filter.count }})</span>
+              </button>
+            }
+          </div>
+          <button type="button" class="add-reminder-link" (click)="openReminderModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar recordatorio
+          </button>
+        </div>
+
+        <div class="u-stack-3">
+          @for (event of dayEvents(); track $index) {
+            @if (event.kind === 'repair') {
+              <!-- Tarjeta de arreglo (diseño Figma): resumen siempre visible + detalle desplegable -->
+              @let repair = event.repair;
+              @let expanded = expandedRepairId() === repair.id;
+              <div class="repair-card" [class.is-expanded]="expanded" (click)="toggleRepair(repair.id)">
+                <div class="repair-card__summary">
+                  <span [class]="'repair-card__strip status-dot--' + statusClass(repair.status)"></span>
+
+                  <div class="repair-card__main">
+                    <div class="repair-card__meta">
+                      <svg width="13" height="13" class="repair-card__clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span class="repair-card__time">{{ repair.deliveryTime ? (repair.deliveryTime | time12) : 'Entrega' }}</span>
+                      <span [class]="'repair-card__status repair-card__status--' + statusClass(repair.status)">
+                        <span [class]="'repair-card__status-dot status-dot--' + statusClass(repair.status)"></span>
+                        {{ statusLabels[repair.status] }}
+                      </span>
+                    </div>
+                    <p class="repair-card__client">{{ repair.clientName }}</p>
+                    <p class="repair-card__desc">{{ repair.description }}</p>
+                  </div>
+
+                  <div class="repair-card__side">
+                    <div class="repair-card__balance" [class.is-paid]="repair.balance <= 0">
+                      <p class="repair-card__balance-label">Saldo</p>
+                      <p class="repair-card__balance-value">{{ repair.balance | cop }}</p>
+                    </div>
+                    <svg class="repair-card__chevron" [class.is-open]="expanded" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                </div>
+
+                @if (expanded) {
+                  <div class="repair-card__detail" (click)="$event.stopPropagation()">
+                    <div class="repair-card__grid">
+                      <div class="repair-card__field">
+                        <span class="repair-card__field-label">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Cliente
+                        </span>
+                        <span class="repair-card__field-value">{{ repair.clientName }}</span>
+                      </div>
+                      <div class="repair-card__field">
+                        <span class="repair-card__field-label">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>ID
+                        </span>
+                        <span class="repair-card__id">{{ repair.code }}</span>
+                      </div>
+                      <div class="repair-card__field">
+                        <span class="repair-card__field-label">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Total
+                        </span>
+                        <span class="repair-card__field-value repair-card__field-value--bold">{{ repair.cost | cop }}</span>
+                      </div>
+                      <div class="repair-card__field">
+                        <span class="repair-card__field-label">Abonado</span>
+                        <span class="repair-card__field-value repair-card__field-value--muted">{{ repair.paid | cop }}</span>
+                      </div>
+                    </div>
+
+                    <div class="repair-card__field">
+                      <span class="repair-card__field-label">Descripción</span>
+                      <p class="repair-card__text">{{ repair.description || '—' }}</p>
+                    </div>
+
+                    @if (repair.cost > 0) {
+                      <div>
+                        <div class="repair-card__pay-row">
+                          <span>Pago</span>
+                          <span class="repair-card__pay-status" [class.is-paid]="repair.balance <= 0">
+                            {{ repair.balance <= 0 ? 'Pagado' : 'Pendiente ' + (repair.balance | cop) }}
+                          </span>
+                        </div>
+                        <div class="repair-card__bar">
+                          <div class="repair-card__bar-fill" [class.is-paid]="repair.balance <= 0" [style.width.%]="paidPercent(repair)"></div>
+                        </div>
+                      </div>
+                    }
+
+                    @if (repair.status === 'pendiente' || repair.status === 'en_proceso') {
+                      <div class="repair-card__actions">
+                        @if (repair.status === 'pendiente') {
+                          <button type="button" class="repair-card__btn repair-card__btn--blue" [disabled]="changingId() === repair.id" (click)="changeStatus(repair, 'en_proceso')">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                            Pasar a Taller
+                          </button>
+                        }
+                        <button type="button" class="repair-card__btn repair-card__btn--green" [disabled]="changingId() === repair.id" (click)="changeStatus(repair, 'listo')">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>
+                          Marcar Listo
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <!-- Tarjeta de recordatorio (diseño Figma) -->
+              <div [class]="'reminder-card reminder-card--' + event.reminder.color">
+                <div class="reminder-card__top">
+                  <div class="reminder-card__time-row">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                    <strong>{{ event.reminder.time | time12 }}</strong>
+                    <span class="reminder-card__tag">Recordatorio</span>
+                  </div>
+                  <button type="button" class="reminder-card__delete" aria-label="Eliminar recordatorio" (click)="deleteReminder(event.reminder)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+                <h4 class="reminder-card__title">{{ event.reminder.title }}</h4>
+                @if (event.reminder.description) {
+                  <p class="reminder-card__desc">{{ event.reminder.description }}</p>
+                }
+              </div>
+            }
+          } @empty {
+            <div class="event-empty">
+              <svg width="48" height="48" class="event-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+              @if (dayFilter() === 'all') {
+                <p>Sin eventos programados</p>
+                <p>No hay entregas ni recordatorios para este día.</p>
+              } @else {
+                <p>Sin eventos "{{ activeFilterLabel() }}"</p>
+                <p>Prueba cambiando el filtro.</p>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+
+</div>
+
+<!-- ============ MODAL: Nuevo Recordatorio ============ -->
+@if (reminderModalOpen()) {
+  <div class="modal-overlay" (click)="reminderModalOpen.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header modal__header--gradient">
+        <div>
+          <h3 class="modal__title">Nuevo Recordatorio</h3>
+          <p>Agrega un recordatorio a la agenda</p>
+        </div>
+        <button class="modal__close" type="button" aria-label="Cerrar" (click)="reminderModalOpen.set(false)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form class="modal__body" appFormValidation #f="ngForm" (ngSubmit)="f.valid && saveReminder()">
+        <div class="field">
+          <label for="reminder-title">Título *</label>
+          <input type="text" id="reminder-title" name="title" class="input" required placeholder="Ej: Llamar cliente, Comprar insumos..." [(ngModel)]="reminderForm.title" #titleCtrl="ngModel" />
+          <app-field-error [control]="titleCtrl" [form]="f" [messages]="{ required: 'Escribe un título para el recordatorio.' }" />
+        </div>
+        <div class="field">
+          <label for="reminder-description">Descripción</label>
+          <textarea id="reminder-description" name="description" class="textarea" rows="2" placeholder="Detalles adicionales..." [(ngModel)]="reminderForm.description"></textarea>
+        </div>
+        <div class="u-grid u-grid-cols-2 u-gap-4">
+          <div class="field">
+            <label for="reminder-date">Fecha *</label>
+            <input type="date" id="reminder-date" name="date" class="input" required [(ngModel)]="reminderForm.date" #dateCtrl="ngModel" />
+            <app-field-error [control]="dateCtrl" [form]="f" />
+          </div>
+          <div class="field">
+            <label for="reminder-time">Hora *</label>
+            <input type="time" id="reminder-time" name="time" class="input" required [(ngModel)]="reminderForm.time" #timeCtrl="ngModel" />
+            <app-field-error [control]="timeCtrl" [form]="f" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Color</label>
+          <div class="color-swatch-group">
+            @for (color of reminderColors; track color.value) {
+              <button
+                type="button"
+                [class]="'color-swatch color-swatch--' + color.value"
+                [class.is-selected]="reminderForm.color === color.value"
+                [title]="color.label"
+                (click)="reminderForm.color = color.value"
+              ></button>
+            }
+          </div>
+        </div>
+        <div class="u-flex u-gap-3">
+          <button type="button" class="btn btn--outline u-flex-1" (click)="reminderModalOpen.set(false)">Cancelar</button>
+          <button type="submit" class="btn btn--navy u-flex-1" [disabled]="savingReminder()">{{ savingReminder() ? 'Guardando...' : 'Guardar' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
