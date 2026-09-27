@@ -1,6 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { LayoutService } from '../../core/services/layout.service';
 import { RepairService } from '../../core/services/repair.service';
@@ -19,6 +21,28 @@ export class Topbar {
   protected readonly layout = inject(LayoutService);
   protected readonly auth = inject(AuthService);
   private readonly repairService = inject(RepairService);
+
+  private readonly router = inject(Router);
+
+  /** Nombre de la sección actual, tomado del título de la ruta ("Arreglos · Interfajas" -> "Arreglos"). */
+  protected readonly sectionTitle = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      startWith(null),
+      map(() => this.currentRouteTitle()),
+    ),
+    { initialValue: '' },
+  );
+
+  private currentRouteTitle(): string {
+    let route: ActivatedRouteSnapshot | null = this.router.routerState.snapshot.root;
+    let title = '';
+    while (route) {
+      if (route.title) title = route.title;
+      route = route.firstChild;
+    }
+    return title.split(' · ')[0];
+  }
 
   protected readonly today = new Date();
   protected readonly notifOpen = signal(false);
