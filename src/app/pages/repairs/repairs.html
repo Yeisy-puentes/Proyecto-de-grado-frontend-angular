@@ -1,6 +1,6 @@
 <div class="u-container u-stack-6">
 
-  <div class="section-header">
+  <div class="section-header repairs-header">
     <div>
       <h2>Gestión de Arreglos</h2>
       <p>Control y seguimiento de órdenes de trabajo</p>
@@ -12,55 +12,29 @@
   </div>
 
   <!-- Filtros -->
-  <div class="card card-pad-sm u-stack-4">
-    <div class="u-flex u-flex-col sm:u-flex-row u-gap-4 u-items-center u-justify-between">
-      <div class="input-icon search-box">
-        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input
-          type="text"
-          class="input"
-          placeholder="Buscar por cliente, ID, cédula o descripción..."
-          [value]="search()"
-          (input)="search.set($any($event.target).value)"
-        />
-      </div>
-      <button class="btn btn--outline btn--outline-thin" type="button" (click)="showAdvancedFilters.set(!showAdvancedFilters())">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        Filtros Avanzados
-        <svg class="chevron" [class.is-open]="showAdvancedFilters()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  <div class="card card-pad-sm filters-bar">
+    <div class="input-icon search-box">
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input
+        type="text"
+        class="input search-box__input"
+        [class.has-value]="search()"
+        placeholder="Buscar por cliente, ID, cédula o fecha"
+        title="Fechas: 30/09, 30/09/2026, 30 sept o 30 de septiembre"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+      @if (search()) {
+        <button type="button" class="search-box__btn search-box__clear" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" (click)="search.set('')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      }
+      <button type="button" class="search-box__btn" title="Buscar por fecha" aria-label="Elegir fecha en el calendario" (click)="openDatePicker(datePicker)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </button>
+      <input #datePicker type="date" class="search-box__picker" tabindex="-1" aria-hidden="true" (change)="onSearchDatePicked(datePicker.value); datePicker.value = ''" />
     </div>
 
-    <!-- Filtros avanzados (colapsables) -->
-    @if (showAdvancedFilters()) {
-      <div class="u-grid u-grid-cols-1 md:u-grid-cols-3 u-gap-4 u-pt-4 u-border-t">
-        <div class="field">
-          <label class="u-text-xs u-uppercase filter-label" for="filter-repair-status">Estado</label>
-          <select id="filter-repair-status" class="select" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
-            <option value="all">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="en_proceso">En Proceso</option>
-            <option value="listo">Listo</option>
-            <option value="entregado">Entregado</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="u-text-xs u-uppercase filter-label" for="filter-repair-client">Cliente</label>
-          <select id="filter-repair-client" class="select" (change)="onClientFilterChange($any($event.target).value)">
-            <option value="all">Todos los clientes</option>
-            @for (client of clients(); track client.id) {
-              <option [value]="client.id" [selected]="clientFilter() === client.id">{{ client.name }}</option>
-            }
-          </select>
-        </div>
-        <div class="field">
-          <label class="u-text-xs u-uppercase filter-label" for="filter-repair-date">Fecha de Entrega</label>
-          <input type="date" id="filter-repair-date" class="input" [value]="dateFilter()" (change)="dateFilter.set($any($event.target).value)" />
-        </div>
-      </div>
-    }
-
-    <!-- Filtros rápidos tipo pill -->
     <div class="u-flex u-items-center u-gap-2 pill-filters">
       @for (pill of pillFilters; track pill.value) {
         <button
@@ -70,9 +44,7 @@
           (click)="statusFilter.set(pill.value)"
         >
           {{ pill.label }}
-          @if (pill.value !== 'all') {
-            <span class="pill-btn__count">{{ countByStatus(pill.value) }}</span>
-          }
+          <span class="pill-btn__count">{{ countByStatus(pill.value) }}</span>
         </button>
       }
     </div>
@@ -81,27 +53,36 @@
   <!-- Tabla de arreglos -->
   <div class="table-wrap">
     <div class="table-scroll">
-      <table class="data-table">
+      <table class="data-table repairs-table">
         <thead>
           <tr>
             <th>Referencia / Cliente</th>
             <th>Descripción</th>
             <th>Fecha Entrega</th>
             <th>Estado</th>
-            <th>Método</th>
             <th>Pago</th>
             <th class="text-right">Acciones</th>
           </tr>
         </thead>
         <tbody>
           @for (repair of filteredRepairs(); track repair.id) {
-            <tr>
-              <td>
+            @let alert = deliveryAlert(repair);
+            @if ($index === firstDeliveredIndex()) {
+              <tr class="group-row">
+                <td colspan="6">Entregados</td>
+              </tr>
+            }
+            <tr
+              class="repair-row"
+              [class.is-selected]="detailRepair()?.id === repair.id"
+              (click)="openDetail(repair, $event)"
+              [class.row--overdue]="alert?.kind === 'overdue'" [class.row--today]="alert?.kind === 'today'" [class.row--debt]="hasDebt(repair)">
+              <td class="cell-ref">
                 <div class="u-font-bold u-text-navy">{{ repair.code }}</div>
                 <div class="cell-client">{{ repair.clientName }}</div>
               </td>
               <td class="u-truncate cell-description" [title]="repair.description">{{ repair.description }}</td>
-              <td>
+              <td class="cell-delivery">
                 @if (repair.deliveryDate) {
                   <div class="u-flex u-items-center u-gap-2 cell-date">
                     <svg width="16" height="16" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -110,29 +91,64 @@
                   @if (repair.deliveryTime) {
                     <div class="u-text-xs u-text-faint u-mt-1 cell-time">{{ repair.deliveryTime | time12 }}</div>
                   }
+                  @if (alert) {
+                    <span [class]="'alert-chip alert-chip--' + alert.kind">
+                      @if (alert.kind === 'overdue') {
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      } @else {
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      }
+                      {{ alert.label }}
+                    </span>
+                  }
                 } @else {
                   <span class="u-text-xs u-text-faint">Sin fecha</span>
                 }
               </td>
-              <td><app-status-badge [status]="repair.status" /></td>
-              <td>
-                @if (lastMethod(repair); as method) {
-                  <span [class]="'badge badge--pago-' + method">{{ paymentLabel(method) }}</span>
-                } @else {
-                  <span class="u-text-xs u-text-faint">—</span>
-                }
+              <td class="cell-status">
+                <button
+                  type="button"
+                  class="status-trigger"
+                  [class.is-open]="statusMenu()?.repair?.id === repair.id"
+                  [disabled]="changingStatusId() === repair.id"
+                  title="Cambiar estado"
+                  aria-haspopup="menu"
+                  (click)="toggleStatusMenu(repair, $event)"
+                >
+                  <app-status-badge [status]="repair.status" />
+                  @if (changingStatusId() === repair.id) {
+                    <span class="status-trigger__spinner" aria-label="Guardando"></span>
+                  } @else {
+                    <svg class="status-trigger__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  }
+                </button>
               </td>
-              <td>
+              <td class="cell-pay">
                 <div class="u-flex u-flex-col">
-                  <span class="u-font-medium cell-amount">{{ repair.paid | cop }}</span>
+                  <span class="u-flex u-items-center u-gap-2">
+                    <span class="u-font-medium cell-amount">{{ repair.paid | cop }}</span>
+                    @if (lastMethod(repair); as method) {
+                      <span [class]="'badge badge--sm badge--pago-' + method" title="Último método de pago">{{ paymentLabel(method) }}</span>
+                    }
+                  </span>
                   <span class="u-text-xs u-text-faint">de {{ repair.cost | cop }}</span>
                   <div class="progress-bar">
-                    <div class="progress-bar__fill" [class.is-complete]="paidPercent(repair) >= 100" [style.width.%]="paidPercent(repair)"></div>
+                    <div class="progress-bar__fill" [class.is-complete]="paidPercent(repair) >= 100" [class.is-debt]="hasDebt(repair)" [style.width.%]="paidPercent(repair)"></div>
                   </div>
+                  @if (hasDebt(repair)) {
+                    <span class="debt-chip" title="Se entregó sin completar el pago">Debe {{ repair.balance | cop }}</span>
+                  } @else if (repair.balance > 0) {
+                    <span class="u-text-xs balance-text">Saldo {{ repair.balance | cop }}</span>
+                  }
                 </div>
               </td>
-              <td class="text-right">
+              <td class="cell-actions text-right">
                 <div class="row-actions">
+                  @if (repair.balance > 0) {
+                    <button class="btn btn--icon btn--ghost btn-pay" [class.is-debt]="hasDebt(repair)" title="Registrar pago" type="button" (click)="openPayment(repair)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </button>
+                  }
                   <button class="btn btn--icon btn--ghost" title="Editar" type="button" (click)="openEditRepair(repair)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
                   </button>
@@ -144,7 +160,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="empty-row">
+              <td colspan="6" class="empty-row">
                 {{ loading() ? 'Cargando arreglos...' : 'No se encontraron arreglos con los filtros actuales.' }}
               </td>
             </tr>
@@ -155,6 +171,200 @@
   </div>
 
 </div>
+
+<!-- ============ PANEL LATERAL: detalle del arreglo ============ -->
+@if (detailRepair(); as repair) {
+  <div class="drawer-backdrop" (click)="closeDetail()"></div>
+  <aside class="drawer" role="dialog" [attr.aria-label]="'Detalle del arreglo ' + repair.code">
+    <header class="drawer__header">
+      <div>
+        <p class="drawer__code">{{ repair.code }}</p>
+        <div class="u-flex u-items-center u-gap-2 u-mt-1">
+          <app-status-badge [status]="repair.status" />
+          @if (deliveryAlert(repair); as alert) {
+            <span [class]="'alert-chip alert-chip--' + alert.kind + ' u-mt-0'">{{ alert.label }}</span>
+          }
+        </div>
+      </div>
+      <button class="modal__close" type="button" aria-label="Cerrar" (click)="closeDetail()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
+
+    <div class="drawer__body">
+      <!-- Cliente -->
+      <section class="drawer-section">
+        <h4 class="drawer-section__title">Cliente</h4>
+        <a class="client-card" [routerLink]="['/clientes', repair.clientId]" title="Ver detalle del cliente">
+          <span class="client-card__avatar">{{ repair.clientName.charAt(0).toUpperCase() }}</span>
+          <span class="u-flex-1">
+            <span class="client-card__name">{{ repair.clientName }}</span>
+            <span class="client-card__meta">
+              @if (repair.clientCedula) { C.C. {{ repair.clientCedula }} }
+              @if (repair.clientPhone) { · {{ repair.clientPhone }} }
+            </span>
+            @if (detailClient()?.email; as email) {
+              <span class="client-card__meta">{{ email }}</span>
+            }
+          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </section>
+
+      <!-- Descripción -->
+      <section class="drawer-section">
+        <h4 class="drawer-section__title">Descripción</h4>
+        <p class="drawer-description">{{ repair.description || 'Sin descripción.' }}</p>
+      </section>
+
+      <!-- Fechas -->
+      <section class="drawer-section">
+        <h4 class="drawer-section__title">Fechas</h4>
+        <div class="drawer-dates">
+          <div>
+            <span>Recibido</span>
+            <strong>{{ fromDateKey(repair.receivedDate) | date: 'EEE d MMM, y' }}</strong>
+            @if (repair.receivedTime) { <small>{{ repair.receivedTime | time12 }}</small> }
+          </div>
+          <div>
+            <span>Entrega</span>
+            @if (repair.deliveryDate) {
+              <strong>{{ fromDateKey(repair.deliveryDate) | date: 'EEE d MMM, y' }}</strong>
+              @if (repair.deliveryTime) { <small>{{ repair.deliveryTime | time12 }}</small> }
+            } @else {
+              <strong class="u-text-faint">Sin fecha</strong>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Pagos -->
+      <section class="drawer-section">
+        <h4 class="drawer-section__title">Pagos</h4>
+        <div class="payment-summary">
+          <div><span>Costo total</span><strong>{{ repair.cost | cop }}</strong></div>
+          <div><span>Pagado</span><strong>{{ repair.paid | cop }}</strong></div>
+          <div [class.is-balance]="repair.balance > 0" [class.is-paid]="repair.balance <= 0">
+            <span>{{ repair.balance > 0 ? (hasDebt(repair) ? 'Debe' : 'Saldo') : 'Estado' }}</span>
+            <strong>{{ repair.balance > 0 ? (repair.balance | cop) : 'Pagado' }}</strong>
+          </div>
+        </div>
+        <div class="progress-bar u-mt-3">
+          <div class="progress-bar__fill" [class.is-complete]="paidPercent(repair) >= 100" [class.is-debt]="hasDebt(repair)" [style.width.%]="paidPercent(repair)"></div>
+        </div>
+
+        <ul class="payment-history">
+          @for (payment of detailPayments(); track payment.id) {
+            <li>
+              <span class="payment-history__date">{{ fromDateKey(payment.date) | date: 'd MMM y' }}</span>
+              <span [class]="'badge badge--sm badge--pago-' + payment.method">{{ payment.methodLabel }}</span>
+              <strong>{{ payment.amount | cop }}</strong>
+            </li>
+          } @empty {
+            <li class="payment-history__empty">Aún no hay pagos registrados.</li>
+          }
+        </ul>
+      </section>
+    </div>
+
+    <footer class="drawer__footer">
+      @if (repair.balance > 0) {
+        <button type="button" class="btn btn--primary u-flex-1" (click)="openPayment(repair)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Registrar pago
+        </button>
+      }
+      <button type="button" class="btn btn--outline btn--outline-thin u-flex-1" (click)="openEditRepair(repair)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+        Editar
+      </button>
+    </footer>
+  </aside>
+}
+
+<!-- ============ MENÚ: cambio rápido de estado ============ -->
+@if (statusMenu(); as menu) {
+  <div class="status-menu" role="menu" [style.top.px]="menu.top" [style.left.px]="menu.left" (click)="$event.stopPropagation()">
+    <p class="status-menu__title">Cambiar estado de {{ menu.repair.code }}</p>
+    @for (status of statuses; track status) {
+      <button
+        type="button"
+        role="menuitem"
+        class="status-menu__item"
+        [class.is-current]="status === menu.repair.status"
+        (click)="changeStatus(menu.repair, status)"
+      >
+        <span [class]="'status-dot status-dot--' + status.replace('_', '-')"></span>
+        {{ statusLabels[status] }}
+        @if (status === menu.repair.status) {
+          <svg class="status-menu__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        } @else if (status === 'listo') {
+          <span class="status-menu__hint">avisa por correo</span>
+        }
+      </button>
+    }
+  </div>
+}
+
+<!-- ============ MODAL: Registrar Pago ============ -->
+@if (paymentRepair(); as repair) {
+  <div class="modal-overlay" (click)="closePayment()">
+    <div class="modal payment-modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <div>
+          <h3 class="modal__title">Registrar Pago</h3>
+          <p class="u-text-sm u-text-muted">{{ repair.code }} · {{ repair.clientName }}</p>
+        </div>
+        <button class="modal__close" type="button" aria-label="Cerrar" (click)="closePayment()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form class="modal__body u-stack-4" (ngSubmit)="submitPayment()">
+        @if (hasDebt(repair)) {
+          <div class="debt-notice">Este arreglo ya fue entregado y aún tiene saldo pendiente.</div>
+        }
+
+        <div class="payment-summary">
+          <div><span>Costo total</span><strong>{{ repair.cost | cop }}</strong></div>
+          <div><span>Pagado</span><strong>{{ repair.paid | cop }}</strong></div>
+          <div class="is-balance"><span>Saldo pendiente</span><strong>{{ repair.balance | cop }}</strong></div>
+        </div>
+
+        <div class="field">
+          <label for="payment-amount">Monto a pagar</label>
+          <div class="u-flex u-gap-2">
+            <div class="input-icon u-flex-1">
+              <span class="icon payment-currency">$</span>
+              <input
+                id="payment-amount"
+                name="amount"
+                type="text"
+                inputmode="numeric"
+                class="input input--thick"
+                placeholder="0"
+                autocomplete="off"
+                [value]="paymentAmount()"
+                (input)="onPaymentAmountInput($any($event.target).value)"
+              />
+            </div>
+            <button type="button" class="btn btn--outline btn--outline-thin" (click)="payFullBalance(repair)">Pagar todo</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Método de pago</label>
+          <app-payment-method-selector [(value)]="paymentMethod" />
+        </div>
+
+        <div class="modal__footer">
+          <button type="button" class="btn btn--ghost" (click)="closePayment()">Cancelar</button>
+          <button type="submit" class="btn btn--primary" [disabled]="savingPayment()">{{ savingPayment() ? 'Registrando...' : 'Registrar Pago' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
 
 <!-- ============ MODAL: Nuevo / Editar Arreglo ============ -->
 @if (repairModalOpen()) {
@@ -224,16 +434,19 @@
             </div>
           </div>
 
-          <div class="u-col-span-2 form-row form-row--3">
-            <div class="field">
-              <label for="repair-status">Estado</label>
-              <select id="repair-status" name="status" class="select" [(ngModel)]="form.status">
-                <option value="pendiente">Pendiente</option>
-                <option value="en_proceso">En Proceso</option>
-                <option value="listo">Listo</option>
-                <option value="entregado">Entregado</option>
-              </select>
-            </div>
+          <!-- Al crear, el arreglo siempre empieza "Pendiente"; el estado solo se elige al editar. -->
+          <div class="u-col-span-2 form-row" [class.form-row--3]="editing()" [class.form-row--2]="!editing()">
+            @if (editing()) {
+              <div class="field">
+                <label for="repair-status">Estado</label>
+                <select id="repair-status" name="status" class="select" [(ngModel)]="form.status">
+                  <option value="pendiente">Pendiente</option>
+                  <option value="en_proceso">En Taller</option>
+                  <option value="listo">Listo</option>
+                  <option value="entregado">Entregado</option>
+                </select>
+              </div>
+            }
             <div class="field">
               <label for="repair-received-date">Fecha de Recepción</label>
               <input type="date" id="repair-received-date" name="receivedDate" class="input" required [(ngModel)]="form.receivedDate" #receivedDateCtrl="ngModel" />
