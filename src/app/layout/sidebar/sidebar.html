@@ -1,18 +1,12 @@
 <aside
   class="sidebar"
-  [class.is-collapsed]="layout.sidebarCollapsed()"
+  [class.is-expanded]="expanded()"
   [class.is-mobile-open]="layout.mobileSidebarOpen()"
+  (mouseenter)="expanded.set(true)"
+  (mouseleave)="expanded.set(false)"
+  (focusin)="expanded.set(true)"
+  (focusout)="onFocusOut($event)"
 >
-  <button
-    class="sidebar__toggle"
-    type="button"
-    [title]="layout.sidebarCollapsed() ? 'Expandir menú' : 'Contraer menú'"
-    [attr.aria-label]="layout.sidebarCollapsed() ? 'Expandir menú' : 'Contraer menú'"
-    (click)="layout.toggleCollapsed()"
-  >
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-  </button>
-
   <div class="sidebar__brand">
     <img src="assets/logo-interfajas.svg" alt="Interfajas" />
     <svg class="icon-scissors" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>

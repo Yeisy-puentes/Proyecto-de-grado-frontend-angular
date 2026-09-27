@@ -70,6 +70,9 @@ export class LineChart {
   readonly color = input('#2563eb');
   /** Nombre de la serie en el tooltip ("Ingresos : $400.000"). */
   readonly seriesName = input('Ingresos');
+  /** 'money' para valores en pesos; 'count' para cantidades (eje Y con enteros). */
+  readonly valueType = input<'money' | 'count'>('money');
+  readonly emptyText = input('Sin datos para el período.');
 
   protected readonly gradientId = nextChartId();
   protected readonly viewBox = `0 0 ${WIDTH} ${HEIGHT}`;
@@ -83,12 +86,16 @@ export class LineChart {
   protected readonly hasData = computed(() => this.points().some((p) => p.value > 0));
 
   /** Máximo del eje Y: 4 saltos "redondos" (p. ej. 0, 10k, 20k, 30k, 40k). */
-  private readonly max = computed(() => niceMax(Math.max(0, ...this.points().map((p) => p.value)) / 4) * 4);
+  private readonly max = computed(() => {
+    const top = Math.max(0, ...this.points().map((p) => p.value)) / 4;
+    // En cantidades cada salto debe ser un entero (0, 1, 2, 3, 4...).
+    return niceMax(this.valueType() === 'count' ? Math.ceil(top) : top) * 4;
+  });
 
   protected readonly ticks = computed(() =>
     [4, 3, 2, 1, 0].map((i) => {
       const y = BOTTOM - ((BOTTOM - TOP) * i) / 4;
-      return { y, top: this.pctY(y), label: compactMoney((this.max() * i) / 4) };
+      return { y, top: this.pctY(y), label: this.axisLabel((this.max() * i) / 4) };
     }),
   );
 
@@ -140,7 +147,12 @@ export class LineChart {
     return (y / HEIGHT) * 100;
   }
 
-  protected money(value: number): string {
+  protected formatValue(value: number): string {
+    if (this.valueType() === 'count') return String(Math.round(value));
     return `$${Math.round(value).toLocaleString('es-CO')}`;
+  }
+
+  private axisLabel(value: number): string {
+    return this.valueType() === 'count' ? String(+value.toFixed(1)) : compactMoney(value);
   }
 }

@@ -31,9 +31,9 @@
     <span class="active-dot" [style.left.%]="a.left" [style.top.%]="a.top" [style.background]="color()"></span>
     <div class="chart-tooltip" [class.chart-tooltip--flip]="a.flip" [style.left.%]="a.left" [style.top.%]="a.top">
       <p class="chart-tooltip__label">{{ a.label }}</p>
-      <p class="chart-tooltip__value" [style.color]="color()">{{ seriesName() }} : {{ money(a.value) }}</p>
+      <p class="chart-tooltip__value" [style.color]="color()">{{ seriesName() }} : {{ formatValue(a.value) }}</p>
     </div>
   }
 } @else {
-  <p class="chart-empty">Sin datos para el período.</p>
+  <p class="chart-empty">{{ emptyText() }}</p>
 }
