@@ -5,6 +5,7 @@
 .status-label {
   font-weight: var(--font-weight-medium);
   color: var(--color-slate-600);
+  transition: color var(--transition-fast);
 }
 
 .status-count {
@@ -14,6 +15,56 @@
   padding: 0.25rem 0.75rem;
   border-radius: 0.5rem;
   border: 1px solid var(--color-slate-100);
+}
+
+/* ---- Lista de estados (hover = cambia la gráfica) ---- */
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.625rem;
+  margin: 0 -0.625rem;
+  width: calc(100% + 1.25rem);
+  border-radius: 0.625rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+.status-row:hover,
+.status-row.is-active { background-color: var(--color-slate-50); }
+.status-row.is-active .status-label { color: var(--color-slate-800); font-weight: var(--font-weight-semibold, 600); }
+.status-row.is-active .status-count { background: var(--color-white); border-color: var(--color-slate-200, #e2e8f0); }
+.status-row.is-active .status-dot { box-shadow: 0 0 0 4px rgb(148 163 184 / 0.2); }
+
+/* ---- Encabezado de la gráfica principal ---- */
+.trend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+.trend-status { transition: color var(--transition-slow); }
+.trend-subtitle {
+  margin-top: 0.125rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-slate-500);
+}
+.trend-total {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-800);
+  white-space: nowrap;
+}
+.trend-total span {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-slate-500);
 }
 
 .upcoming-title { color: var(--color-slate-500); }

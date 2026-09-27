@@ -52,26 +52,50 @@
   <!-- Chart + status -->
   <div class="u-grid u-grid-cols-1 lg:u-grid-cols-3 u-gap-6">
 
-    <!-- Main chart -->
+    <!-- Main chart: evolución del estado seleccionado en "Estado de Arreglos" -->
+    @let chart = statusChart();
     <div class="card card-pad u-col-span-2">
-      <h3 class="u-text-lg u-font-bold u-text-dark u-mb-4">Tendencia de Ingresos</h3>
+      <div class="trend-header u-mb-4">
+        <div>
+          <h3 class="u-text-lg u-font-bold u-text-dark">
+            Arreglos <span class="trend-status" [style.color]="chart.color">{{ chart.label }}</span>
+          </h3>
+          <p class="trend-subtitle">Últimos 6 meses · {{ chart.basis }}</p>
+        </div>
+        <p class="trend-total">{{ chart.total }} <span>arreglos</span></p>
+      </div>
       <div class="chart-box">
-        <app-line-chart [points]="revenueTrend()" />
+        <app-line-chart
+          [points]="chart.points"
+          [color]="chart.color"
+          [seriesName]="chart.label"
+          valueType="count"
+          [emptyText]="'No hay arreglos en estado ' + chart.label.toLowerCase() + ' en los últimos 6 meses.'"
+        />
       </div>
     </div>
 
     <!-- Status breakdown -->
     <div class="card card-pad">
       <h3 class="u-text-lg u-font-bold u-text-dark u-mb-4">Estado de Arreglos</h3>
-      <div class="u-stack-4">
+      <div class="status-list" role="tablist" aria-label="Estados de arreglos">
         @for (item of statusSummary(); track item.status) {
-          <div class="u-flex u-justify-between u-items-center">
-            <div class="u-flex u-items-center u-gap-3">
+          <button
+            type="button"
+            role="tab"
+            class="status-row"
+            [class.is-active]="activeStatus() === item.status"
+            [attr.aria-selected]="activeStatus() === item.status"
+            (mouseenter)="activeStatus.set(item.status)"
+            (focus)="activeStatus.set(item.status)"
+            (click)="activeStatus.set(item.status)"
+          >
+            <span class="u-flex u-items-center u-gap-3">
               <span [class]="'status-dot status-dot--lg status-dot--' + statusClass(item.status)"></span>
               <span class="status-label">{{ item.label }}</span>
-            </div>
+            </span>
             <span class="status-count">{{ item.count }}</span>
-          </div>
+          </button>
         }
       </div>
 
