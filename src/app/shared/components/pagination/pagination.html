@@ -1,9 +1,5 @@
 @if (total() > 0) {
   <nav class="pagination" aria-label="Paginación">
-    <p class="pagination__info">
-      Mostrando <strong>{{ from() }}–{{ to() }}</strong> de <strong>{{ total() }}</strong>
-    </p>
-
     @if (totalPages() > 1) {
       <div class="pagination__bar">
         <button type="button" class="pagination__btn" title="Primera página" aria-label="Primera página" [disabled]="isFirst()" (click)="goTo(1)">←</button>
@@ -23,5 +19,9 @@
         <button type="button" class="pagination__btn" title="Última página" aria-label="Última página" [disabled]="isLast()" (click)="goTo(totalPages())">→</button>
       </div>
     }
+
+    <p class="pagination__info">
+      Mostrando <strong>{{ from() }}–{{ to() }}</strong> de <strong>{{ total() }}</strong>
+    </p>
   </nav>
 }

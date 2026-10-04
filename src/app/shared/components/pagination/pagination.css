@@ -1,15 +1,16 @@
 :host { display: block; }
 
+/* Barra centrada y, justo debajo, el texto "Mostrando X–Y de Z" también centrado */
 .pagination {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .pagination__info {
   margin: 0;
+  text-align: center;
   font-size: var(--font-size-sm);
   color: var(--color-slate-500);
 }
@@ -70,13 +71,8 @@
   cursor: not-allowed;
 }
 
-/* Celular: centrado y más compacto */
+/* Celular: más compacto */
 @media (max-width: 767px) {
-  .pagination {
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
   .pagination__info { font-size: var(--font-size-xs); }
 
   .pagination__btn {
