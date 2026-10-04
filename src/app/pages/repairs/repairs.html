@@ -64,7 +64,7 @@
             <th class="text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody #rowsBody>
           @for (repair of pagedRepairs(); track repair.id) {
             @let alert = deliveryAlert(repair);
             @if (pageOffset() + $index === firstDeliveredIndex()) {
@@ -170,7 +170,7 @@
     </div>
   </div>
 
-  <app-pagination [total]="filteredRepairs().length" [(page)]="page" />
+  <app-pagination [total]="filteredRepairs().length" [pageSize]="pageSize()" [(page)]="page" />
 
 </div>
 

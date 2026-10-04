@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, linkedSignal, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, computed, inject, linkedSignal, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
@@ -22,7 +22,8 @@ import { apiErrorMessage } from '../../core/utils/http-error';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { FieldError } from '../../shared/forms/field-error/field-error';
 import { FormValidation } from '../../shared/forms/form-validation.directive';
-import { PAGE_SIZE, Pagination, clampPage, paginate } from '../../shared/components/pagination/pagination';
+import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
+import { Pagination, clampPage, paginate } from '../../shared/components/pagination/pagination';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
@@ -170,10 +171,24 @@ export class Repairs implements OnInit, OnDestroy {
     computation: () => 1,
   });
 
-  protected readonly pagedRepairs = computed(() => paginate(this.filteredRepairs(), this.page()));
+  private readonly rowsBody = viewChild<ElementRef<HTMLElement>>('rowsBody');
+
+  /** Filas que caben en pantalla sin desplazamiento (10 fijas en celular). */
+  protected readonly pageSize = autoPageSize({
+    items: this.filteredRepairs,
+    page: this.page,
+    list: this.rowsBody,
+    itemSelector: 'tr.repair-row',
+    reservedSelector: 'tr.group-row',
+    needsReserved: () => this.firstDeliveredIndex() >= 0,
+  });
+
+  protected readonly pagedRepairs = computed(() => paginate(this.filteredRepairs(), this.page(), this.pageSize()));
 
   /** Posición en la lista filtrada del primer arreglo de la página actual. */
-  protected readonly pageOffset = computed(() => (clampPage(this.page(), this.filteredRepairs().length) - 1) * PAGE_SIZE);
+  protected readonly pageOffset = computed(
+    () => (clampPage(this.page(), this.filteredRepairs().length, this.pageSize()) - 1) * this.pageSize(),
+  );
 
   /** Índice del primer entregado en "Todos", para mostrar el separador "Entregados". */
   protected readonly firstDeliveredIndex = computed(() =>
