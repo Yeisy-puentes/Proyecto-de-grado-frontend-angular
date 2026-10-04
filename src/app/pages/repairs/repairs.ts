@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, linkedSignal, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
@@ -22,6 +22,7 @@ import { apiErrorMessage } from '../../core/utils/http-error';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { FieldError } from '../../shared/forms/field-error/field-error';
 import { FormValidation } from '../../shared/forms/form-validation.directive';
+import { PAGE_SIZE, Pagination, clampPage, paginate } from '../../shared/components/pagination/pagination';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
@@ -91,7 +92,7 @@ function emptyForm(): RepairForm {
 
 @Component({
   selector: 'app-repairs',
-  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation],
+  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation, Pagination],
   templateUrl: './repairs.html',
   styleUrl: './repairs.css',
   host: {
@@ -161,6 +162,18 @@ export class Repairs implements OnInit, OnDestroy {
       .sort((a, b) => (b.deliveryDate ?? b.receivedDate).localeCompare(a.deliveryDate ?? a.receivedDate) || b.id - a.id);
     return [...active, ...delivered];
   });
+
+  // ---------- Paginación ----------
+  /** Vuelve a la página 1 cada vez que cambia la búsqueda (texto o fecha) o el filtro por estado. */
+  protected readonly page = linkedSignal({
+    source: () => [this.search(), this.statusFilter()],
+    computation: () => 1,
+  });
+
+  protected readonly pagedRepairs = computed(() => paginate(this.filteredRepairs(), this.page()));
+
+  /** Posición en la lista filtrada del primer arreglo de la página actual. */
+  protected readonly pageOffset = computed(() => (clampPage(this.page(), this.filteredRepairs().length) - 1) * PAGE_SIZE);
 
   /** Índice del primer entregado en "Todos", para mostrar el separador "Entregados". */
   protected readonly firstDeliveredIndex = computed(() =>
