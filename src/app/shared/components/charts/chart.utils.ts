@@ -19,3 +19,12 @@ let chartId = 0;
 export function nextChartId(): string {
   return `chart-${++chartId}`;
 }
+
+/** Formato corto en pesos con coma decimal: 2100000 -> "$2,1M", 150000 -> "$150k", 0 -> "$0". */
+export function shortMoney(value: number): string {
+  const fmt = (n: number, decimals: number) => n.toLocaleString('es-CO', { maximumFractionDigits: decimals });
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `$${fmt(value / 1_000_000, 1)}M`;
+  if (abs >= 1_000) return `$${fmt(value / 1_000, 0)}k`;
+  return `$${fmt(value, 0)}`;
+}

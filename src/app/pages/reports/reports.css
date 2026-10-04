@@ -6,17 +6,30 @@
 
 .report-tabs { padding: 0.5rem 1rem; }
 
-.chart-card { padding: 1.25rem; }
+.chart-card { padding: var(--space-5); }
 .chart-card__icon { color: var(--color-brand-blue); }
 .chart-box--center { display: flex; align-items: center; justify-content: center; }
+/* Alto de las gráficas de barras (incluye la leyenda) */
+.bar-chart-box { height: 18rem; }
 
-.table-title { padding: 1.25rem; }
+.table-title { padding: var(--space-5); }
 
+/* Recuadros por estado: mismo espacio entre tarjetas que los totales (KPI) */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: var(--space-4);
 }
+@media (max-width: 639px) {
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Tablas de informes: ancho mínimo para que en celular se desplacen
+   horizontalmente (dentro de .table-scroll) en lugar de apretar las columnas. */
+.report-table { min-width: 42rem; }
+.report-table th,
+.report-table td { white-space: nowrap; }
+.report-table .cell-desc { max-width: 16rem; }
 
 .cell-ref { font-family: monospace; color: var(--color-slate-600); }
 .cell-muted { color: var(--color-slate-500); }
