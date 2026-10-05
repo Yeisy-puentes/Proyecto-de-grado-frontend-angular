@@ -25,8 +25,8 @@
   </div>
 
   <!-- Grid de clientes -->
-  <div class="u-grid u-grid-cols-1 md:u-grid-cols-2 lg:u-grid-cols-3 u-gap-6">
-    @for (client of filteredClients(); track client.id) {
+  <div #cardsGrid class="u-grid u-grid-cols-1 md:u-grid-cols-2 lg:u-grid-cols-3 u-gap-6">
+    @for (client of pagedClients(); track client.id) {
       <div class="card card-pad card-hover">
         <div class="u-flex u-items-center u-gap-4 u-mb-4">
           <div class="client-avatar">{{ client.name.charAt(0) }}</div>
@@ -66,6 +66,8 @@
       <p class="empty-state u-col-span-3">{{ loading() ? 'Cargando clientes...' : 'No se encontraron clientes.' }}</p>
     }
   </div>
+
+  <app-pagination [total]="filteredClients().length" [pageSize]="pageSize()" [(page)]="page" />
 </div>
 
 <!-- ============ MODAL: Editar Cliente ============ -->

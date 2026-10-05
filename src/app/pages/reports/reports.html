@@ -137,26 +137,22 @@
             <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Ingresos vs Pendiente por mes
           </h3>
-          <div class="chart-box chart-box--260">
-            <app-bar-chart [labels]="incomeChart().labels" [series]="incomeChart().series" [format]="formatMoney" />
-          </div>
-          <div class="chart-legend-row">
-            <span class="chart-legend-row__item"><span class="chart-legend-row__swatch" style="background:#2563eb"></span>Cobrado</span>
-            <span class="chart-legend-row__item"><span class="chart-legend-row__swatch" style="background:#f97316"></span>Pendiente</span>
+          <div class="chart-box bar-chart-box">
+            <app-bar-chart [labels]="incomeChart().labels" [series]="incomeChart().series" [format]="formatMoney" valueType="money" />
           </div>
         </div>
 
         <div class="table-wrap">
           <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Detalle de arreglos — ingresos</h3></div>
           <div class="table-scroll">
-            <table class="data-table">
+            <table class="data-table report-table">
               <thead><tr><th>Referencia</th><th>Cliente</th><th>Fecha</th><th class="text-right">Costo</th><th class="text-right">Cobrado</th><th class="text-right">Pendiente</th></tr></thead>
               <tbody>
-                @for (row of ingresos()?.detalle ?? []; track row.id_arreglo) {
+                @for (row of pagedIncomeRows(); track row.id_arreglo) {
                   <tr>
                     <td class="u-text-xs cell-ref">{{ repairCode(row.id_arreglo) }}</td>
                     <td class="u-font-medium">{{ row.nombre_completo }}</td>
-                    <td class="cell-muted">{{ day(row.fecha_ingreso) | date: 'dd/MM/y' }}</td>
+                    <td class="cell-muted">{{ day(row.fecha_ingreso) | date: 'dd/MM/yy' }}</td>
                     <td class="text-right">{{ num(row.valor) | cop }}</td>
                     <td class="text-right u-text-green u-font-medium">{{ num(row.pagado) | cop }}</td>
                     <td class="text-right u-font-medium" [class.u-text-orange]="num(row.pendiente) > 0" [class.cell-zero]="num(row.pendiente) === 0">{{ num(row.pendiente) | cop }}</td>
@@ -167,7 +163,7 @@
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="3" class="cell-total-label">Total</td>
+                  <td colspan="3" class="cell-total-label">Total del período</td>
                   <td class="text-right">{{ num(ingresos()?.totales?.valor) | cop }}</td>
                   <td class="text-right u-text-green">{{ num(ingresos()?.totales?.pagado) | cop }}</td>
                   <td class="text-right u-text-orange">{{ num(ingresos()?.totales?.pendiente) | cop }}</td>
@@ -176,6 +172,7 @@
             </table>
           </div>
         </div>
+        <app-pagination [total]="incomeRows().length" [pageSize]="reportPageSize" [(page)]="incomePage" />
       </div>
     }
 
@@ -191,18 +188,21 @@
           }
         </div>
         <div class="card chart-card">
-          <h3 class="u-font-semibold u-text-dark u-mb-4">Arreglos por mes</h3>
-          <div class="chart-box chart-box--240">
+          <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
+            <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Arreglos por mes
+          </h3>
+          <div class="chart-box bar-chart-box">
             <app-bar-chart [labels]="repairsChart().labels" [series]="repairsChart().series" />
           </div>
         </div>
         <div class="table-wrap">
           <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Listado de arreglos en el período</h3></div>
           <div class="table-scroll">
-            <table class="data-table">
+            <table class="data-table report-table">
               <thead><tr><th>Referencia</th><th>Cliente</th><th>Descripción</th><th>Estado</th><th>Recibido</th><th>Entrega</th></tr></thead>
               <tbody>
-                @for (row of arreglos()?.listado ?? []; track row.id_arreglo) {
+                @for (row of pagedRepairRows(); track row.id_arreglo) {
                   <tr>
                     <td class="u-text-xs cell-ref">{{ repairCode(row.id_arreglo) }}</td>
                     <td class="u-font-medium">{{ row.nombre_completo }}</td>
@@ -214,8 +214,8 @@
                         [style.background]="statusColors[statusKey(row.nombre_estado)] + '20'"
                       >{{ statusLabels[statusKey(row.nombre_estado)] }}</span>
                     </td>
-                    <td class="cell-muted">{{ day(row.fecha_ingreso) | date: 'dd/MM/y' }}</td>
-                    <td class="cell-muted">{{ row.fecha_entrega ? (day(row.fecha_entrega) | date: 'dd/MM/y') : '—' }}</td>
+                    <td class="cell-muted">{{ day(row.fecha_ingreso) | date: 'dd/MM/yy' }}</td>
+                    <td class="cell-muted">{{ row.fecha_entrega ? (day(row.fecha_entrega) | date: 'dd/MM/yy') : '—' }}</td>
                   </tr>
                 } @empty {
                   <tr><td colspan="6" class="cell-zero">Sin arreglos en el período.</td></tr>
@@ -224,6 +224,7 @@
             </table>
           </div>
         </div>
+        <app-pagination [total]="repairRows().length" [pageSize]="reportPageSize" [(page)]="repairsPage" />
       </div>
     }
 
@@ -242,7 +243,7 @@
         <div class="table-wrap">
           <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Resumen por cliente</h3></div>
           <div class="table-scroll">
-            <table class="data-table">
+            <table class="data-table report-table">
               <thead><tr><th>Cliente</th><th class="text-right">Arreglos</th><th class="text-right">Total facturado</th><th class="text-right">Total cobrado</th><th class="text-right">Saldo</th></tr></thead>
               <tbody>
                 @for (row of clientes()?.resumenPorCliente ?? []; track row.id_cliente) {
@@ -263,7 +264,7 @@
         <div class="table-wrap">
           <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Todos los clientes registrados</h3></div>
           <div class="table-scroll">
-            <table class="data-table">
+            <table class="data-table report-table">
               <thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Email</th></tr></thead>
               <tbody>
                 @for (client of clientes()?.todosClientes ?? []; track client.id_cliente) {

@@ -1,122 +1,143 @@
-<div class="u-container u-stack-6">
+<div class="u-container u-stack-6 dash">
 
-  <!-- KPI cards -->
-  <div class="u-grid u-grid-cols-1 md:u-grid-cols-2 lg:u-grid-cols-4 u-gap-6">
+  <!-- Tarjetas: al hacer clic cambian la lista de la tarjeta principal -->
+  @let g = groups();
+  <div class="u-grid u-grid-cols-1 lg:u-grid-cols-3 u-gap-6 stat-grid">
 
-    <div class="stat-card">
-      <div class="stat-card__top">
-        <div class="stat-card__icon stat-card__icon--blue">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        </div>
-        
-      </div>
-      <h3 class="stat-card__title">Arreglos Activos</h3>
-      <p class="stat-card__value">{{ activeRepairs() }}</p>
-    </div>
-
-    <div class="stat-card">
+    <button type="button" class="stat-card stat-card--button" [class.is-active]="activeGroup() === 'hoy'" (click)="selectGroup('hoy')">
       <div class="stat-card__top">
         <div class="stat-card__icon stat-card__icon--orange">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <span class="stat-card__trend">Prioridad</span>
       </div>
-      <h3 class="stat-card__title">Entregas Hoy</h3>
-      <p class="stat-card__value">{{ deliveriesToday() }}</p>
-    </div>
+      <h3 class="stat-card__title">Pendientes Hoy</h3>
+      <p class="stat-card__value">{{ g.hoy.length }}</p>
+    </button>
 
-    <div class="stat-card">
+    <button type="button" class="stat-card stat-card--button" [class.is-active]="activeGroup() === 'manana'" (click)="selectGroup('manana')">
+      <div class="stat-card__top">
+        <div class="stat-card__icon stat-card__icon--blue">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <span class="stat-card__trend">Preparar</span>
+      </div>
+      <h3 class="stat-card__title">Pendientes Mañana</h3>
+      <p class="stat-card__value">{{ g.manana.length }}</p>
+    </button>
+
+    <button type="button" class="stat-card stat-card--button" [class.is-active]="activeGroup() === 'listos'" (click)="selectGroup('listos')">
       <div class="stat-card__top">
         <div class="stat-card__icon stat-card__icon--green">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
-        
+        <span class="stat-card__trend">Avisar</span>
       </div>
-      <h3 class="stat-card__title">Ingresos Totales</h3>
-      <p class="stat-card__value">{{ totalRevenue() | cop }}</p>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-card__top">
-        <div class="stat-card__icon stat-card__icon--purple">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        
-      </div>
-      <h3 class="stat-card__title">Clientes Registrados</h3>
-      <p class="stat-card__value">{{ totalClients() }}</p>
-    </div>
+      <h3 class="stat-card__title">Listos para Recoger</h3>
+      <p class="stat-card__value">{{ g.listos.length }}</p>
+    </button>
 
   </div>
 
-  <!-- Chart + status -->
-  <div class="u-grid u-grid-cols-1 lg:u-grid-cols-3 u-gap-6">
+  <!-- Lista principal + próximas entregas -->
+  <div class="u-grid u-grid-cols-1 lg:u-grid-cols-3 u-gap-6 dash-main">
 
-    <!-- Main chart: evolución del estado seleccionado en "Estado de Arreglos" -->
-    @let chart = statusChart();
-    <div class="card card-pad u-col-span-2">
+    @let list = activeList();
+    <div class="card card-pad u-col-span-2 list-card">
       <div class="trend-header u-mb-4">
         <div>
-          <h3 class="u-text-lg u-font-bold u-text-dark">
-            Arreglos <span class="trend-status" [style.color]="chart.color">{{ chart.label }}</span>
-          </h3>
-          <p class="trend-subtitle">Últimos 6 meses · {{ chart.basis }}</p>
+          <h3 class="u-text-lg u-font-bold u-text-dark">{{ list.title }}</h3>
+          <p class="trend-subtitle today-label">{{ today | date: "EEEE d 'de' MMMM" }}</p>
         </div>
-        <p class="trend-total">{{ chart.total }} <span>arreglos</span></p>
+        <p class="trend-total">{{ list.items.length }} <span>{{ list.items.length === 1 ? 'arreglo' : 'arreglos' }}</span></p>
       </div>
-      <div class="chart-box">
-        <app-line-chart
-          [points]="chart.points"
-          [color]="chart.color"
-          [seriesName]="chart.label"
-          valueType="count"
-          [emptyText]="'No hay arreglos en estado ' + chart.label.toLowerCase() + ' en los últimos 6 meses.'"
-        />
-      </div>
-    </div>
 
-    <!-- Status breakdown -->
-    <div class="card card-pad">
-      <h3 class="u-text-lg u-font-bold u-text-dark u-mb-4">Estado de Arreglos</h3>
-      <div class="status-list" role="tablist" aria-label="Estados de arreglos">
-        @for (item of statusSummary(); track item.status) {
-          <button
-            type="button"
-            role="tab"
-            class="status-row"
-            [class.is-active]="activeStatus() === item.status"
-            [attr.aria-selected]="activeStatus() === item.status"
-            (mouseenter)="activeStatus.set(item.status)"
-            (focus)="activeStatus.set(item.status)"
-            (click)="activeStatus.set(item.status)"
-          >
-            <span class="u-flex u-items-center u-gap-3">
-              <span [class]="'status-dot status-dot--lg status-dot--' + statusClass(item.status)"></span>
-              <span class="status-label">{{ item.label }}</span>
-            </span>
-            <span class="status-count">{{ item.count }}</span>
-          </button>
+      <div class="delivery-list">
+        @for (repair of visibleItems(); track repair.id) {
+          <ng-container *ngTemplateOutlet="row; context: { $implicit: repair, showDate: list.group === 'listos', narrow: false }" />
+        } @empty {
+          <div class="delivery-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <p>{{ loading() ? 'Cargando...' : list.empty }}</p>
+          </div>
         }
       </div>
 
-      <div class="u-pt-6 u-mt-8 u-border-t">
-        <h4 class="u-text-sm u-font-semibold u-uppercase u-mb-3 upcoming-title">Próximas Entregas</h4>
-        <div class="u-stack-3">
-          @for (repair of upcomingDeliveries(); track repair.id) {
-            <div class="u-flex u-justify-between u-items-center u-text-sm">
-              <div class="u-flex u-items-center u-gap-3">
-                <span [class]="'status-dot status-dot--' + statusClass(repair.status)"></span>
-                <span class="u-font-medium upcoming-name">{{ repair.clientName }}</span>
-              </div>
-              <span class="upcoming-date">{{ fromDateKey(repair.deliveryDate!) | date: 'd MMM' }}</span>
-            </div>
-          } @empty {
-            <p class="u-text-sm u-text-faint">No hay entregas pendientes.</p>
-          }
+      @if (compact()) {
+        <app-pagination [total]="list.items.length" [pageSize]="compactPageSize" [(page)]="page" />
+      }
+    </div>
+
+    <!-- Próximas entregas (desde pasado mañana), mismo formato que la lista principal -->
+    <div class="card card-pad list-card">
+      <div class="trend-header u-mb-4">
+        <div>
+          <h3 class="u-text-lg u-font-bold u-text-dark">Próximas entregas</h3>
+          <p class="trend-subtitle">Después de mañana</p>
         </div>
+        <p class="trend-total">{{ upcomingDeliveries().length }}</p>
       </div>
+
+      <div class="delivery-list">
+        @for (repair of visibleUpcoming(); track repair.id) {
+          <ng-container *ngTemplateOutlet="row; context: { $implicit: repair, showDate: true, narrow: true }" />
+        } @empty {
+          <div class="delivery-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <p>{{ loading() ? 'Cargando...' : 'No hay entregas programadas después de mañana.' }}</p>
+          </div>
+        }
+      </div>
+
+      @if (compact()) {
+        <app-pagination [total]="upcomingDeliveries().length" [pageSize]="compactPageSize" [(page)]="upcomingPage" />
+      }
     </div>
 
   </div>
 
 </div>
+
+<!--
+  Fila de un arreglo: recuadro de hora/fecha, cliente y descripción, estado y teléfono.
+  En la tarjeta angosta (narrow) el estado va debajo del nombre, en lugar de la descripción.
+-->
+<ng-template #row let-repair let-showDate="showDate" let-narrow="narrow">
+  <a class="delivery-row" [class.delivery-row--narrow]="narrow" [routerLink]="['/clientes', repair.clientId]">
+    <div class="delivery-when">
+      @if (showDate) {
+        <span class="delivery-when__main">{{ repair.deliveryDate ? (fromDateKey(repair.deliveryDate) | date: 'd MMM') : '—' }}</span>
+        @if (repair.deliveryTime) {
+          <span class="delivery-when__sub">{{ repair.deliveryTime | time12 }}</span>
+        }
+      } @else {
+        <span class="delivery-when__main">{{ repair.deliveryTime ? (repair.deliveryTime | time12) : 'Sin hora' }}</span>
+      }
+    </div>
+    <div class="delivery-info">
+      <p class="delivery-name" [title]="repair.clientName">{{ repair.clientName }}</p>
+      @if (narrow) {
+        <div class="delivery-narrow-meta">
+          <app-status-badge [status]="repair.status" />
+          <span class="delivery-code">{{ repair.code }}</span>
+        </div>
+      } @else {
+        <p class="delivery-desc">
+          <span class="delivery-code">{{ repair.code }}</span>
+          {{ repair.description || 'Sin descripción' }}
+        </p>
+      }
+    </div>
+    @if (!narrow) {
+    <div class="delivery-side">
+      <app-status-badge [status]="repair.status" />
+      @if (repair.clientPhone) {
+        <span class="delivery-phone">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          {{ repair.clientPhone }}
+        </span>
+      }
+    </div>
+    }
+  </a>
+</ng-template>

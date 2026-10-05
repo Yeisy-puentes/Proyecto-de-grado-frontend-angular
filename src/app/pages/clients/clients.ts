@@ -1,14 +1,16 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, inject, linkedSignal, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
 import { ClientService } from '../../core/services/client.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/http-error';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
+import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
+import { Pagination, paginate } from '../../shared/components/pagination/pagination';
 
 @Component({
   selector: 'app-clients',
-  imports: [RouterLink, ClientFormModal],
+  imports: [RouterLink, ClientFormModal, Pagination],
   templateUrl: './clients.html',
   styleUrl: './clients.css',
 })
@@ -42,6 +44,21 @@ export class Clients implements OnInit {
           c.phone.includes(term),
       );
   });
+
+  /** Vuelve a la página 1 cada vez que cambia la búsqueda. */
+  protected readonly page = linkedSignal({ source: this.search, computation: () => 1 });
+
+  private readonly cardsGrid = viewChild<ElementRef<HTMLElement>>('cardsGrid');
+
+  /** Filas de tarjetas que caben en pantalla × columnas del grid (10 fijas en celular). */
+  protected readonly pageSize = autoPageSize({
+    items: this.filteredClients,
+    page: this.page,
+    list: this.cardsGrid,
+    itemSelector: ':scope > .card',
+  });
+
+  protected readonly pagedClients = computed(() => paginate(this.filteredClients(), this.page(), this.pageSize()));
 
   protected async createClient(data: ClientFormData): Promise<void> {
     try {

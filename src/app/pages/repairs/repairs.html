@@ -64,10 +64,10 @@
             <th class="text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody>
-          @for (repair of filteredRepairs(); track repair.id) {
+        <tbody #rowsBody>
+          @for (repair of pagedRepairs(); track repair.id) {
             @let alert = deliveryAlert(repair);
-            @if ($index === firstDeliveredIndex()) {
+            @if (pageOffset() + $index === firstDeliveredIndex()) {
               <tr class="group-row">
                 <td colspan="6">Entregados</td>
               </tr>
@@ -169,6 +169,8 @@
       </table>
     </div>
   </div>
+
+  <app-pagination [total]="filteredRepairs().length" [pageSize]="pageSize()" [(page)]="page" />
 
 </div>
 

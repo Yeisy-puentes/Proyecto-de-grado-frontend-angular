@@ -1,5 +1,5 @@
 import { DatePipe, formatDate } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, linkedSignal, signal } from '@angular/core';
 import {
   ApiConteoEstado,
   ApiReporteArreglos,
@@ -23,9 +23,13 @@ import { apiErrorMessage } from '../../core/utils/http-error';
 import { BarChart, BarSeries } from '../../shared/components/charts/bar-chart/bar-chart';
 import { HBarChart } from '../../shared/components/charts/hbar-chart/hbar-chart';
 import { ChartPoint, LineChart } from '../../shared/components/charts/line-chart/line-chart';
+import { Pagination, paginate } from '../../shared/components/pagination/pagination';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 
 type ReportTab = 'summary' | 'income' | 'repairs' | 'clients';
+
+/** Registros por página en las tablas de informes. */
+const REPORT_PAGE_SIZE = 10;
 type Preset = 'month' | '3months' | 'year';
 
 const TAB_TO_REPORT: Record<ReportTab, ReportType> = {
@@ -47,7 +51,7 @@ function monthLabel(month: string): string {
 
 @Component({
   selector: 'app-reports',
-  imports: [DatePipe, CopCurrencyPipe, LineChart, BarChart, HBarChart],
+  imports: [DatePipe, CopCurrencyPipe, LineChart, BarChart, HBarChart, Pagination],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
@@ -157,6 +161,20 @@ export class Reports implements OnInit {
     return Number(value ?? 0);
   }
 
+  // ---------- Paginación de tablas ----------
+  protected readonly reportPageSize = REPORT_PAGE_SIZE;
+
+  /** Cambia con el rango de fechas o la pestaña: las tablas vuelven a la página 1. */
+  private readonly pageResetKey = computed(() => `${this.dateFrom()}|${this.dateTo()}|${this.activeTab()}`);
+
+  protected readonly incomeRows = computed(() => this.ingresos()?.detalle ?? []);
+  protected readonly incomePage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
+  protected readonly pagedIncomeRows = computed(() => paginate(this.incomeRows(), this.incomePage(), REPORT_PAGE_SIZE));
+
+  protected readonly repairRows = computed(() => this.arreglos()?.listado ?? []);
+  protected readonly repairsPage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
+  protected readonly pagedRepairRows = computed(() => paginate(this.repairRows(), this.repairsPage(), REPORT_PAGE_SIZE));
+
   // ---------- KPIs ----------
   protected readonly totals = computed(() => {
     const t = this.resumen()?.totales;
@@ -193,15 +211,15 @@ export class Reports implements OnInit {
   protected readonly incomeChart = computed(() => {
     const rows = this.ingresos()?.porMes ?? [];
     const series: BarSeries[] = [
-      { name: 'Cobrado', color: '#2563eb', values: rows.map((r) => Number(r.cobrado)) },
-      { name: 'Pendiente', color: '#f97316', values: rows.map((r) => Number(r.pendiente)) },
+      { name: 'Cobrado', color: 'var(--color-brand-blue)', values: rows.map((r) => Number(r.cobrado)) },
+      { name: 'Pendiente', color: 'var(--color-orange-500)', values: rows.map((r) => Number(r.pendiente)) },
     ];
     return { labels: rows.map((r) => monthLabel(r.mes)), series };
   });
 
   protected readonly repairsChart = computed(() => {
     const rows = this.arreglos()?.porMes ?? [];
-    const series: BarSeries[] = [{ name: 'Arreglos', color: '#1e3a8a', values: rows.map((r) => Number(r.total)) }];
+    const series: BarSeries[] = [{ name: 'Arreglos', color: 'var(--color-brand-navy-dark)', values: rows.map((r) => Number(r.total)) }];
     return { labels: rows.map((r) => monthLabel(r.mes)), series };
   });
 

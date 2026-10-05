@@ -1,15 +1,71 @@
-@if (hasData()) {
-  <svg viewBox="0 0 500 240" preserveAspectRatio="none">
-    <line x1="0" [attr.y1]="baseline" x2="500" [attr.y2]="baseline" stroke="#e2e8f0" />
-    @for (group of groups(); track group.label) {
-      @for (bar of group.bars; track $index) {
-        <rect [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height" [attr.fill]="bar.color" rx="3">
-          <title>{{ group.label }} — {{ bar.title }}</title>
-        </rect>
-      }
-      <text [attr.x]="group.center" [attr.y]="baseline + 18" fill="#64748b" font-size="11" text-anchor="middle">{{ group.label }}</text>
+@if (hasData() && showLegend()) {
+  <!-- Leyenda alineada con el inicio del área de dibujo -->
+  <div class="bar-legend" [style.padding-left.px]="pad.left">
+    @for (s of series(); track s.name) {
+      <span class="bar-legend__item"><span class="bar-legend__dot" [style.background]="s.color"></span>{{ s.name }}</span>
     }
-  </svg>
-} @else {
-  <p class="chart-empty">Sin datos para el período.</p>
+  </div>
 }
+
+<div class="plot" #plot>
+  @if (hasData()) {
+    <svg [attr.viewBox]="viewBox()" role="img" aria-label="Gráfica de barras" (mouseleave)="activeIndex.set(null)">
+      <defs>
+        @for (s of series(); track $index) {
+          <linearGradient [attr.id]="gradientId + '-' + $index" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" [style.stop-color]="s.color" />
+            <stop offset="1" [style.stop-color]="s.color" stop-opacity="0.72" />
+          </linearGradient>
+        }
+      </defs>
+
+      <!-- Eje Y y líneas guía punteadas -->
+      @for (tick of ticks(); track $index) {
+        <line class="grid-line" [class.grid-line--base]="$first" [attr.x1]="pad.left" [attr.x2]="plotRight()" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+        <text class="axis-y" [attr.x]="pad.left - 10" [attr.y]="tick.y">{{ tick.label }}</text>
+      }
+
+      <!-- Fondo suave del grupo activo -->
+      @if (activeIndex() !== null) {
+        @let g = groups()[activeIndex()!];
+        @if (g) {
+          <rect class="hover-band" [attr.x]="g.x + 2" [attr.y]="pad.top - 8" [attr.width]="g.width - 4" [attr.height]="baseline() - pad.top + 8" rx="6" />
+        }
+      }
+
+      @for (group of groups(); track group.label; let i = $index) {
+        <g class="bar-group" [class.is-dim]="activeIndex() !== null && activeIndex() !== i">
+          @for (bar of group.bars; track $index) {
+            <path class="bar" [attr.d]="bar.path" [attr.fill]="bar.fill" [style.animation-delay.ms]="i * 40" />
+            @if (bar.showValue) {
+              <text class="bar-value" [attr.x]="bar.center" [attr.y]="bar.y - 6" [style.animation-delay.ms]="300 + i * 40">{{ bar.text }}</text>
+            }
+          }
+        </g>
+        @if (group.showLabel) {
+          <text class="axis-x" [class.is-active]="activeIndex() === i" [attr.x]="group.center" [attr.y]="baseline() + 19">{{ group.label }}</text>
+        }
+      }
+
+      <!-- Zonas invisibles para el hover de cada mes -->
+      @for (group of groups(); track group.label; let i = $index) {
+        <rect class="hit-area" [attr.x]="group.x" [attr.y]="pad.top - 8" [attr.width]="group.width" [attr.height]="baseline() - pad.top + pad.bottom + 8" (mouseenter)="activeIndex.set(i)" />
+      }
+    </svg>
+
+    @if (tooltip(); as t) {
+      <div class="bar-tooltip" [class.bar-tooltip--flip]="t.flip" [style.left.px]="t.left" [style.top.px]="t.top">
+        <p class="bar-tooltip__label">{{ t.label }}</p>
+        @for (row of t.rows; track row.name) {
+          <p class="bar-tooltip__row">
+            <span class="bar-legend__dot" [style.background]="row.color"></span>
+            <span class="bar-tooltip__name">{{ row.name }}</span>
+            <strong>{{ row.value }}</strong>
+          </p>
+        }
+      </div>
+    }
+  } @else {
+    <p class="chart-empty">Sin datos para el período.</p>
+  }
+</div>
