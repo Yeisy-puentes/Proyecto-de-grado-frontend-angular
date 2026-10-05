@@ -122,6 +122,10 @@
   line-height: 1;
 }
 
+/* ---- Vista de semana (estilos en week-view/) ---- */
+/* El rango "4 – 10 de octubre 2026" va en minúsculas (el título del mes usa capitalize). */
+.calendar-nav__title--plain { text-transform: none; }
+
 /* ---- Vista de día ---- */
 .day-view { padding: var(--space-5); }
 .day-view__toolbar {

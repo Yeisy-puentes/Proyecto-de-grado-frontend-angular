@@ -1,0 +1,36 @@
+<div class="week-view">
+  @for (day of days(); track day.key) {
+    <section class="week-col" [class.is-today]="day.isToday">
+      <button type="button" class="week-col__header" [title]="'Ver el día ' + day.day" (click)="dayClick.emit(day.key)">
+        <span class="week-col__weekday">{{ day.weekday }}</span>
+        <span class="week-col__number" [class.is-today]="day.isToday">{{ day.day }}</span>
+      </button>
+      <div class="week-col__body">
+        @for (event of day.events; track $index) {
+          @if (event.kind === 'repair') {
+            <button type="button" class="week-item week-item--repair" (click)="repairClick.emit({ key: day.key, repairId: event.repair.id })">
+              <span class="week-item__top">
+                <span [class]="'status-dot status-dot--sm status-dot--' + statusClass(event.repair.status)" [title]="statusLabels[event.repair.status]"></span>
+                @if (event.repair.deliveryTime) {
+                  <span class="week-item__time">{{ event.repair.deliveryTime | time12 }}</span>
+                }
+                <span class="week-item__ref">{{ event.repair.code }}</span>
+              </span>
+              <span class="week-item__title">{{ event.repair.clientName }}</span>
+            </button>
+          } @else {
+            <button type="button" class="week-item week-item--reminder" [class]="'week-item--' + event.reminder.color" (click)="dayClick.emit(day.key)">
+              <span class="week-item__top">
+                <span class="status-dot status-dot--sm status-dot--recordatorio" title="Recordatorio"></span>
+                <span class="week-item__time">{{ event.reminder.time | time12 }}</span>
+              </span>
+              <span class="week-item__title">{{ event.reminder.title }}</span>
+            </button>
+          }
+        } @empty {
+          <p class="week-col__empty">Sin entregas</p>
+        }
+      </div>
+    </section>
+  }
+</div>
