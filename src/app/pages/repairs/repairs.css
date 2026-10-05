@@ -350,9 +350,19 @@
 
 
 /* ---------------- Celular: la tabla se muestra como tarjetas ---------------- */
+/* Desplegable de estados: solo en celular (en computador se ven los botones) */
+.status-select { display: none; }
+
 @media (max-width: 767px) {
+  /* Título y subtítulo centrados; el botón sigue a todo el ancho debajo */
+  .repairs-header { flex-direction: column; align-items: stretch; }
+  .repairs-header > div { text-align: center; }
   .repairs-header .btn { width: 100%; justify-content: center; }
   .filters-bar .search-box { max-width: none; }
+
+  /* Filtros de estado: el desplegable reemplaza la fila de botones, debajo del buscador */
+  .pill-filters { display: none; }
+  .status-select { display: block; width: 100%; }
 
   .table-wrap:has(.repairs-table) {
     background: none;

@@ -25,6 +25,7 @@ import { FormValidation } from '../../shared/forms/form-validation.directive';
 import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
 import { Pagination, clampPage, paginate } from '../../shared/components/pagination/pagination';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
+import { SelectDropdown, SelectOption } from '../../shared/components/select-dropdown/select-dropdown';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { Time12Pipe } from '../../shared/pipes/time12.pipe';
@@ -93,7 +94,7 @@ function emptyForm(): RepairForm {
 
 @Component({
   selector: 'app-repairs',
-  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation, Pagination],
+  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation, Pagination, SelectDropdown],
   templateUrl: './repairs.html',
   styleUrl: './repairs.css',
   host: {
@@ -209,6 +210,11 @@ export class Repairs implements OnInit, OnDestroy {
       input.click();
     }
   }
+
+  /** Opciones del desplegable de celular: los mismos filtros que los botones, con su cantidad. */
+  protected readonly statusOptions = computed<SelectOption<StatusFilter>[]>(() =>
+    this.pillFilters.map((pill) => ({ ...pill, count: this.countByStatus(pill.value) })),
+  );
 
   protected countByStatus(status: StatusFilter): number {
     return status === 'all'

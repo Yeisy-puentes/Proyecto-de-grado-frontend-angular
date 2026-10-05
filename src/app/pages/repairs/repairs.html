@@ -48,6 +48,9 @@
         </button>
       }
     </div>
+
+    <!-- Celular: los mismos filtros en un desplegable (mismo signal statusFilter) -->
+    <app-select-dropdown class="status-select" ariaLabel="Filtrar por estado" [options]="statusOptions()" [(value)]="statusFilter" />
   </div>
 
   <!-- Tabla de arreglos -->
