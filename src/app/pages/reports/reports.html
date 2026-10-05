@@ -143,7 +143,10 @@
         </div>
 
         <div class="table-wrap">
-          <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Detalle de arreglos — ingresos</h3></div>
+          <div class="u-border-b table-title table-title--search">
+            <h3 class="u-font-semibold u-text-dark">Detalle de arreglos — ingresos</h3>
+            <app-search-box class="table-search" placeholder="Buscar por referencia, cliente o fecha..." [value]="incomeSearch.text()" (valueChange)="incomeSearch.set($event)" />
+          </div>
           <div class="table-scroll">
             <table class="data-table report-table">
               <thead><tr><th>Referencia</th><th>Cliente</th><th>Fecha</th><th class="text-right">Costo</th><th class="text-right">Cobrado</th><th class="text-right">Pendiente</th></tr></thead>
@@ -158,21 +161,21 @@
                     <td class="text-right u-font-medium" [class.u-text-orange]="num(row.pendiente) > 0" [class.cell-zero]="num(row.pendiente) === 0">{{ num(row.pendiente) | cop }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="6" class="cell-zero">Sin arreglos en el período.</td></tr>
+                  <tr><td colspan="6" class="cell-zero">@if (incomeSearch.term()) { No se encontraron resultados para «{{ incomeSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
                 }
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="3" class="cell-total-label">Total del período</td>
-                  <td class="text-right">{{ num(ingresos()?.totales?.valor) | cop }}</td>
-                  <td class="text-right u-text-green">{{ num(ingresos()?.totales?.pagado) | cop }}</td>
-                  <td class="text-right u-text-orange">{{ num(ingresos()?.totales?.pendiente) | cop }}</td>
+                  <td colspan="3" class="cell-total-label">{{ incomeSearch.term() ? 'Total filtrado' : 'Total del período' }}</td>
+                  <td class="text-right">{{ incomeTotals().cost | cop }}</td>
+                  <td class="text-right u-text-green">{{ incomeTotals().paid | cop }}</td>
+                  <td class="text-right u-text-orange">{{ incomeTotals().pending | cop }}</td>
                 </tr>
               </tfoot>
             </table>
           </div>
         </div>
-        <app-pagination [total]="incomeRows().length" [pageSize]="reportPageSize" [(page)]="incomePage" />
+        <app-pagination [total]="filteredIncomeRows().length" [pageSize]="reportPageSize" [(page)]="incomePage" />
       </div>
     }
 
@@ -197,7 +200,10 @@
           </div>
         </div>
         <div class="table-wrap">
-          <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Listado de arreglos en el período</h3></div>
+          <div class="u-border-b table-title table-title--search">
+            <h3 class="u-font-semibold u-text-dark">Listado de arreglos en el período</h3>
+            <app-search-box class="table-search" placeholder="Buscar por referencia, cliente, descripción o estado..." [value]="repairsSearch.text()" (valueChange)="repairsSearch.set($event)" />
+          </div>
           <div class="table-scroll">
             <table class="data-table report-table">
               <thead><tr><th>Referencia</th><th>Cliente</th><th>Descripción</th><th>Estado</th><th>Recibido</th><th>Entrega</th></tr></thead>
@@ -218,13 +224,13 @@
                     <td class="cell-muted">{{ row.fecha_entrega ? (day(row.fecha_entrega) | date: 'dd/MM/yy') : '—' }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="6" class="cell-zero">Sin arreglos en el período.</td></tr>
+                  <tr><td colspan="6" class="cell-zero">@if (repairsSearch.term()) { No se encontraron resultados para «{{ repairsSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
                 }
               </tbody>
             </table>
           </div>
         </div>
-        <app-pagination [total]="repairRows().length" [pageSize]="reportPageSize" [(page)]="repairsPage" />
+        <app-pagination [total]="filteredRepairRows().length" [pageSize]="reportPageSize" [(page)]="repairsPage" />
       </div>
     }
 
@@ -239,7 +245,10 @@
           <app-hbar-chart [items]="topClients()" />
         </div>
         <div class="table-wrap">
-          <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Resumen por cliente</h3></div>
+          <div class="u-border-b table-title table-title--search">
+            <h3 class="u-font-semibold u-text-dark">Resumen por cliente</h3>
+            <app-search-box class="table-search" placeholder="Buscar cliente..." [value]="clientsSearch.text()" (valueChange)="clientsSearch.set($event)" />
+          </div>
           <div class="table-scroll">
             <table class="data-table report-table">
               <thead><tr><th>Cliente</th><th class="text-right">Arreglos</th><th class="text-right">Total facturado</th><th class="text-right">Total cobrado</th><th class="text-right">Saldo</th></tr></thead>
@@ -253,13 +262,13 @@
                     <td class="text-right u-font-medium" [class.u-text-orange]="num(row.saldo) > 0" [class.cell-zero]="num(row.saldo) === 0">{{ num(row.saldo) | cop }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="5" class="cell-zero">Sin clientes con arreglos en el período.</td></tr>
+                  <tr><td colspan="5" class="cell-zero">@if (clientsSearch.term()) { No se encontraron resultados para «{{ clientsSearch.term() }}» } @else { Sin clientes con arreglos en el período. }</td></tr>
                 }
               </tbody>
-              @if (clientRows().length) {
+              @if (filteredClientRows().length) {
                 <tfoot>
                   <tr>
-                    <td class="cell-total-label">Total del período</td>
+                    <td class="cell-total-label">{{ clientsSearch.term() ? 'Total filtrado' : 'Total del período' }}</td>
                     <td class="text-right">{{ clientTotals().repairs }}</td>
                     <td class="text-right">{{ clientTotals().billed | cop }}</td>
                     <td class="text-right u-text-green">{{ clientTotals().paid | cop }}</td>
@@ -270,9 +279,12 @@
             </table>
           </div>
         </div>
-        <app-pagination [total]="clientRows().length" [pageSize]="reportPageSize" [(page)]="clientsPage" />
+        <app-pagination [total]="filteredClientRows().length" [pageSize]="reportPageSize" [(page)]="clientsPage" />
         <div class="table-wrap">
-          <div class="u-border-b table-title"><h3 class="u-font-semibold u-text-dark">Todos los clientes registrados</h3></div>
+          <div class="u-border-b table-title table-title--search">
+            <h3 class="u-font-semibold u-text-dark">Todos los clientes registrados</h3>
+            <app-search-box class="table-search" placeholder="Buscar por nombre, correo, cédula o teléfono..." [value]="allClientsSearch.text()" (valueChange)="allClientsSearch.set($event)" />
+          </div>
           <div class="table-scroll">
             <table class="data-table report-table">
               <thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Email</th></tr></thead>
@@ -285,13 +297,13 @@
                     <td class="cell-muted">{{ client.correo }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="4" class="cell-zero">No hay clientes registrados.</td></tr>
+                  <tr><td colspan="4" class="cell-zero">@if (allClientsSearch.term()) { No se encontraron resultados para «{{ allClientsSearch.term() }}» } @else { No hay clientes registrados. }</td></tr>
                 }
               </tbody>
             </table>
           </div>
         </div>
-        <app-pagination [total]="allClientRows().length" [pageSize]="reportPageSize" [(page)]="allClientsPage" />
+        <app-pagination [total]="filteredAllClientRows().length" [pageSize]="reportPageSize" [(page)]="allClientsPage" />
       </div>
     }
   }

@@ -14,6 +14,20 @@
 
 .table-title { padding: var(--space-5); }
 
+/* Título + buscador: el buscador a la derecha (máx. 400px); en celular, debajo a todo el ancho */
+.table-title--search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+}
+.table-search { flex: 1 1 16rem; max-width: 400px; }
+@media (max-width: 767px) {
+  .table-title--search { flex-direction: column; align-items: stretch; }
+  .table-search { flex-basis: auto; max-width: none; }
+}
+
 /* Recuadros por estado: mismo espacio entre tarjetas que los totales (KPI) */
 .summary-grid {
   display: grid;

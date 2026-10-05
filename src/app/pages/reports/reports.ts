@@ -1,5 +1,5 @@
 import { DatePipe, formatDate } from '@angular/common';
-import { Component, OnInit, computed, inject, linkedSignal, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, Signal, computed, inject, linkedSignal, signal, untracked } from '@angular/core';
 import {
   ApiConteoEstado,
   ApiReporteArreglos,
@@ -20,16 +20,57 @@ import { ReportService } from '../../core/services/report.service';
 import { ToastService } from '../../core/services/toast.service';
 import { fromDateKey, fromMonthKey, toDateKey, todayKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
+import { normalize } from '../../core/utils/text.utils';
 import { BarChart, BarSeries } from '../../shared/components/charts/bar-chart/bar-chart';
 import { HBarChart } from '../../shared/components/charts/hbar-chart/hbar-chart';
 import { ChartPoint, LineChart } from '../../shared/components/charts/line-chart/line-chart';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
+import { SearchBox } from '../../shared/components/search-box/search-box';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 
 type ReportTab = 'summary' | 'income' | 'repairs' | 'clients';
 
 /** Registros por página en las tablas de informes. */
 const REPORT_PAGE_SIZE = 10;
+/** Espera tras la última tecla antes de filtrar (evita recalcular en cada pulsación). */
+const SEARCH_DEBOUNCE_MS = 200;
+
+/**
+ * Buscador con espera: `text` es lo que se ve en el input y `term` (sin espacios sobrantes)
+ * se actualiza 200 ms después de dejar de escribir. Ambos se limpian cuando cambia `resetKey`
+ * (rango de fechas o pestaña). Debe crearse en un contexto de inyección.
+ */
+function debouncedSearch(resetKey: Signal<string>) {
+  const text = linkedSignal({ source: resetKey, computation: () => '' });
+  const query = linkedSignal({ source: resetKey, computation: () => '' });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  inject(DestroyRef).onDestroy(() => clearTimeout(timer));
+
+  return {
+    text: text.asReadonly(),
+    term: computed(() => query().trim()),
+    set(value: string): void {
+      text.set(value);
+      clearTimeout(timer);
+      // Limpiar (botón ✕ o borrar todo) se aplica al instante.
+      if (!value.trim()) {
+        query.set('');
+        return;
+      }
+      // Solo se aplica si el texto sigue igual (p. ej. no se limpió al cambiar de pestaña).
+      timer = setTimeout(() => {
+        if (untracked(text) === value) query.set(value);
+      }, SEARCH_DEBOUNCE_MS);
+    },
+  };
+}
+
+/** Filas cuyo algún campo contiene el término, sin distinguir mayúsculas ni tildes. */
+function filterRows<T>(rows: readonly T[], term: string, fields: (row: T) => (string | null | undefined)[]): T[] {
+  const needle = normalize(term);
+  if (!needle) return [...rows];
+  return rows.filter((row) => fields(row).some((value) => !!value && normalize(value).includes(needle)));
+}
 type Preset = 'month' | '3months' | 'year';
 
 const TAB_TO_REPORT: Record<ReportTab, ReportType> = {
@@ -51,7 +92,7 @@ function monthLabel(month: string): string {
 
 @Component({
   selector: 'app-reports',
-  imports: [DatePipe, CopCurrencyPipe, LineChart, BarChart, HBarChart, Pagination],
+  imports: [DatePipe, CopCurrencyPipe, LineChart, BarChart, HBarChart, Pagination, SearchBox],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
@@ -167,25 +208,85 @@ export class Reports implements OnInit {
   /** Cambia con el rango de fechas o la pestaña: las tablas vuelven a la página 1. */
   private readonly pageResetKey = computed(() => `${this.dateFrom()}|${this.dateTo()}|${this.activeTab()}`);
 
+  // Cada tabla: lista completa -> filtrada por su buscador -> paginada.
+  // La página vuelve a 1 al cambiar fechas/pestaña (pageResetKey) o el texto buscado.
+
+  /** Fecha en los formatos que el usuario puede escribir: 04/10/26, 04/10/2026 y 2026-10-04. */
+  private dateSearchKeys(value: string | null): string[] {
+    const date = this.day(value);
+    if (!date) return [];
+    return [formatDate(date, 'dd/MM/yy', 'es'), formatDate(date, 'dd/MM/yyyy', 'es'), toDateKey(date)];
+  }
+
+  protected readonly incomeSearch = debouncedSearch(this.pageResetKey);
   protected readonly incomeRows = computed(() => this.ingresos()?.detalle ?? []);
-  protected readonly incomePage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
-  protected readonly pagedIncomeRows = computed(() => paginate(this.incomeRows(), this.incomePage(), REPORT_PAGE_SIZE));
+  protected readonly filteredIncomeRows = computed(() =>
+    filterRows(this.incomeRows(), this.incomeSearch.term(), (r) => [
+      this.repairCode(r.id_arreglo),
+      r.nombre_completo,
+      ...this.dateSearchKeys(r.fecha_ingreso),
+    ]),
+  );
+  protected readonly incomePage = linkedSignal({
+    source: () => `${this.pageResetKey()}|${this.incomeSearch.term()}`,
+    computation: () => 1,
+  });
+  protected readonly pagedIncomeRows = computed(() => paginate(this.filteredIncomeRows(), this.incomePage(), REPORT_PAGE_SIZE));
 
+  /** Totales de "Detalle de arreglos — ingresos" sobre los registros filtrados. */
+  protected readonly incomeTotals = computed(() =>
+    this.filteredIncomeRows().reduce(
+      (t, r) => ({
+        cost: t.cost + this.num(r.valor),
+        paid: t.paid + this.num(r.pagado),
+        pending: t.pending + this.num(r.pendiente),
+      }),
+      { cost: 0, paid: 0, pending: 0 },
+    ),
+  );
+
+  protected readonly repairsSearch = debouncedSearch(this.pageResetKey);
   protected readonly repairRows = computed(() => this.arreglos()?.listado ?? []);
-  protected readonly repairsPage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
-  protected readonly pagedRepairRows = computed(() => paginate(this.repairRows(), this.repairsPage(), REPORT_PAGE_SIZE));
+  protected readonly filteredRepairRows = computed(() =>
+    filterRows(this.repairRows(), this.repairsSearch.term(), (r) => [
+      this.repairCode(r.id_arreglo),
+      r.nombre_completo,
+      r.descripcion,
+      r.nombre_estado,
+      this.statusLabels[this.statusKey(r.nombre_estado)],
+    ]),
+  );
+  protected readonly repairsPage = linkedSignal({
+    source: () => `${this.pageResetKey()}|${this.repairsSearch.term()}`,
+    computation: () => 1,
+  });
+  protected readonly pagedRepairRows = computed(() => paginate(this.filteredRepairRows(), this.repairsPage(), REPORT_PAGE_SIZE));
 
+  protected readonly clientsSearch = debouncedSearch(this.pageResetKey);
   protected readonly clientRows = computed(() => this.clientes()?.resumenPorCliente ?? []);
-  protected readonly clientsPage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
-  protected readonly pagedClientRows = computed(() => paginate(this.clientRows(), this.clientsPage(), REPORT_PAGE_SIZE));
+  protected readonly filteredClientRows = computed(() =>
+    filterRows(this.clientRows(), this.clientsSearch.term(), (r) => [r.nombre_completo]),
+  );
+  protected readonly clientsPage = linkedSignal({
+    source: () => `${this.pageResetKey()}|${this.clientsSearch.term()}`,
+    computation: () => 1,
+  });
+  protected readonly pagedClientRows = computed(() => paginate(this.filteredClientRows(), this.clientsPage(), REPORT_PAGE_SIZE));
 
+  protected readonly allClientsSearch = debouncedSearch(this.pageResetKey);
   protected readonly allClientRows = computed(() => this.clientes()?.todosClientes ?? []);
-  protected readonly allClientsPage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
-  protected readonly pagedAllClientRows = computed(() => paginate(this.allClientRows(), this.allClientsPage(), REPORT_PAGE_SIZE));
+  protected readonly filteredAllClientRows = computed(() =>
+    filterRows(this.allClientRows(), this.allClientsSearch.term(), (c) => [c.nombre_completo, c.cedula, c.telefono, c.correo]),
+  );
+  protected readonly allClientsPage = linkedSignal({
+    source: () => `${this.pageResetKey()}|${this.allClientsSearch.term()}`,
+    computation: () => 1,
+  });
+  protected readonly pagedAllClientRows = computed(() => paginate(this.filteredAllClientRows(), this.allClientsPage(), REPORT_PAGE_SIZE));
 
-  /** Totales de "Resumen por cliente" sobre todos los clientes del período (no solo la página visible). */
+  /** Totales de "Resumen por cliente" sobre los clientes filtrados (no solo la página visible). */
   protected readonly clientTotals = computed(() =>
-    this.clientRows().reduce(
+    this.filteredClientRows().reduce(
       (t, r) => ({
         repairs: t.repairs + this.num(r.total_arreglos),
         billed: t.billed + this.num(r.total_facturado),
