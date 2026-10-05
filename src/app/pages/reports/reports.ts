@@ -1,4 +1,4 @@
-import { DatePipe, formatDate } from '@angular/common';
+import { DatePipe, NgTemplateOutlet, formatDate } from '@angular/common';
 import { Component, DestroyRef, OnInit, Signal, computed, inject, linkedSignal, signal, untracked } from '@angular/core';
 import {
   ApiConteoEstado,
@@ -27,6 +27,7 @@ import { HBarChart } from '../../shared/components/charts/hbar-chart/hbar-chart'
 import { ChartPoint, LineChart } from '../../shared/components/charts/line-chart/line-chart';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
 import { SearchBox } from '../../shared/components/search-box/search-box';
+import { SelectDropdown } from '../../shared/components/select-dropdown/select-dropdown';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 
 type ReportTab = 'summary' | 'income' | 'repairs' | 'clients';
@@ -124,7 +125,7 @@ function monthLabel(month: string): string {
 
 @Component({
   selector: 'app-reports',
-  imports: [DatePipe, CopCurrencyPipe, LineChart, BarChart, HBarChart, DonutChart, Pagination, SearchBox],
+  imports: [DatePipe, NgTemplateOutlet, CopCurrencyPipe, LineChart, BarChart, HBarChart, DonutChart, Pagination, SearchBox, SelectDropdown],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
@@ -148,6 +149,8 @@ export class Reports implements OnInit {
   // ---------- Período ----------
   protected readonly dateFrom = signal(toDateKey(presetStart('3months')));
   protected readonly dateTo = signal(todayKey());
+  /** Atajo de fechas activo (se resalta en el control segmentado de teléfono); null si las fechas se eligieron a mano. */
+  protected readonly activePreset = signal<Preset | null>('3months');
   protected readonly loading = signal(false);
   protected readonly exporting = signal(false);
 
@@ -162,16 +165,19 @@ export class Reports implements OnInit {
   }
 
   protected setDateFrom(value: string): void {
+    this.activePreset.set(null);
     this.dateFrom.set(value);
     this.loadReports();
   }
 
   protected setDateTo(value: string): void {
+    this.activePreset.set(null);
     this.dateTo.set(value);
     this.loadReports();
   }
 
   protected applyPreset(preset: Preset): void {
+    this.activePreset.set(preset);
     this.dateFrom.set(toDateKey(presetStart(preset)));
     this.dateTo.set(todayKey());
     this.loadReports();

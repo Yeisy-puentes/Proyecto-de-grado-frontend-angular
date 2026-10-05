@@ -6,6 +6,58 @@
 
 .report-tabs { padding: 0.5rem 1rem; }
 
+/* Piezas solo para teléfono: en tabletas y computador no cambian el diseño */
+.toolbar__field,
+.toolbar__presets { display: contents; }
+.toolbar__label,
+.report-tabs-select { display: none; }
+
+/* ---------------- Teléfono ---------------- */
+@media (max-width: 767px) {
+  /* Título centrado; exportar en dos columnas iguales debajo */
+  .reports-header { flex-direction: column; align-items: stretch; }
+  .reports-header > div:first-child { text-align: center; }
+  .export-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .export-actions .btn { justify-content: center; min-width: 0; }
+
+  /* Fechas en dos columnas con etiqueta encima, atajos y rango debajo */
+  .toolbar { flex-direction: column; align-items: stretch; padding: var(--space-4); }
+  .toolbar__dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+  .toolbar__dash,
+  .toolbar__divider { display: none; }
+  .toolbar__field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .toolbar__label { display: block; font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-slate-500); }
+  .toolbar__date { width: 100%; min-width: 0; min-height: 44px; }
+
+  /* Atajos como control segmentado */
+  .toolbar__presets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .toolbar__presets .btn {
+    min-height: 44px;
+    border: none;
+    border-radius: 0;
+    border-left: 1px solid var(--color-slate-200);
+    white-space: normal;
+  }
+  .toolbar__presets .btn:first-child { border-left: none; }
+  .toolbar__presets .btn.is-active { background-color: var(--color-brand-blue); color: var(--color-white); }
+
+  .toolbar__range { margin-left: 0; text-align: center; }
+
+  /* Pestañas: desplegable a todo el ancho */
+  .report-tabs { display: none; }
+  .report-tabs-select { display: block; padding: var(--space-3) var(--space-4); --select-height: 44px; --select-option-height: 44px; }
+
+  /* Totales: que los montos grandes no desborden en 360 px */
+  .kpi-card { padding: var(--space-4); min-width: 0; }
+  .kpi-card__value { font-size: var(--font-size-lg); overflow-wrap: anywhere; }
+}
+
 .chart-card { padding: var(--space-5); }
 .chart-card__icon { color: var(--color-brand-blue); }
 
