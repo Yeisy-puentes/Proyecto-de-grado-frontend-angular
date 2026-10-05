@@ -22,6 +22,7 @@ import { fromDateKey, fromMonthKey, toDateKey, todayKey } from '../../core/utils
 import { apiErrorMessage } from '../../core/utils/http-error';
 import { normalize } from '../../core/utils/text.utils';
 import { BarChart, BarSeries } from '../../shared/components/charts/bar-chart/bar-chart';
+import { DonutChart, DonutSegment } from '../../shared/components/charts/donut-chart/donut-chart';
 import { HBarChart } from '../../shared/components/charts/hbar-chart/hbar-chart';
 import { ChartPoint, LineChart } from '../../shared/components/charts/line-chart/line-chart';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
@@ -86,13 +87,44 @@ function presetStart(preset: Preset, today = new Date()): Date {
   return new Date(today.getFullYear(), 0, 1);
 }
 
+/** Colores de estados que no están en REPAIR_STATUSES (los conocidos usan STATUS_COLORS). */
+const EXTRA_STATUS_COLORS: Record<string, string> = {
+  recibido: 'var(--color-brand-cyan)',
+  terminado: 'var(--color-purple-500)',
+  cancelado: 'var(--color-slate-400)',
+};
+/** Para cualquier otro estado que agregue el backend. */
+const FALLBACK_STATUS_COLORS = ['var(--color-orange-500)', 'var(--color-red-500)', 'var(--color-emerald-700)', 'var(--color-yellow-500)'];
+
+/**
+ * Porcentajes enteros que suman exactamente 100 (método del mayor residuo):
+ * se redondea hacia abajo y los puntos que faltan van a los de mayor parte decimal.
+ */
+function largestRemainder(counts: number[]): number[] {
+  const total = counts.reduce((a, b) => a + b, 0);
+  if (!total) return counts.map(() => 0);
+  const exact = counts.map((c) => (c / total) * 100);
+  const result = exact.map((v) => Math.floor(v));
+  let missing = 100 - result.reduce((a, b) => a + b, 0);
+  exact
+    .map((v, i) => ({ i, rest: v - result[i] }))
+    .sort((a, b) => b.rest - a.rest)
+    .forEach(({ i }) => {
+      if (missing > 0 && counts[i] > 0) {
+        result[i]++;
+        missing--;
+      }
+    });
+  return result;
+}
+
 function monthLabel(month: string): string {
   return formatDate(fromMonthKey(month), 'MMM yy', 'es');
 }
 
 @Component({
   selector: 'app-reports',
-  imports: [DatePipe, CopCurrencyPipe, LineChart, BarChart, HBarChart, Pagination, SearchBox],
+  imports: [DatePipe, CopCurrencyPipe, LineChart, BarChart, HBarChart, DonutChart, Pagination, SearchBox],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
@@ -308,27 +340,79 @@ export class Reports implements OnInit {
     };
   });
 
-  // ---------- Distribución por estado (dona + recuadros) ----------
+  // ---------- Distribución por estado ----------
+  /** Dona: todos los estados que devuelve el backend (también Recibido, Terminado, Cancelado...). */
   protected readonly statusBreakdown = computed(() => this.breakdown(this.resumen()?.porEstado ?? []));
 
-  private breakdown(rows: ApiConteoEstado[]) {
-    const counts = new Map(rows.map((r) => [toKey(r.nombre_estado), Number(r.total)]));
-    const total = [...counts.values()].reduce((a, b) => a + b, 0) || 1;
-    let accumulated = 0;
-    return REPAIR_STATUSES.map((status) => {
-      const count = counts.get(status) ?? 0;
-      const percent = Math.round((count / total) * 100);
-      // El círculo SVG empieza a las 3 en punto; el offset de 25 lo lleva a las 12.
-      const segment = { status, count, percent, offset: 25 - accumulated };
-      accumulated += percent;
-      return segment;
+  /** Recuadros de la pestaña Arreglos: los 4 estados conocidos, aunque tengan 0. */
+  protected readonly statusCounts = computed(() => {
+    const counts = new Map(this.statusBreakdown().map((s) => [s.key, s.count]));
+    return REPAIR_STATUSES.map((status) => ({ status, count: counts.get(status) ?? 0 }));
+  });
+
+  private breakdown(rows: ApiConteoEstado[]): DonutSegment[] {
+    // Agrupa por clave normalizada ("En Proceso" -> en_proceso) conservando el nombre original.
+    const groups = new Map<string, { name: string; count: number }>();
+    for (const row of rows) {
+      const key = toKey(row.nombre_estado);
+      const group = groups.get(key) ?? { name: row.nombre_estado.trim(), count: 0 };
+      group.count += Number(row.total);
+      groups.set(key, group);
+    }
+    // Primero los estados conocidos (en su orden habitual), luego los demás como vienen.
+    const known = REPAIR_STATUSES.filter((s) => groups.has(s));
+    const keys = [...known, ...[...groups.keys()].filter((k) => !known.includes(k as RepairStatus))];
+    const percents = largestRemainder(keys.map((k) => groups.get(k)!.count));
+    let extra = 0;
+
+    return keys.map((key, i) => {
+      const isKnown = REPAIR_STATUSES.includes(key as RepairStatus);
+      const color = isKnown
+        ? STATUS_COLORS[key as RepairStatus]
+        : (EXTRA_STATUS_COLORS[key] ?? FALLBACK_STATUS_COLORS[extra++ % FALLBACK_STATUS_COLORS.length]);
+      return {
+        key,
+        label: isKnown ? STATUS_LABELS[key as RepairStatus] : groups.get(key)!.name,
+        color,
+        count: groups.get(key)!.count,
+        percent: percents[i],
+      };
     });
   }
 
   // ---------- Gráficas ----------
   protected readonly monthlyIncome = computed<ChartPoint[]>(() =>
-    (this.resumen()?.ingresosPorMes ?? []).map((m) => ({ label: monthLabel(m.mes), value: Number(m.cobrado) })),
+    (this.resumen()?.ingresosPorMes ?? []).map((m) => ({
+      label: monthLabel(m.mes),
+      fullLabel: formatDate(fromMonthKey(m.mes), 'MMMM y', 'es'),
+      value: Number(m.cobrado),
+    })),
   );
+
+  /** El último mes está incompleto si el rango termina antes de su último día. */
+  protected readonly incomePartialLast = computed(() => {
+    const last = this.resumen()?.ingresosPorMes.at(-1);
+    if (!last) return false;
+    const month = fromMonthKey(last.mes);
+    const monthEnd = toDateKey(new Date(month.getFullYear(), month.getMonth() + 1, 0));
+    return this.dateTo() < monthEnd;
+  });
+
+  /** Total del período y variación del último mes completo frente al anterior. */
+  protected readonly incomeSummary = computed(() => {
+    const points = this.monthlyIncome();
+    const total = points.reduce((sum, p) => sum + p.value, 0);
+    const lastIndex = points.length - 1 - (this.incomePartialLast() ? 1 : 0);
+    const current = points[lastIndex];
+    const previous = points[lastIndex - 1];
+    const change = current && previous && previous.value > 0 ? Math.round(((current.value - previous.value) / previous.value) * 100) : null;
+    return {
+      total,
+      change,
+      changeAbs: Math.abs(change ?? 0),
+      compare: current && previous ? `${current.fullLabel} frente a ${previous.fullLabel}` : '',
+    };
+  });
 
   protected readonly incomeChart = computed(() => {
     const rows = this.ingresos()?.porMes ?? [];

@@ -1,35 +1,35 @@
-import { Component, computed, input, signal } from '@angular/core';
-import { compactMoney, nextChartId, niceMax } from '../chart.utils';
+import { Component, DestroyRef, ElementRef, afterNextRender, computed, inject, input, signal, viewChild } from '@angular/core';
+import { nextChartId, niceMax, shortMoney } from '../chart.utils';
 
 export interface ChartPoint {
   label: string;
   value: number;
+  /** Texto del tooltip (p. ej. "agosto 2026"); si falta se usa `label`. */
+  fullLabel?: string;
 }
 
-/** Sistema de coordenadas interno del SVG (se estira al tamaño del contenedor). */
-const WIDTH = 650;
-const HEIGHT = 320;
-const LEFT = 60;
-const RIGHT = 620;
-const TOP = 20;
-const BOTTOM = 280;
+/** Márgenes internos en px: a la izquierda el eje Y, abajo los meses. */
+const PAD = { top: 16, right: 16, bottom: 30, left: 52 };
+/** Separación extra para que el primer y el último punto no queden pegados al borde. */
+const INSET = 10;
+const MONTH_CHAR_WIDTH = 6.8; // meses, 12px
 
 interface Coord {
   x: number;
   y: number;
   label: string;
+  fullLabel: string;
   value: number;
 }
 
 /**
- * Curva monótona (igual a `type="monotone"` de Recharts / d3.curveMonotoneX):
+ * Tramos de curva monótona (igual a `type="monotone"` de Recharts / d3.curveMonotoneX):
  * suaviza la línea sin "pasarse" por encima o debajo de los valores reales.
+ * Devuelve un comando `C` por cada tramo entre dos puntos consecutivos.
  */
-function monotonePath(pts: Coord[]): string {
-  if (pts.length === 0) return '';
-  if (pts.length === 1) return `M${pts[0].x},${pts[0].y}`;
-
+function monotoneSegments(pts: Coord[]): string[] {
   const n = pts.length;
+  if (n < 2) return [];
   const h = pts.slice(1).map((p, i) => p.x - pts[i].x);
   const s = pts.slice(1).map((p, i) => (p.y - pts[i].y) / (h[i] || 1));
   const t = new Array<number>(n).fill(0);
@@ -41,20 +41,18 @@ function monotonePath(pts: Coord[]): string {
   t[0] = n > 2 ? (3 * s[0] - t[1]) / 2 : s[0];
   t[n - 1] = n > 2 ? (3 * s[n - 2] - t[n - 2]) / 2 : s[0];
 
-  let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
-  for (let i = 0; i < n - 1; i++) {
-    const dx = h[i] / 3;
-    const a = pts[i];
+  const f = (v: number) => v.toFixed(1);
+  return pts.slice(0, -1).map((a, i) => {
     const b = pts[i + 1];
-    d += ` C${(a.x + dx).toFixed(1)},${(a.y + dx * t[i]).toFixed(1)} ${(b.x - dx).toFixed(1)},${(b.y - dx * t[i + 1]).toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
-  }
-  return d;
+    const dx = h[i] / 3;
+    return `C${f(a.x + dx)},${f(a.y + dx * t[i])} ${f(b.x - dx)},${f(b.y - dx * t[i + 1])} ${f(b.x)},${f(b.y)}`;
+  });
 }
 
 /**
- * Gráfica de área (diseño Figma): curva suavizada, cuadrícula punteada horizontal,
- * sin ejes, y tooltip con línea guía al pasar el mouse.
- * Los textos, el punto activo y el tooltip son HTML para que no se deformen al estirar el SVG.
+ * Gráfica de área: curva suavizada, guías punteadas, punto en cada mes y tooltip.
+ * El viewBox usa el tamaño real del contenedor (ResizeObserver), así los textos no se deforman.
+ * Con `partialLast` el último tramo se dibuja punteado (mes en curso).
  */
 @Component({
   selector: 'app-line-chart',
@@ -67,25 +65,47 @@ function monotonePath(pts: Coord[]): string {
 })
 export class LineChart {
   readonly points = input.required<ChartPoint[]>();
-  readonly color = input('#2563eb');
-  /** Nombre de la serie en el tooltip ("Ingresos : $400.000"). */
+  readonly color = input('var(--color-brand-blue)');
+  /** Nombre de la serie en el tooltip ("Ingresos"). */
   readonly seriesName = input('Ingresos');
   /** 'money' para valores en pesos; 'count' para cantidades (eje Y con enteros). */
   readonly valueType = input<'money' | 'count'>('money');
   readonly emptyText = input('Sin datos para el período.');
+  /** El último punto es un mes incompleto: tramo punteado y aviso en el tooltip. */
+  readonly partialLast = input(false);
 
+  private readonly plot = viewChild.required<ElementRef<HTMLElement>>('plot');
+
+  /** Tamaño del área de dibujo en px (valores por defecto para el render del servidor). */
+  protected readonly width = signal(600);
+  protected readonly height = signal(280);
+
+  protected readonly pad = PAD;
   protected readonly gradientId = nextChartId();
-  protected readonly viewBox = `0 0 ${WIDTH} ${HEIGHT}`;
-  protected readonly left = LEFT;
-  protected readonly right = RIGHT;
-  protected readonly top = TOP;
-  protected readonly bottom = BOTTOM;
-
   protected readonly activeIndex = signal<number | null>(null);
 
-  protected readonly hasData = computed(() => this.points().some((p) => p.value > 0));
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    // ResizeObserver solo existe en el navegador: se crea después del primer render.
+    afterNextRender(() => {
+      const observer = new ResizeObserver(([entry]) => {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          this.width.set(Math.round(width));
+          this.height.set(Math.round(height));
+        }
+      });
+      observer.observe(this.plot().nativeElement);
+      destroyRef.onDestroy(() => observer.disconnect());
+    });
+  }
 
-  /** Máximo del eje Y: 4 saltos "redondos" (p. ej. 0, 10k, 20k, 30k, 40k). */
+  protected readonly hasData = computed(() => this.points().some((p) => p.value > 0));
+  protected readonly viewBox = computed(() => `0 0 ${this.width()} ${this.height()}`);
+  protected readonly baseline = computed(() => this.height() - PAD.bottom);
+  protected readonly plotRight = computed(() => this.width() - PAD.right);
+
+  /** Máximo del eje Y: 4 saltos "redondos" (p. ej. 0, 1M, 2M, 3M, 4M). */
   private readonly max = computed(() => {
     const top = Math.max(0, ...this.points().map((p) => p.value)) / 4;
     // En cantidades cada salto debe ser un entero (0, 1, 2, 3, 4...).
@@ -93,58 +113,90 @@ export class LineChart {
   });
 
   protected readonly ticks = computed(() =>
-    [4, 3, 2, 1, 0].map((i) => {
-      const y = BOTTOM - ((BOTTOM - TOP) * i) / 4;
-      return { y, top: this.pctY(y), label: this.axisLabel((this.max() * i) / 4) };
-    }),
+    [0, 1, 2, 3, 4].map((i) => ({
+      y: this.baseline() - ((this.baseline() - PAD.top) * i) / 4,
+      label: this.axisLabel((this.max() * i) / 4),
+    })),
   );
 
   protected readonly coords = computed<Coord[]>(() => {
     const pts = this.points();
-    const step = pts.length > 1 ? (RIGHT - LEFT) / (pts.length - 1) : 0;
+    const left = PAD.left + INSET;
+    const right = this.plotRight() - INSET;
+    const step = pts.length > 1 ? (right - left) / (pts.length - 1) : 0;
+    const base = this.baseline();
     return pts.map((p, i) => ({
-      x: pts.length > 1 ? LEFT + i * step : (LEFT + RIGHT) / 2,
-      y: BOTTOM - (p.value / this.max()) * (BOTTOM - TOP),
+      x: pts.length > 1 ? left + i * step : (left + right) / 2,
+      y: base - (p.value / this.max()) * (base - PAD.top),
       label: p.label,
+      fullLabel: p.fullLabel ?? p.label,
       value: p.value,
     }));
   });
 
-  protected readonly linePath = computed(() => monotonePath(this.coords()));
+  /** Meses visibles en el eje X (uno de cada N si no caben todos). */
+  protected readonly labelStep = computed(() => {
+    const coords = this.coords();
+    if (coords.length < 2) return 1;
+    const longest = Math.max(...coords.map((c) => c.label.length));
+    return Math.max(1, Math.ceil((longest * MONTH_CHAR_WIDTH + 10) / (coords[1].x - coords[0].x)));
+  });
+
+  /** Índice desde el que la línea es punteada (último tramo si el mes está incompleto). */
+  private readonly dashFrom = computed(() => {
+    const n = this.coords().length;
+    return this.partialLast() && n >= 2 ? n - 2 : n;
+  });
+
+  private readonly segments = computed(() => monotoneSegments(this.coords()));
+
+  protected readonly solidPath = computed(() => {
+    const coords = this.coords();
+    if (!coords.length) return '';
+    const start = `M${coords[0].x.toFixed(1)},${coords[0].y.toFixed(1)}`;
+    return [start, ...this.segments().slice(0, this.dashFrom())].join(' ');
+  });
+
+  protected readonly dashedPath = computed(() => {
+    const from = this.dashFrom();
+    const c = this.coords()[from];
+    const segs = this.segments().slice(from);
+    return c && segs.length ? `M${c.x.toFixed(1)},${c.y.toFixed(1)} ${segs.join(' ')}` : '';
+  });
 
   protected readonly areaPath = computed(() => {
     const coords = this.coords();
-    if (!coords.length) return '';
-    return `${this.linePath()} L${coords[coords.length - 1].x},${BOTTOM} L${coords[0].x},${BOTTOM} Z`;
+    if (coords.length < 2) return '';
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    const base = this.baseline();
+    return `M${first.x.toFixed(1)},${first.y.toFixed(1)} ${this.segments().join(' ')} L${last.x.toFixed(1)},${base} L${first.x.toFixed(1)},${base} Z`;
   });
 
-  /** Punto resaltado + posición del tooltip (en % del contenedor). */
+  /** Punto resaltado + tooltip (posición en px dentro del área de dibujo). */
   protected readonly active = computed(() => {
     const index = this.activeIndex();
-    const c = index === null ? undefined : this.coords()[index];
-    if (!c) return null;
-    const left = this.pctX(c.x);
-    return { ...c, left, top: this.pctY(c.y), flip: left > 70 };
+    const coords = this.coords();
+    const c = index === null ? undefined : coords[index];
+    if (index === null || !c) return null;
+    return {
+      ...c,
+      flip: c.x > this.width() * 0.6,
+      partial: this.partialLast() && index === coords.length - 1,
+      text: this.formatValue(c.value),
+    };
   });
 
   protected onPointerMove(event: MouseEvent): void {
     const coords = this.coords();
     if (!coords.length || !this.hasData()) return;
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * WIDTH;
+    const rect = this.plot().nativeElement.getBoundingClientRect();
+    const x = event.clientX - rect.left;
     let nearest = 0;
     coords.forEach((c, i) => {
       if (Math.abs(c.x - x) < Math.abs(coords[nearest].x - x)) nearest = i;
     });
     this.activeIndex.set(nearest);
-  }
-
-  protected pctX(x: number): number {
-    return (x / WIDTH) * 100;
-  }
-
-  protected pctY(y: number): number {
-    return (y / HEIGHT) * 100;
   }
 
   protected formatValue(value: number): string {
@@ -153,6 +205,6 @@ export class LineChart {
   }
 
   private axisLabel(value: number): string {
-    return this.valueType() === 'count' ? String(+value.toFixed(1)) : compactMoney(value);
+    return this.valueType() === 'count' ? String(+value.toFixed(1)) : shortMoney(value);
   }
 }

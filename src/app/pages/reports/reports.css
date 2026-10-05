@@ -8,6 +8,34 @@
 
 .chart-card { padding: var(--space-5); }
 .chart-card__icon { color: var(--color-brand-blue); }
+
+/* Resumen general: título a la izquierda, total y variación a la derecha */
+.chart-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.chart-card__stats { display: flex; align-items: center; gap: var(--space-2); }
+.chart-card__total { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-slate-800); }
+.trend {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-slate-100);
+  color: var(--color-slate-600);
+}
+.trend--up { background: var(--color-green-50); color: var(--color-green-700); }
+.trend--down { background: var(--color-red-50); color: var(--color-red-700); }
+
+/* Las dos tarjetas a la misma altura, una al lado de la otra */
+.summary-charts { align-items: stretch; }
+.summary-chart-box { height: 18rem; }
+.donut-box { min-height: 18rem; display: flex; align-items: center; justify-content: center; }
+.donut-box app-donut-chart { width: 100%; }
 .chart-box--center { display: flex; align-items: center; justify-content: center; }
 /* Alto de las gráficas de barras (incluye la leyenda) */
 .bar-chart-box { height: 18rem; }

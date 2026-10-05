@@ -1,0 +1,64 @@
+@if (total() > 0) {
+  <div class="donut" (mouseleave)="activeKey.set(null)">
+    <div class="donut__chart" [style.width.px]="size" [style.height.px]="size">
+      <svg [attr.width]="size" [attr.height]="size" [attr.viewBox]="'0 0 ' + size + ' ' + size" role="img" [attr.aria-label]="'Distribución de ' + total() + ' ' + unit()">
+        <defs>
+          <!-- Máscara que se descubre en sentido horario (animación de entrada) -->
+          <mask [attr.id]="maskId">
+            <circle
+              class="donut__reveal"
+              [attr.cx]="center" [attr.cy]="center" [attr.r]="ringRadius"
+              fill="none" stroke="white" [attr.stroke-width]="ringWidth"
+              pathLength="100" stroke-dasharray="100 100"
+              [attr.transform]="'rotate(-90 ' + center + ' ' + center + ')'"
+            />
+          </mask>
+        </defs>
+        <g [attr.mask]="'url(#' + maskId + ')'">
+          @for (arc of arcs(); track arc.key) {
+            <path
+              class="donut__segment"
+              [class.is-active]="activeKey() === arc.key"
+              [class.is-dim]="activeKey() !== null && activeKey() !== arc.key"
+              [attr.d]="arc.path"
+              [style.fill]="arc.color"
+              [style.stroke]="arc.single ? 'none' : arc.color"
+              [attr.stroke-width]="cornerStroke"
+              (mouseenter)="activeKey.set(arc.key)"
+            />
+          }
+        </g>
+      </svg>
+
+      <!-- Centro: total, o el estado activo -->
+      <div class="donut__center">
+        @if (active(); as a) {
+          <span class="donut__center-label">{{ a.label }}</span>
+          <strong class="donut__center-value">{{ a.count }}</strong>
+          <span class="donut__center-sub">{{ a.percent }}%</span>
+        } @else {
+          <strong class="donut__center-value">{{ total() }}</strong>
+          <span class="donut__center-sub">{{ unit() }}</span>
+        }
+      </div>
+    </div>
+
+    <ul class="donut__legend">
+      @for (s of visible(); track s.key) {
+        <li
+          class="donut__legend-item"
+          [class.is-active]="activeKey() === s.key"
+          [class.is-dim]="activeKey() !== null && activeKey() !== s.key"
+          (mouseenter)="activeKey.set(s.key)"
+        >
+          <span class="donut__dot" [style.background]="s.color"></span>
+          <span class="donut__legend-label">{{ s.label }}</span>
+          <span class="donut__legend-count">{{ s.count }}</span>
+          <span class="donut__legend-percent">{{ s.percent }}%</span>
+        </li>
+      }
+    </ul>
+  </div>
+} @else {
+  <p class="chart-empty">{{ emptyText() }}</p>
+}
