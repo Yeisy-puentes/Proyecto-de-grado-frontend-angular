@@ -1,13 +1,35 @@
 @if (rows().length) {
-  <svg [attr.viewBox]="viewBox()" preserveAspectRatio="xMinYMin meet">
-    @for (row of rows(); track $index) {
-      <text x="4" [attr.y]="row.y + 20" fill="#334155" font-size="12">{{ row.label.length > 18 ? row.label.slice(0, 17) + '…' : row.label }}</text>
-      <rect [attr.x]="row.barX" [attr.y]="row.y" [attr.width]="row.width" height="30" [attr.fill]="color()" rx="4">
-        <title>{{ row.label }}: {{ row.value }}</title>
-      </rect>
-      <text [attr.x]="row.barX + row.width + 8" [attr.y]="row.y + 20" fill="#64748b" font-size="12">{{ row.value }}</text>
+  <ol class="hbar" (mouseleave)="onLeave()">
+    @for (row of rows(); track $index; let i = $index) {
+      <li
+        class="hbar-row"
+        [class.is-top]="row.isTop"
+        [class.is-active]="activeIndex() === i"
+        [class.is-dim]="activeIndex() !== null && activeIndex() !== i"
+        (mouseenter)="onRowEnter(i, $event)"
+      >
+        <span class="hbar-rank">{{ row.rank }}</span>
+        <span class="hbar-name">{{ row.label }}</span>
+        <span class="hbar-track">
+          <span class="hbar-bar" [style.width.%]="row.percent" [style.animation-delay.ms]="i * 60"></span>
+        </span>
+        <span class="hbar-value" [style.animation-delay.ms]="300 + i * 60">
+          <strong>{{ row.value }}</strong> {{ unitFor(row.value) }}
+        </span>
+      </li>
     }
-  </svg>
+  </ol>
+
+  @if (tooltip(); as t) {
+    <div class="hbar-tooltip" [class.hbar-tooltip--flip]="t.flip" [style.left.px]="t.left" [style.top.px]="t.top">
+      <p class="hbar-tooltip__label">{{ t.label }}</p>
+      <p class="hbar-tooltip__row">
+        <span class="hbar-tooltip__dot"></span>
+        <span class="hbar-tooltip__name">Total</span>
+        <strong>{{ t.value }} {{ unitFor(t.value) }}</strong>
+      </p>
+    </div>
+  }
 } @else {
   <p class="chart-empty">Sin datos para el período.</p>
 }

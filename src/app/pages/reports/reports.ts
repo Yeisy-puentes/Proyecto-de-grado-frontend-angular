@@ -175,6 +175,27 @@ export class Reports implements OnInit {
   protected readonly repairsPage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
   protected readonly pagedRepairRows = computed(() => paginate(this.repairRows(), this.repairsPage(), REPORT_PAGE_SIZE));
 
+  protected readonly clientRows = computed(() => this.clientes()?.resumenPorCliente ?? []);
+  protected readonly clientsPage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
+  protected readonly pagedClientRows = computed(() => paginate(this.clientRows(), this.clientsPage(), REPORT_PAGE_SIZE));
+
+  protected readonly allClientRows = computed(() => this.clientes()?.todosClientes ?? []);
+  protected readonly allClientsPage = linkedSignal({ source: this.pageResetKey, computation: () => 1 });
+  protected readonly pagedAllClientRows = computed(() => paginate(this.allClientRows(), this.allClientsPage(), REPORT_PAGE_SIZE));
+
+  /** Totales de "Resumen por cliente" sobre todos los clientes del período (no solo la página visible). */
+  protected readonly clientTotals = computed(() =>
+    this.clientRows().reduce(
+      (t, r) => ({
+        repairs: t.repairs + this.num(r.total_arreglos),
+        billed: t.billed + this.num(r.total_facturado),
+        paid: t.paid + this.num(r.total_cobrado),
+        balance: t.balance + this.num(r.saldo),
+      }),
+      { repairs: 0, billed: 0, paid: 0, balance: 0 },
+    ),
+  );
+
   // ---------- KPIs ----------
   protected readonly totals = computed(() => {
     const t = this.resumen()?.totales;
