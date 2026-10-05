@@ -29,16 +29,6 @@
   color: inherit;
 }
 .search-box__clear { right: 2.5rem; }
-/* Input de fecha invisible: solo aporta el calendario nativo. */
-.search-box__picker {
-  position: absolute;
-  right: 0.5rem;
-  bottom: 0;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
 
 .btn--outline-thin { border-width: 1px; }
 

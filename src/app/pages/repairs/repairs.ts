@@ -20,6 +20,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { fromDateKey, nowTime, todayKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
+import { DatePickerDialog } from '../../shared/components/date-picker-dialog/date-picker-dialog';
 import { FieldError } from '../../shared/forms/field-error/field-error';
 import { FormValidation } from '../../shared/forms/form-validation.directive';
 import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
@@ -94,7 +95,7 @@ function emptyForm(): RepairForm {
 
 @Component({
   selector: 'app-repairs',
-  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation, Pagination, SelectDropdown],
+  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation, Pagination, SelectDropdown, DatePickerDialog],
   templateUrl: './repairs.html',
   styleUrl: './repairs.css',
   host: {
@@ -203,12 +204,31 @@ export class Repairs implements OnInit, OnDestroy {
     this.search.set(`${d}/${m}/${y}`);
   }
 
-  protected openDatePicker(input: HTMLInputElement): void {
-    try {
-      input.showPicker();
-    } catch {
-      input.click();
-    }
+  // ---------- Calendario del buscador ----------
+  protected readonly datePickerOpen = signal(false);
+
+  /** Si la búsqueda actual es una fecha dd/mm/aaaa, su clave yyyy-MM-dd (para abrir el calendario en ella). */
+  protected readonly searchDateKey = computed(() => {
+    const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(this.search().trim());
+    if (!match) return null;
+    const [, d, m, y] = match;
+    const key = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    return Number.isNaN(fromDateKey(key).getTime()) ? null : key;
+  });
+
+  protected openDatePicker(): void {
+    this.datePickerOpen.set(true);
+  }
+
+  protected onDateDialogSelected(key: string): void {
+    this.datePickerOpen.set(false);
+    this.onSearchDatePicked(key);
+  }
+
+  /** "Limpiar" del calendario: borra la búsqueda solo si es una fecha. */
+  protected onDateDialogCleared(): void {
+    this.datePickerOpen.set(false);
+    if (this.searchDateKey()) this.search.set('');
   }
 
   /** Opciones del desplegable de celular: los mismos filtros que los botones, con su cantidad. */
