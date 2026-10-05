@@ -2,86 +2,285 @@
    LOGIN — Estilos específicos de la página de inicio de sesión
    ============================================================ */
 
-/* ---------------- LOGIN ---------------- */
-.login-page {
-  min-height: 100vh;
-  background-color: var(--color-slate-50);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
+:host {
+  display: block;
+  /* Tonos del login que no existen en 01-variables.css */
+  --login-blue-deep: #0b3fb8;
+  --login-blue-light: #eaf3ff;
+  --login-red-soft: var(--color-red-300);
 }
 
-.login-card {
+/* ---------------- FONDO ---------------- */
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  background: linear-gradient(135deg, var(--login-blue-deep) 0%, var(--color-brand-blue) 38%, var(--color-blue-200) 75%, var(--login-blue-light) 100%);
+}
+
+.login-bg {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  max-width: 28rem;
+  height: 100%;
+  pointer-events: none;
+}
+/* Las ondas se desplazan muy despacio de lado a lado */
+.wave { animation: wave-drift 26s ease-in-out infinite alternate; }
+.wave--mid { animation-duration: 22s; animation-delay: -6s; }
+.wave--fast { animation-duration: 20s; animation-delay: -3s; }
+.wave--slow-reverse { animation-duration: 30s; animation-direction: alternate-reverse; }
+@keyframes wave-drift {
+  from { transform: translateX(-60px); }
+  to { transform: translateX(60px); }
+}
+
+/* Brillo radial detrás de la tarjeta */
+.login-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(48rem, 140vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgb(255 255 255 / 0.35) 0%, rgb(255 255 255 / 0.12) 35%, transparent 65%);
+  pointer-events: none;
+}
+
+/* ---------------- TARJETA ---------------- */
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  border: 1px solid rgb(255 255 255 / 0.45);
   background-color: var(--color-white);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-xl);
+  box-shadow:
+    0 40px 80px -20px rgb(11 63 184 / 0.45),
+    0 16px 32px -12px rgb(11 63 184 / 0.3);
   overflow: hidden;
 }
 
 .login-card__header {
-  background-color: var(--color-brand-navy-dark);
-  padding: var(--space-8);
-  text-align: center;
   position: relative;
   overflow: hidden;
+  padding: var(--space-8) var(--space-8) calc(var(--space-8) + 1.5rem);
+  text-align: center;
+  background: linear-gradient(135deg, var(--color-brand-blue-dark) 0%, var(--login-blue-deep) 100%);
 }
+.login-card__waves {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 70%;
+  pointer-events: none;
+}
+/* Punto de luz en la esquina superior derecha */
+.login-card__light {
+  position: absolute;
+  top: -2.5rem;
+  right: -2.5rem;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.35) 0%, rgb(255 255 255 / 0.08) 45%, transparent 70%);
+  pointer-events: none;
+}
+
 .login-card__header-content {
   position: relative;
-  z-index: 10;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.login-card__logo {
-  height: 4rem;
-  object-fit: contain;
-  background-color: rgba(255,255,255,0.1);
-  border-radius: var(--radius-lg);
-  padding: var(--space-2);
+/* Recuadro del logo (el logo en sí no cambia) */
+.login-card__logo-box {
+  display: inline-flex;
+  padding: var(--space-2) var(--space-3);
   margin-bottom: var(--space-4);
+  border-radius: var(--radius-xl);
+  background-color: rgb(255 255 255 / 0.12);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-.login-card__header h2 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-white); }
-.login-card__header p { color: var(--color-blue-200, #bfdbfe); margin-top: var(--space-2); }
+.login-card__logo { height: 4rem; object-fit: contain; }
 
-.login-card__deco {
-  position: absolute;
-  width: 8rem;
-  height: 8rem;
-  border-radius: 50%;
-  filter: blur(24px);
-  opacity: 0.2;
-  mix-blend-mode: multiply;
+.login-card__header h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
 }
-.login-card__deco--tl { top: 0; left: 0; background-color: var(--color-blue-500); transform: translate(-50%, -50%); }
-.login-card__deco--br { bottom: 0; right: 0; background-color: #22d3ee; transform: translate(50%, 50%); }
+.login-card__header p {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: rgb(255 255 255 / 0.78);
+}
 
+/* Cuerpo blanco que sube sobre el encabezado (hoja superpuesta) */
+.login-card__sheet {
+  position: relative;
+  z-index: 1;
+  margin-top: -1.5rem;
+  border-radius: 24px 24px 0 0;
+  background-color: var(--color-white);
+}
+
+/* ---------------- FORMULARIO ---------------- */
 .login-form {
-  padding: var(--space-8);
+  padding: var(--space-8) var(--space-8) var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
 }
-.login-form__fields { display: flex; flex-direction: column; gap: var(--space-4); }
+.login-form__fields { display: flex; flex-direction: column; gap: var(--space-5); }
 
-.login-card__footer {
-  background-color: var(--color-slate-50);
-  padding: var(--space-4);
-  text-align: center;
-  border-top: 1px solid var(--color-slate-100);
-}
-.login-card__footer p { font-size: var(--font-size-xs); color: var(--color-slate-500); }
-
-
-.login-error {
-  margin-bottom: var(--space-4);
-  padding: var(--space-3);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-red-50, #fef2f2);
-  border: 1px solid var(--color-red-200, #fecaca);
-  color: var(--color-red-700, #b91c1c);
+.login-form .field label {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-700);
+}
+
+.login-form .input {
+  height: 52px;
+  padding-left: 2.75rem;
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-lg); /* 12px */
+  background-color: var(--color-white);
+  font-size: var(--font-size-base);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+.login-form .input::placeholder { color: var(--color-slate-400); }
+.login-form .input:focus {
+  border-color: var(--color-brand-blue);
+  box-shadow: 0 0 0 4px rgb(37 99 235 / 0.12);
+}
+.login-form .input-icon .icon { left: 0.875rem; }
+.login-form .input-icon:focus-within .icon { color: var(--color-brand-blue); }
+
+/* Con error: borde rojo suave y fondo rosado (solo en el login) */
+.login-form .input.ng-invalid.ng-touched,
+.login-form.ng-submitted .input.ng-invalid {
+  border-color: var(--login-red-soft);
+  background-color: var(--color-red-50);
+}
+.login-form .input.ng-invalid.ng-touched:focus,
+.login-form.ng-submitted .input.ng-invalid:focus {
+  border-color: var(--color-red-500);
+  box-shadow: 0 0 0 4px rgb(239 68 68 / 0.12);
+}
+
+/* Mensaje de <app-field-error>: ícono de alerta en un círculo rojo.
+   ::ng-deep queda acotado a este componente por :host. */
+:host ::ng-deep .field-error {
+  gap: var(--space-2);
+  margin-top: 0.125rem;
+  color: var(--color-red-600);
+}
+:host ::ng-deep .field-error svg {
+  width: 16px;
+  height: 16px;
+  padding: 2px;
+  border-radius: 50%;
+  background-color: var(--color-red-500);
+  color: var(--color-white);
+  stroke-width: 3;
+}
+:host ::ng-deep .field-error svg circle { display: none; }
+
+/* Botón ojo para mostrar u ocultar la contraseña */
+.login-form .input--with-toggle { padding-right: 3rem; }
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  display: flex;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  color: var(--color-slate-400);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+.password-toggle:hover { color: var(--color-brand-blue); background-color: var(--color-slate-100); }
+.password-toggle:focus-visible { outline: 2px solid var(--color-brand-blue-light); outline-offset: 1px; }
+/* Anula el posicionamiento global de `.input-icon svg` (pensado para el ícono de la izquierda). */
+.login-form .input-icon .password-toggle svg { position: static; transform: none; color: inherit; }
+
+/* Error del servidor: misma alerta roja suave */
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-red-50);
+  border: 1px solid var(--color-red-200);
+  color: var(--color-red-700);
+  font-size: var(--font-size-sm);
+}
+.login-alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--color-red-500);
+  color: var(--color-white);
+}
+
+/* ---------------- BOTÓN ---------------- */
+.login-submit {
+  height: 52px;
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  background: linear-gradient(135deg, var(--login-blue-deep) 0%, var(--color-brand-blue-dark) 100%);
+  box-shadow: 0 10px 20px -8px rgb(11 63 184 / 0.55);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+}
+.login-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px -8px rgb(11 63 184 / 0.6);
+  filter: brightness(1.05);
+}
+.login-submit:active:not(:disabled) { transform: translateY(0); }
+.login-submit:disabled { opacity: 0.75; cursor: wait; }
+.login-submit .icon { transition: transform var(--transition-fast); }
+.login-submit:hover:not(:disabled) .icon { transform: translateX(3px); }
+
+/* ---------------- PIE ---------------- */
+.login-card__footer {
+  margin: 0 var(--space-8);
+  padding: var(--space-4) 0 var(--space-5);
+  border-top: 1px solid var(--color-slate-100);
+  text-align: center;
+}
+.login-card__footer p { font-size: var(--font-size-xs); color: var(--color-slate-400); }
+
+/* ---------------- CELULAR ---------------- */
+@media (max-width: 639px) {
+  .login-page { padding: var(--space-6) var(--space-4); }
+  .login-card { max-width: none; }
+  .login-card__header { padding: var(--space-6) var(--space-6) calc(var(--space-6) + 1.5rem); }
+  .login-form { padding: var(--space-6) var(--space-5) var(--space-5); }
+  .login-card__footer { margin: 0 var(--space-5); }
+  /* Ondas simplificadas */
+  .wave--extra { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave { animation: none; }
+  .login-submit,
+  .login-submit .icon { transition: none; }
+  .login-submit:hover:not(:disabled),
+  .login-submit:hover:not(:disabled) .icon { transform: none; }
 }
