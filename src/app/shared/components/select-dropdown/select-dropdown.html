@@ -12,6 +12,9 @@
     (keydown)="onKeydown($event)"
   >
     <span class="select__value">
+      @if (iconTemplate() && selected()) {
+        <span class="select__icon"><ng-container *ngTemplateOutlet="iconTemplate(); context: { $implicit: selected()! }" /></span>
+      }
       {{ selected()?.label }}
       @if (selected()?.count !== undefined) {
         <span class="select__sep">·</span>
@@ -39,6 +42,9 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             }
           </span>
+          @if (iconTemplate()) {
+            <span class="select__icon"><ng-container *ngTemplateOutlet="iconTemplate(); context: { $implicit: option }" /></span>
+          }
           <span class="select__label">{{ option.label }}</span>
           @if (option.count !== undefined) {
             <span class="select__count">{{ option.count }}</span>

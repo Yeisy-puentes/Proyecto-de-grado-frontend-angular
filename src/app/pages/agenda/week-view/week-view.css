@@ -126,3 +126,8 @@
   .week-col__body { min-height: 0; max-height: none; padding: var(--space-3) var(--space-4); }
   .week-col__empty { text-align: left; padding: 0; }
 }
+
+/* ---- Teléfonos y tabletas: mínimo 44 px para tocar ---- */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  .week-item { min-height: 44px; justify-content: center; }
+}

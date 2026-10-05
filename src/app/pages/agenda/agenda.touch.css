@@ -1,0 +1,129 @@
+/* ============================================================
+   AGENDA — Teléfonos y tabletas/iPads
+   (≤ 1024 px o pantallas táctiles; los computadores con mouse no cambian)
+   ============================================================ */
+
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  /* ---- Títulos centrados ---- */
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  /* ---- Desplegable de vista + "Recordatorio" en una fila ---- */
+  .tab-toggle-group { display: none; }
+  .agenda-actions { justify-content: space-between; width: 100%; }
+  .view-select {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 260px;
+    text-align: left;
+    --select-height: 44px;
+    --select-option-height: 44px;
+  }
+  .reminder-btn { min-height: 44px; flex-shrink: 0; }
+
+  /* ---- Encabezado azul: título centrado, flechas a los lados y "Hoy" debajo ---- */
+  .calendar-nav {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    grid-template-areas:
+      'prev center next'
+      'prev today  next';
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+  }
+  .calendar-nav__btn--prev { grid-area: prev; }
+  .calendar-nav__btn--next { grid-area: next; }
+  .calendar-nav__center { grid-area: center; min-width: 0; }
+  .calendar-nav__actions { display: contents; }
+  .calendar-nav__btn {
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+  }
+  .calendar-nav__today {
+    grid-area: today;
+    justify-self: center;
+    min-height: 44px;
+    padding: 0 var(--space-5);
+  }
+  .calendar-nav__title { font-size: var(--font-size-xl); }
+
+  /* ---- Referencias centradas, en varias líneas si no caben ---- */
+  .calendar-legend { justify-content: center; gap: var(--space-2) var(--space-4); }
+
+  /* ---- Mes: las 7 columnas caben en el ancho (sin desplazamiento lateral) ---- */
+  .calendar-scroll { overflow-x: visible; }
+  .calendar-day { min-height: 88px; padding: var(--space-2) 0.375rem; }
+  /* Textos cortos ("1 en proceso") en varias líneas si no caben, sin cortarse */
+  .calendar-day__event-row { align-items: flex-start; line-height: 1.2; }
+  .calendar-day__event-row .status-dot { margin-top: 0.15em; }
+
+  /* ---- Mínimo 44 px en lo que se toca con el dedo ---- */
+  .day-filter-chip,
+  .add-reminder-link,
+  .repair-card__btn { min-height: 44px; }
+  .reminder-card__delete {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .color-swatch { width: 44px; height: 44px; }
+}
+
+/* ---- Teléfonos ---- */
+@media (max-width: 639px) {
+  .calendar-nav__title { font-size: var(--font-size-lg); }
+
+  /* Encabezado con letras: D L M M J V S */
+  .weekday-long { display: none; }
+  .weekday-short { display: inline; }
+  .calendar-weekdays span { padding: var(--space-2) 0; letter-spacing: 0; }
+
+  /* Celdas casi cuadradas con el número y puntos de colores */
+  .calendar-day {
+    position: relative;
+    min-height: 0;
+    aspect-ratio: 1 / 1.05;
+    padding: 0.25rem 0.125rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .calendar-day__number { margin: 0 0 0.25rem; }
+  /* El texto sigue disponible para lectores de pantalla */
+  .calendar-day__events {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .calendar-day__dots {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  .calendar-day__more {
+    font-size: 0.625rem;
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    color: var(--color-slate-500);
+  }
+}
+
+/* ---- Pantallas muy angostas: el botón muestra solo "+" ---- */
+@media (max-width: 359px) {
+  .reminder-btn__text { display: none; }
+  .reminder-btn { min-width: 44px; padding: 0; }
+}

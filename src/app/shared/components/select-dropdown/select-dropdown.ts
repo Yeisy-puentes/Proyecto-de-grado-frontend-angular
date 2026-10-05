@@ -1,4 +1,5 @@
-import { Component, ElementRef, computed, inject, input, model, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, ElementRef, TemplateRef, computed, inject, input, model, signal } from '@angular/core';
 
 export interface SelectOption<T> {
   value: T;
@@ -16,6 +17,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'app-select-dropdown',
+  imports: [NgTemplateOutlet],
   templateUrl: './select-dropdown.html',
   styleUrl: './select-dropdown.css',
   host: { '(document:click)': 'onDocumentClick($event)' },
@@ -26,6 +28,8 @@ export class SelectDropdown<T> {
   readonly options = input.required<SelectOption<T>[]>();
   readonly value = model.required<T>();
   readonly ariaLabel = input('Seleccionar');
+  /** Plantilla opcional para un ícono antes de cada etiqueta (contexto: la opción). */
+  readonly iconTemplate = input<TemplateRef<{ $implicit: SelectOption<T> }> | null>(null);
 
   protected readonly listId = `select-dropdown-${++nextId}`;
   protected readonly open = signal(false);

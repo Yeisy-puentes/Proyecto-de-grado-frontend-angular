@@ -61,12 +61,6 @@
   background-color: var(--color-slate-50);
 }
 
-@media (max-width: 640px) {
-  .calendar-weekdays,
-  .calendar-grid {
-    min-width: 560px;
-  }
-}
 .calendar-weekdays span {
   padding: var(--space-3);
   text-align: center;
@@ -125,6 +119,11 @@
 /* ---- Vista de semana (estilos en week-view/) ---- */
 /* El rango "4 – 10 de octubre 2026" va en minúsculas (el título del mes usa capitalize). */
 .calendar-nav__title--plain { text-transform: none; }
+
+/* Piezas solo para teléfonos y tabletas (ver agenda.touch.css) */
+.view-select,
+.weekday-short,
+.calendar-day__dots { display: none; }
 
 /* ---- Vista de día ---- */
 .day-view { padding: var(--space-5); }

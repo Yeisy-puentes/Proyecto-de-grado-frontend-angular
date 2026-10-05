@@ -12,6 +12,7 @@ import { apiErrorMessage } from '../../core/utils/http-error';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { Time12Pipe } from '../../shared/pipes/time12.pipe';
 import { FieldError } from '../../shared/forms/field-error/field-error';
+import { SelectDropdown, SelectOption } from '../../shared/components/select-dropdown/select-dropdown';
 import { FormValidation } from '../../shared/forms/form-validation.directive';
 import { AgendaEvent, WeekDay, WeekView } from './week-view/week-view';
 
@@ -45,9 +46,10 @@ const EVENT_LABELS: Record<AgendaStatus | 'recordatorio', [string, string]> = {
 
 @Component({
   selector: 'app-agenda',
-  imports: [FormsModule, DatePipe, TitleCasePipe, CopCurrencyPipe, Time12Pipe, FieldError, FormValidation, WeekView],
+  imports: [FormsModule, DatePipe, TitleCasePipe, CopCurrencyPipe, Time12Pipe, FieldError, FormValidation, WeekView, SelectDropdown],
   templateUrl: './agenda.html',
-  styleUrl: './agenda.css',
+  // agenda.touch.css: ajustes para teléfonos y tabletas (aparte por el límite de tamaño por hoja de estilos).
+  styleUrls: ['./agenda.css', './agenda.touch.css'],
 })
 export class Agenda implements OnInit {
   private readonly repairService = inject(RepairService);
@@ -58,6 +60,14 @@ export class Agenda implements OnInit {
   protected readonly statusClass = statusClass;
   protected readonly statusLabels = STATUS_LABELS;
   protected readonly weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  /** Encabezado del mes en teléfonos. */
+  protected readonly weekdayLetters = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  /** Desplegable de vista (teléfonos y tabletas): mismas vistas que los botones. */
+  protected readonly viewOptions: SelectOption<AgendaView>[] = [
+    { value: 'day', label: 'Día' },
+    { value: 'week', label: 'Semana' },
+    { value: 'month', label: 'Mes' },
+  ];
   protected readonly reminderColors = REMINDER_COLORS;
 
   private readonly today = new Date();
