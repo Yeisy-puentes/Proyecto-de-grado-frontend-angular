@@ -42,30 +42,86 @@
   .client-header__btn { flex: 1 1 0; justify-content: center; }
 }
 
-/* Dato opcional sin registrar (correo o dirección) */
-.contact-row__empty { color: var(--color-slate-400); font-style: italic; font-weight: var(--font-weight-normal, 400); }
-
-.section-title { color: var(--color-slate-700); }
-.contact-row { color: var(--color-slate-600); }
-
-/* ---- Tarjetas de estadísticas ---- */
-.stat-box {
-  border: 1px solid;
-  border-radius: 0.5rem;
-  padding: 1rem;
+/* ---- Cuerpo de la tarjeta: contacto + saldo pendiente ----
+   Celular: todo en una columna (saldo arriba). Tableta: contacto en 2 columnas.
+   Computador: contacto a la izquierda y saldo a la derecha. */
+.client-body {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
 }
-.stat-box--blue   { background: var(--color-blue-50);   border-color: var(--color-blue-100); }
-.stat-box--green  { background: var(--color-green-50);  border-color: var(--color-green-100); }
-.stat-box--purple { background: var(--color-purple-50); border-color: var(--color-purple-100); }
-.stat-box--orange { background: var(--color-orange-50); border-color: var(--color-orange-100); }
-.stat-box--blue .stat-box__label   { color: var(--color-blue-600); }
-.stat-box--green .stat-box__label  { color: var(--color-green-600); }
-.stat-box--purple .stat-box__label { color: var(--color-purple-600); }
-.stat-box--orange .stat-box__label { color: var(--color-orange-600); }
-.stat-box--blue .stat-box__value   { color: var(--color-blue-900); }
-.stat-box--green .stat-box__value  { color: var(--color-green-900); }
-.stat-box--purple .stat-box__value { color: var(--color-purple-900); }
-.stat-box--orange .stat-box__value { color: var(--color-orange-900); }
+.client-section-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-slate-500);
+  margin-bottom: var(--space-4);
+}
+.contact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4) var(--space-6);
+}
+.contact-item { display: flex; align-items: flex-start; gap: var(--space-3); min-width: 0; }
+.contact-item__icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.contact-item__text { min-width: 0; }
+.contact-item__text dt { font-size: var(--font-size-xs); color: var(--color-slate-400); }
+.contact-item__text dd {
+  margin: 0.125rem 0 0;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-800);
+  overflow-wrap: anywhere; /* correos y direcciones largas no se salen de la tarjeta */
+}
+.contact-item__link { color: var(--color-slate-800); }
+.contact-item__link:hover { color: var(--color-brand-blue); text-decoration: underline; }
+.contact-item__empty { color: var(--color-slate-400); font-style: italic; font-weight: var(--font-weight-normal, 400); }
+
+.balance-card {
+  order: -1; /* en celular, lo primero que se ve */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-orange-200);
+  background-color: var(--color-orange-50);
+}
+.balance-card__head { display: flex; align-items: center; gap: var(--space-2); color: var(--color-orange-600); }
+.balance-card__icon { display: flex; }
+.balance-card__label { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); text-transform: uppercase; letter-spacing: 0.05em; }
+.balance-card__value { font-size: var(--font-size-3xl, 1.875rem); font-weight: var(--font-weight-bold); color: var(--color-orange-900); line-height: 1.2; }
+.balance-card__hint { font-size: var(--font-size-sm); color: var(--color-orange-700); }
+.balance-card.is-clear { border-color: var(--color-green-200); background-color: var(--color-green-50); }
+.balance-card.is-clear .balance-card__head { color: var(--color-green-600); }
+.balance-card.is-clear .balance-card__value { color: var(--color-green-900); }
+.balance-card.is-clear .balance-card__hint { color: var(--color-green-700); }
+
+@media (min-width: 640px) {
+  .contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .client-body { grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); align-items: stretch; }
+  .balance-card { order: 0; }
+}
+
+/* ---- Montos de cada arreglo del historial ---- */
+.repair-amounts { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); text-align: right; flex-shrink: 0; }
+.repair-amount { display: flex; flex-direction: column; }
+.repair-amount__label { font-size: var(--font-size-xs); color: var(--color-slate-400); }
+.repair-amount__value { font-weight: var(--font-weight-semibold); white-space: nowrap; }
+.repair-amount__value--total { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-slate-800); }
 
 /* ---- Historial ---- */
 .history-icon {
@@ -128,3 +184,26 @@
   color: var(--color-slate-600);
 }
 .payments-history__row:last-child { border-bottom: none; }
+
+/* ---- Celular: ajustes del cuerpo, historial y pagos (al final para que tengan prioridad) ---- */
+@media (max-width: 639px) {
+  .client-body { padding: var(--space-4); gap: var(--space-5); }
+  .card-header-gradient { padding: var(--space-5) var(--space-4); }
+
+  /* Montos en una fila de 2–3 columnas, separada de la descripción */
+  .repair-row { padding: var(--space-4); }
+  .repair-amounts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    text-align: left;
+    padding-top: var(--space-3);
+    border-top: 1px dashed var(--color-slate-200);
+  }
+  .repair-amount__value--total { font-size: var(--font-size-base); }
+  .expanded-panel { padding: 0 var(--space-4) var(--space-4); }
+  .payment-box { padding: var(--space-4); }
+  .payment-box__actions > .u-flex { width: 100%; }
+  .payment-box__actions .btn { flex: 1 1 0; justify-content: center; }
+  .payment-box__amount { width: 100%; }
+}

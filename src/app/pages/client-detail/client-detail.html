@@ -32,62 +32,58 @@
         </div>
       </div>
 
-      <div class="u-grid u-grid-cols-1 md:u-grid-cols-2 u-gap-6 u-p-6">
-        <div class="u-stack-4">
-          <h4 class="u-text-sm u-font-semibold u-uppercase section-title">Información de Contacto</h4>
-          <div class="u-stack-3">
-            <div class="u-flex u-items-center u-gap-3 contact-row">
-              <svg width="18" height="18" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              <div><p class="u-text-xs u-text-faint">Cédula</p><p class="u-font-medium">{{ client.cedula }}</p></div>
+      <div class="client-body">
+        <!-- Datos de contacto: 1 columna en celular, 2 desde tableta -->
+        <section class="client-contact">
+          <h4 class="client-section-title">Información de contacto</h4>
+          <dl class="contact-grid">
+            <div class="contact-item">
+              <span class="contact-item__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+              <div class="contact-item__text"><dt>Cédula</dt><dd>{{ client.cedula }}</dd></div>
             </div>
-            <div class="u-flex u-items-center u-gap-3 contact-row">
-              <svg width="18" height="18" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></svg>
-              <div><p class="u-text-xs u-text-faint">Correo Electrónico</p><p class="u-font-medium" [class.contact-row__empty]="!client.email">{{ client.email || 'Sin correo' }}</p></div>
+            <div class="contact-item">
+              <span class="contact-item__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+              <div class="contact-item__text"><dt>Teléfono</dt><dd>
+                @if (client.phone) { <a class="contact-item__link" [href]="'tel:' + client.phone">{{ client.phone }}</a> } @else { <span class="contact-item__empty">Sin teléfono</span> }
+              </dd></div>
             </div>
-            <div class="u-flex u-items-center u-gap-3 contact-row">
-              <svg width="18" height="18" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <div><p class="u-text-xs u-text-faint">Teléfono</p><p class="u-font-medium">{{ client.phone }}</p></div>
+            <div class="contact-item">
+              <span class="contact-item__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></svg></span>
+              <div class="contact-item__text"><dt>Correo electrónico</dt><dd>
+                @if (client.email) { <a class="contact-item__link" [href]="'mailto:' + client.email">{{ client.email }}</a> } @else { <span class="contact-item__empty">Sin correo</span> }
+              </dd></div>
             </div>
-            <div class="u-flex u-items-center u-gap-3 contact-row">
-              <svg width="18" height="18" class="u-text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <div><p class="u-text-xs u-text-faint">Dirección</p><p class="u-font-medium" [class.contact-row__empty]="!client.address">{{ client.address || 'Sin dirección' }}</p></div>
+            <div class="contact-item">
+              <span class="contact-item__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+              <div class="contact-item__text"><dt>Dirección</dt><dd>
+                @if (client.address) { {{ client.address }} } @else { <span class="contact-item__empty">Sin dirección</span> }
+              </dd></div>
             </div>
-          </div>
-        </div>
+          </dl>
+        </section>
 
-        <div class="u-stack-4">
-          <h4 class="u-text-sm u-font-semibold u-uppercase section-title">Estadísticas</h4>
-          <div class="u-grid u-grid-cols-2 u-gap-4">
-            <div class="stat-box stat-box--blue">
-              <div class="u-flex u-items-center u-gap-2 u-mb-1 stat-box__label">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                <span class="u-text-xs u-font-medium u-uppercase">Total Arreglos</span>
-              </div>
-              <p class="u-text-2xl u-font-bold stat-box__value">{{ stats().total }}</p>
-            </div>
-            <div class="stat-box stat-box--green">
-              <div class="u-flex u-items-center u-gap-2 u-mb-1 stat-box__label">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span class="u-text-xs u-font-medium u-uppercase">Activos</span>
-              </div>
-              <p class="u-text-2xl u-font-bold stat-box__value">{{ stats().active }}</p>
-            </div>
-            <div class="stat-box stat-box--purple">
-              <div class="u-flex u-items-center u-gap-2 u-mb-1 stat-box__label">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                <span class="u-text-xs u-font-medium u-uppercase">Total Gastado</span>
-              </div>
-              <p class="u-text-xl u-font-bold stat-box__value">{{ stats().spent | cop }}</p>
-            </div>
-            <div class="stat-box stat-box--orange">
-              <div class="u-flex u-items-center u-gap-2 u-mb-1 stat-box__label">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span class="u-text-xs u-font-medium u-uppercase">Saldo Pendiente</span>
-              </div>
-              <p class="u-text-xl u-font-bold stat-box__value">{{ stats().pending | cop }}</p>
-            </div>
+        <!-- Saldo pendiente: naranja si debe, verde si está al día -->
+        @let balance = stats();
+        <aside class="balance-card" [class.is-clear]="balance.pending <= 0">
+          <div class="balance-card__head">
+            <span class="balance-card__icon">
+              @if (balance.pending > 0) {
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              }
+            </span>
+            <span class="balance-card__label">Saldo pendiente</span>
           </div>
-        </div>
+          <p class="balance-card__value">{{ balance.pending | cop }}</p>
+          <p class="balance-card__hint">
+            @if (balance.pending > 0) {
+              En {{ balance.withDebt }} {{ balance.withDebt === 1 ? 'arreglo' : 'arreglos' }}
+            } @else {
+              El cliente está al día
+            }
+          </p>
+        </aside>
       </div>
     </div>
 
@@ -159,14 +155,21 @@
                     <div class="u-flex u-items-center u-gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Entrega: {{ repair.deliveryDate ? (fromDateKey(repair.deliveryDate) | date: 'd MMM y') : 'sin fecha' }}@if (repair.deliveryTime) {, {{ repair.deliveryTime | time12 }}}</div>
                   </div>
                 </div>
-                <div class="u-text-right">
-                  <p class="u-text-xs u-text-muted">Costo Total</p>
-                  <p class="u-text-xl u-font-bold u-text-dark">{{ repair.cost | cop }}</p>
-                  <p class="u-text-xs u-text-muted u-mt-2">Pagado</p>
-                  <p class="u-font-semibold" [class.u-text-orange]="repair.balance > 0" [class.u-text-green]="repair.balance <= 0">{{ repair.paid | cop }}</p>
+                <!-- Montos: en columna a la derecha (computador); en fila compacta (celular) -->
+                <div class="repair-amounts">
+                  <div class="repair-amount">
+                    <span class="repair-amount__label">Costo total</span>
+                    <span class="repair-amount__value repair-amount__value--total">{{ repair.cost | cop }}</span>
+                  </div>
+                  <div class="repair-amount">
+                    <span class="repair-amount__label">Pagado</span>
+                    <span class="repair-amount__value" [class.u-text-orange]="repair.balance > 0" [class.u-text-green]="repair.balance <= 0">{{ repair.paid | cop }}</span>
+                  </div>
                   @if (repair.balance > 0) {
-                    <p class="u-text-xs u-text-muted u-mt-2">Saldo</p>
-                    <p class="u-font-semibold u-text-red">{{ repair.balance | cop }}</p>
+                    <div class="repair-amount">
+                      <span class="repair-amount__label">Saldo</span>
+                      <span class="repair-amount__value u-text-red">{{ repair.balance | cop }}</span>
+                    </div>
                   }
                 </div>
               </div>

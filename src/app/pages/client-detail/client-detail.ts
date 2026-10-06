@@ -97,14 +97,12 @@ export class ClientDetail implements OnInit {
       .sort((a, b) => b.receivedDate.localeCompare(a.receivedDate) || b.id - a.id),
   );
 
-  // ---------- Estadísticas ----------
+  // ---------- Saldo pendiente ----------
   protected readonly stats = computed(() => {
-    const repairs = this.clientRepairs();
+    const withDebt = this.clientRepairs().filter((r) => r.balance > 0);
     return {
-      total: repairs.length,
-      active: repairs.filter((r) => r.status !== 'entregado').length,
-      spent: repairs.reduce((sum, r) => sum + r.cost, 0),
-      pending: repairs.reduce((sum, r) => sum + r.balance, 0),
+      pending: withDebt.reduce((sum, r) => sum + r.balance, 0),
+      withDebt: withDebt.length,
     };
   });
 
