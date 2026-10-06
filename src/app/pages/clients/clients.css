@@ -30,3 +30,6 @@
   padding: var(--space-8) 0;
   color: var(--color-slate-400);
 }
+
+/* Dato opcional sin registrar (correo o dirección) */
+.client-info__empty { color: var(--color-slate-400); font-style: italic; }

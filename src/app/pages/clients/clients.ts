@@ -4,6 +4,7 @@ import { Client, ClientFormData } from '../../core/models/client.model';
 import { ClientService } from '../../core/services/client.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/http-error';
+import { normalize } from '../../core/utils/text.utils';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
@@ -31,18 +32,12 @@ export class Clients implements OnInit {
     }
   }
 
+  /** Búsqueda sin distinguir tildes ni mayúsculas: "maria" encuentra a "María". */
   protected readonly filteredClients = computed(() => {
-    const term = this.search().trim().toLowerCase();
+    const term = normalize(this.search().trim());
     return this.clientService
       .clients()
-      .filter(
-        (c) =>
-          !term ||
-          c.name.toLowerCase().includes(term) ||
-          c.email.toLowerCase().includes(term) ||
-          c.cedula.includes(term) ||
-          c.phone.includes(term),
-      );
+      .filter((c) => !term || [c.name, c.email, c.cedula, c.phone].some((value) => normalize(value).includes(term)));
   });
 
   /** Vuelve a la página 1 cada vez que cambia la búsqueda. */
