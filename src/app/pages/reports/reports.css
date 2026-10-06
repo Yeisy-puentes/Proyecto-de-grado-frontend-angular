@@ -119,11 +119,42 @@
 }
 
 /* Tablas de informes: ancho mínimo para que en celular se desplacen
-   horizontalmente (dentro de .table-scroll) en lugar de apretar las columnas. */
-.report-table { min-width: 42rem; }
-.report-table th,
-.report-table td { white-space: nowrap; }
-.report-table .cell-desc { max-width: 16rem; }
+   horizontalmente (dentro de .table-scroll) en lugar de apretar las columnas.
+   Columnas de ancho fijo (<colgroup>): no cambian al filtrar; lo que no cabe se corta con "…". */
+.report-table {
+  --report-row-h: 3.375rem; /* alto fijo de una fila (54 px): un poco más que su contenido, para que todas midan igual */
+  min-width: 48rem;
+  table-layout: fixed;
+}
+.report-table th { white-space: normal; }
+.report-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Alto fijo de 10 filas: todas las filas miden lo mismo y las líneas separadoras son
+   sombras internas (no suman alto como los bordes), así el relleno coincide al píxel. */
+.report-table tbody tr { height: var(--report-row-h); }
+.report-table tbody td {
+  border-bottom: 0;
+  box-shadow: inset 0 -1px 0 var(--color-slate-100);
+}
+.report-table tbody tr:last-child td { box-shadow: none; }
+
+/* Filas de relleno: invisibles, sin línea ni efecto al pasar el mouse */
+.report-table tbody tr.filler-row td { box-shadow: none; padding: 0; }
+.report-table tbody tr.filler-row:hover,
+.report-table tbody tr.empty-row:hover { background-color: transparent; }
+
+/* Sin resultados: el mensaje ocupa el alto de las 10 filas, centrado */
+.report-table tbody tr.empty-row { height: calc(var(--report-row-h) * 10); }
+.report-table .cell-empty {
+  text-align: center;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 
 .cell-ref { font-family: monospace; color: var(--color-slate-600); }
 .cell-muted { color: var(--color-slate-500); }

@@ -25,7 +25,7 @@ import { BarChart, BarSeries } from '../../shared/components/charts/bar-chart/ba
 import { DonutChart, DonutSegment } from '../../shared/components/charts/donut-chart/donut-chart';
 import { HBarChart } from '../../shared/components/charts/hbar-chart/hbar-chart';
 import { ChartPoint, LineChart } from '../../shared/components/charts/line-chart/line-chart';
-import { Pagination, paginate } from '../../shared/components/pagination/pagination';
+import { Pagination, fillerRows, paginate } from '../../shared/components/pagination/pagination';
 import { SearchBox } from '../../shared/components/search-box/search-box';
 import { SelectDropdown } from '../../shared/components/select-dropdown/select-dropdown';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
@@ -270,6 +270,7 @@ export class Reports implements OnInit {
     computation: () => 1,
   });
   protected readonly pagedIncomeRows = computed(() => paginate(this.filteredIncomeRows(), this.incomePage(), REPORT_PAGE_SIZE));
+  protected readonly incomeFillers = computed(() => fillerRows(this.pagedIncomeRows().length, REPORT_PAGE_SIZE));
 
   /** Totales de "Detalle de arreglos — ingresos" sobre los registros filtrados. */
   protected readonly incomeTotals = computed(() =>
@@ -299,6 +300,7 @@ export class Reports implements OnInit {
     computation: () => 1,
   });
   protected readonly pagedRepairRows = computed(() => paginate(this.filteredRepairRows(), this.repairsPage(), REPORT_PAGE_SIZE));
+  protected readonly repairFillers = computed(() => fillerRows(this.pagedRepairRows().length, REPORT_PAGE_SIZE));
 
   protected readonly clientsSearch = debouncedSearch(this.pageResetKey);
   protected readonly clientRows = computed(() => this.clientes()?.resumenPorCliente ?? []);
@@ -310,6 +312,7 @@ export class Reports implements OnInit {
     computation: () => 1,
   });
   protected readonly pagedClientRows = computed(() => paginate(this.filteredClientRows(), this.clientsPage(), REPORT_PAGE_SIZE));
+  protected readonly clientFillers = computed(() => fillerRows(this.pagedClientRows().length, REPORT_PAGE_SIZE));
 
   /** Totales de "Resumen por cliente" sobre los clientes filtrados (no solo la página visible). */
   protected readonly clientTotals = computed(() =>

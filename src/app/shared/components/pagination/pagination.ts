@@ -24,6 +24,15 @@ export function paginate<T>(items: readonly T[], page: number, pageSize = PAGE_S
   return items.slice(start, start + pageSize);
 }
 
+/**
+ * Filas vacías que faltan para completar la página, para que una tabla mantenga siempre el mismo alto.
+ * Sin resultados devuelve [] (el mensaje de "sin resultados" ocupa ese espacio).
+ */
+export function fillerRows(visible: number, pageSize = PAGE_SIZE): number[] {
+  if (visible === 0) return [];
+  return Array.from({ length: Math.max(0, pageSize - visible) }, (_, i) => i);
+}
+
 @Component({
   selector: 'app-pagination',
   templateUrl: './pagination.html',

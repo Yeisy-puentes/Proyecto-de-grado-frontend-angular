@@ -164,19 +164,23 @@
           </div>
           <div class="table-scroll">
             <table class="data-table report-table">
+              <colgroup><col style="width: 11%" /><col style="width: 29%" /><col style="width: 12%" /><col style="width: 16%" /><col style="width: 16%" /><col style="width: 16%" /></colgroup>
               <thead><tr><th>Referencia</th><th>Cliente</th><th>Fecha</th><th class="text-right">Costo</th><th class="text-right">Cobrado</th><th class="text-right">Pendiente</th></tr></thead>
               <tbody>
                 @for (row of pagedIncomeRows(); track row.id_arreglo) {
                   <tr>
                     <td class="u-text-xs cell-ref">{{ repairCode(row.id_arreglo) }}</td>
-                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
+                    <td class="u-font-medium" [title]="row.nombre_completo">{{ row.nombre_completo }}</td>
                     <td class="cell-muted">{{ day(row.fecha_ingreso) | date: 'dd/MM/yy' }}</td>
                     <td class="text-right">{{ num(row.valor) | cop }}</td>
                     <td class="text-right u-text-green u-font-medium">{{ num(row.pagado) | cop }}</td>
                     <td class="text-right u-font-medium" [class.u-text-orange]="num(row.pendiente) > 0" [class.cell-zero]="num(row.pendiente) === 0">{{ num(row.pendiente) | cop }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="6" class="cell-zero">@if (incomeSearch.term()) { No se encontraron resultados para «{{ incomeSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
+                  <tr class="empty-row"><td colspan="6" class="cell-zero cell-empty">@if (incomeSearch.term()) { No se encontraron resultados para «{{ incomeSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
+                }
+                @for (n of incomeFillers(); track n) {
+                  <tr class="filler-row" aria-hidden="true"><td colspan="6"></td></tr>
                 }
               </tbody>
               <tfoot>
@@ -221,13 +225,14 @@
           </div>
           <div class="table-scroll">
             <table class="data-table report-table">
+              <colgroup><col style="width: 11%" /><col style="width: 22%" /><col style="width: 26%" /><col style="width: 15%" /><col style="width: 13%" /><col style="width: 13%" /></colgroup>
               <thead><tr><th>Referencia</th><th>Cliente</th><th>Descripción</th><th>Estado</th><th>Recibido</th><th>Entrega</th></tr></thead>
               <tbody>
                 @for (row of pagedRepairRows(); track row.id_arreglo) {
                   <tr>
                     <td class="u-text-xs cell-ref">{{ repairCode(row.id_arreglo) }}</td>
-                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
-                    <td class="u-truncate cell-desc">{{ row.descripcion }}</td>
+                    <td class="u-font-medium" [title]="row.nombre_completo">{{ row.nombre_completo }}</td>
+                    <td class="u-truncate cell-desc" [title]="row.descripcion">{{ row.descripcion }}</td>
                     <td>
                       <span
                         class="status-pill"
@@ -239,7 +244,10 @@
                     <td class="cell-muted">{{ row.fecha_entrega ? (day(row.fecha_entrega) | date: 'dd/MM/yy') : '—' }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="6" class="cell-zero">@if (repairsSearch.term()) { No se encontraron resultados para «{{ repairsSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
+                  <tr class="empty-row"><td colspan="6" class="cell-zero cell-empty">@if (repairsSearch.term()) { No se encontraron resultados para «{{ repairsSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
+                }
+                @for (n of repairFillers(); track n) {
+                  <tr class="filler-row" aria-hidden="true"><td colspan="6"></td></tr>
                 }
               </tbody>
             </table>
@@ -266,18 +274,22 @@
           </div>
           <div class="table-scroll">
             <table class="data-table report-table">
+              <colgroup><col style="width: 40%" /><col style="width: 12%" /><col style="width: 16%" /><col style="width: 16%" /><col style="width: 16%" /></colgroup>
               <thead><tr><th>Cliente</th><th class="text-right">Arreglos</th><th class="text-right">Total facturado</th><th class="text-right">Total cobrado</th><th class="text-right">Saldo</th></tr></thead>
               <tbody>
                 @for (row of pagedClientRows(); track row.id_cliente) {
                   <tr>
-                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
+                    <td class="u-font-medium" [title]="row.nombre_completo">{{ row.nombre_completo }}</td>
                     <td class="text-right">{{ num(row.total_arreglos) }}</td>
                     <td class="text-right">{{ num(row.total_facturado) | cop }}</td>
                     <td class="text-right u-text-green u-font-medium">{{ num(row.total_cobrado) | cop }}</td>
                     <td class="text-right u-font-medium" [class.u-text-orange]="num(row.saldo) > 0" [class.cell-zero]="num(row.saldo) === 0">{{ num(row.saldo) | cop }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="5" class="cell-zero">@if (clientsSearch.term()) { No se encontraron resultados para «{{ clientsSearch.term() }}» } @else { Sin clientes con arreglos en el período. }</td></tr>
+                  <tr class="empty-row"><td colspan="5" class="cell-zero cell-empty">@if (clientsSearch.term()) { No se encontraron resultados para «{{ clientsSearch.term() }}» } @else { Sin clientes con arreglos en el período. }</td></tr>
+                }
+                @for (n of clientFillers(); track n) {
+                  <tr class="filler-row" aria-hidden="true"><td colspan="5"></td></tr>
                 }
               </tbody>
               @if (filteredClientRows().length) {
