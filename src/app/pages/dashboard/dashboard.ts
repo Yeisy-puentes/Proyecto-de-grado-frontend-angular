@@ -34,6 +34,14 @@ function byDelivery(a: Repair, b: Repair): number {
   );
 }
 
+/** Del más reciente al más antiguo por fecha y hora de entrega (los que no tienen fecha/hora van al final). */
+function byDeliveryDesc(a: Repair, b: Repair): number {
+  return (
+    (b.deliveryDate ?? '').localeCompare(a.deliveryDate ?? '') ||
+    (b.deliveryTime ?? '').localeCompare(a.deliveryTime ?? '')
+  );
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [DatePipe, NgTemplateOutlet, Pagination, RouterLink, StatusBadge, Time12Pipe],
@@ -93,7 +101,8 @@ export class Dashboard implements OnInit {
       // Hoy y mañana: solo los que siguen en estado Pendiente (sin empezar).
       hoy: list.filter((r) => r.status === 'pendiente' && r.deliveryDate === this.todayKey),
       manana: list.filter((r) => r.status === 'pendiente' && r.deliveryDate === this.tomorrowKey),
-      listos: list.filter((r) => r.status === 'listo'),
+      // Listos: todos, del más reciente al más antiguo por fecha de entrega.
+      listos: list.filter((r) => r.status === 'listo').sort(byDeliveryDesc),
     };
   });
 

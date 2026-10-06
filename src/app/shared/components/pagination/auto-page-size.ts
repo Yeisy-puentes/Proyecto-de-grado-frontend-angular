@@ -20,6 +20,12 @@ export interface AutoPageSizeOptions {
   reservedSelector?: string;
   /** Si hay que reservar el alto de `reservedSelector` (aunque no esté en la página actual). */
   needsReserved?: () => boolean;
+  /**
+   * Recibe el alto libre que queda debajo de los registros hasta el fondo de la pantalla, para
+   * rellenarlo (p. ej. con una fila vacía) y que la tabla no se encoja al filtrar. El relleno debe
+   * ir dentro de `list` y no coincidir con `itemSelector`. En celular siempre es 0.
+   */
+  fill?: WritableSignal<number>;
 }
 
 /**
@@ -53,13 +59,19 @@ export function autoPageSize(options: AutoPageSizeOptions): Signal<number> {
 
   const measure = (): void => {
     if (window.matchMedia(MOBILE_QUERY).matches) {
+      options.fill?.set(0);
       apply(MOBILE_PAGE_SIZE);
       return;
     }
 
     const list = options.list()?.nativeElement;
     const items = list?.querySelectorAll<HTMLElement>(options.itemSelector);
-    if (!list || !items?.length) return; // Cargando o sin resultados: no hay nada que medir.
+    if (!list) return;
+    if (!items?.length) {
+      // Cargando o sin resultados: no hay registros que medir, pero sí se rellena el alto.
+      if (belowHeight) updateFill(list);
+      return;
+    }
 
     for (const item of items) itemHeight = Math.max(itemHeight, Math.ceil(item.getBoundingClientRect().height));
 
@@ -78,11 +90,8 @@ export function autoPageSize(options: AutoPageSizeOptions): Signal<number> {
     const listRect = list.getBoundingClientRect();
     belowHeight = Math.max(belowHeight, host.getBoundingClientRect().bottom - listRect.bottom);
 
-    const scroller = scrollParent(host);
-    const listTop = listRect.top + (scroller?.scrollTop ?? 0);
-    const bottomLimit = scroller
-      ? scroller.getBoundingClientRect().top + scroller.clientTop + scroller.clientHeight - parseFloat(getComputedStyle(scroller).paddingBottom)
-      : document.documentElement.clientHeight;
+    const listTop = listRect.top + (scrollParent(host)?.scrollTop ?? 0);
+    const bottomLimit = bottomLimitOf(host);
 
     const listStyle = getComputedStyle(list);
     const gap = parseFloat(listStyle.rowGap) || 0;
@@ -91,6 +100,15 @@ export function autoPageSize(options: AutoPageSizeOptions): Signal<number> {
     const available = bottomLimit - listTop - belowHeight - reserved;
     const rows = Math.max(Math.ceil(MIN_PAGE_SIZE / columns), Math.floor((available + gap) / (itemHeight + gap)));
     apply(rows * columns);
+    updateFill(list);
+  };
+
+  /** Alto libre entre el último registro (sin contar el relleno actual) y el fondo de la pantalla. */
+  const updateFill = (list: HTMLElement): void => {
+    if (!options.fill) return;
+    const scroller = scrollParent(host);
+    const contentBottom = list.getBoundingClientRect().bottom - untracked(options.fill) + (scroller?.scrollTop ?? 0);
+    options.fill.set(Math.max(0, Math.floor(bottomLimitOf(host) - contentBottom - belowHeight)));
   };
 
   // Mide tras cada render en el que cambie la lista, la página o el tamaño (converge en 1–2 pasadas).
@@ -118,6 +136,14 @@ export function autoPageSize(options: AutoPageSizeOptions): Signal<number> {
   });
 
   return pageSize.asReadonly();
+}
+
+/** Fondo del área de contenido visible (sin su padding inferior), en coordenadas de la ventana. */
+function bottomLimitOf(host: HTMLElement): number {
+  const scroller = scrollParent(host);
+  return scroller
+    ? scroller.getBoundingClientRect().top + scroller.clientTop + scroller.clientHeight - parseFloat(getComputedStyle(scroller).paddingBottom)
+    : document.documentElement.clientHeight;
 }
 
 /** Ancestro con desplazamiento vertical propio (en el layout, `.page-content`). */

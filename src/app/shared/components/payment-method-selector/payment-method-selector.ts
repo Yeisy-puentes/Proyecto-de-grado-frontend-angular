@@ -16,7 +16,7 @@ export class PaymentMethodSelector {
   protected readonly methods = SELECTABLE_PAYMENT_METHODS.map((value) => PAYMENT_METHODS.find((m) => m.value === value)!);
 
   protected select(method: PaymentMethod): void {
-    // Un segundo clic sobre el mismo método lo deselecciona (el pago es opcional).
-    this.value.update((current) => (current === method ? null : method));
+    // Siempre queda un método elegido (por defecto Efectivo): un segundo clic no lo deselecciona.
+    this.value.set(method);
   }
 }

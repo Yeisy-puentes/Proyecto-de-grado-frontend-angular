@@ -131,3 +131,18 @@
 @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
   .week-item { min-height: 44px; justify-content: center; }
 }
+
+/* ---- Computador: semana más grande (ocupa el alto de la pantalla) ---- */
+@media (min-width: 1025px) and (hover: hover) {
+  .week-col__header { padding: var(--space-4) var(--space-2); }
+  .week-col__weekday { font-size: var(--font-size-sm); }
+  .week-col__number { min-width: 2.25rem; height: 2.25rem; font-size: var(--font-size-base); }
+  .week-col__body {
+    min-height: max(20rem, calc(100vh - 24rem));
+    max-height: max(20rem, calc(100vh - 24rem));
+    padding: var(--space-3) var(--space-2);
+  }
+  .week-item { padding: 0.5rem 0.625rem; }
+  .week-item__top { font-size: var(--font-size-xs); }
+  .week-item__title { font-size: var(--font-size-sm); }
+}

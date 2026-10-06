@@ -83,6 +83,9 @@ export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
  */
 export const SELECTABLE_PAYMENT_METHODS: PaymentMethod[] = ['efectivo', 'tarjeta', 'transferencia'];
 
+/** Método que queda seleccionado por defecto al registrar un pago. */
+export const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'efectivo';
+
 /** Convierte el estado a sufijo de clase CSS (en_proceso -> en-proceso). */
 export function statusClass(status: RepairStatus | 'recordatorio'): string {
   return status.replace('_', '-');

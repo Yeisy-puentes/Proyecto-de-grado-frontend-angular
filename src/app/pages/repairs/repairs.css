@@ -198,6 +198,9 @@
 .repair-row { cursor: pointer; }
 .data-table tbody tr.repair-row.is-selected { background-color: var(--color-blue-50); }
 .data-table tbody tr.group-row:hover { background: none; }
+/* Espacio vacío al final de la tabla (mantiene su alto cuando hay pocos resultados). */
+.data-table tbody tr.fill-row:hover { background: none; }
+.data-table tbody tr.fill-row td { padding: 0; border-bottom: none; }
 .group-row td {
   padding: 0.625rem var(--space-4);
   background-color: var(--color-slate-50);

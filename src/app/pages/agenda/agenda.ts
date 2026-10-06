@@ -1,5 +1,5 @@
 import { DatePipe, TitleCasePipe, formatDate } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { REMINDER_COLORS, Reminder, ReminderColor } from '../../core/models/reminder.model';
 import { Repair, RepairStatus, STATUS_LABELS, statusClass } from '../../core/models/repair.model';
@@ -73,7 +73,18 @@ export class Agenda implements OnInit {
   private readonly today = new Date();
   private readonly todayKey = toDateKey(this.today);
 
+  /** ?fecha=yyyy-MM-dd (p. ej. desde el Dashboard): abre la vista de día en esa fecha. */
+  readonly fecha = input<string>();
+  /** ?arreglo=ID junto con ?fecha: ese arreglo aparece desplegado. */
+  readonly arreglo = input<string>();
+
   async ngOnInit(): Promise<void> {
+    const fecha = this.fecha();
+    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      const repairId = Number(this.arreglo());
+      if (repairId) this.openRepair(fecha, repairId);
+      else this.openDay(fecha);
+    }
     try {
       await Promise.all([this.repairService.load(), this.reminderService.load()]);
     } catch (err) {
@@ -86,7 +97,8 @@ export class Agenda implements OnInit {
   protected readonly currentMonth = signal(new Date(this.today.getFullYear(), this.today.getMonth(), 1));
   /** Día seleccionado en la vista de día (yyyy-MM-dd). */
   protected readonly selectedDate = signal(this.todayKey);
-  protected readonly dayFilter = signal<DayFilter>('all');
+  /** Filtro de la vista de día: por defecto, solo los pendientes. */
+  protected readonly dayFilter = signal<DayFilter>('pendiente');
 
   /** Arreglos que siguen activos (no entregados), con datos del cliente. */
   private readonly agendaRepairs = computed(() =>
@@ -169,6 +181,9 @@ export class Agenda implements OnInit {
   /** Clic en una tarjeta de arreglo de la semana: vista de día con ese arreglo desplegado. */
   protected openRepair(key: string, repairId: number): void {
     this.openDay(key);
+    // Si el arreglo no está pendiente, se muestran todos para que se vea desplegado.
+    const repair = this.repairService.repairs().find((r) => r.id === repairId);
+    if (repair && repair.status !== 'pendiente') this.dayFilter.set('all');
     this.expandedRepairId.set(repairId);
   }
 
@@ -274,12 +289,13 @@ export class Agenda implements OnInit {
       const d = this.selectedDateValue();
       this.currentMonth.set(new Date(d.getFullYear(), d.getMonth(), 1));
     }
+    if (view === 'day' && this.view() !== 'day') this.dayFilter.set('pendiente');
     this.view.set(view);
   }
 
   protected openDay(key: string): void {
     this.selectedDate.set(key);
-    this.dayFilter.set('all');
+    this.dayFilter.set('pendiente');
     this.view.set('day');
   }
 

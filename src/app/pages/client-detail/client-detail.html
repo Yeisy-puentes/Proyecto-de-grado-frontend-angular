@@ -135,7 +135,7 @@
       <!-- Lista de arreglos -->
       <div>
         @for (repair of filteredRepairs(); track repair.id) {
-          <div class="repair-item">
+          <div class="repair-item" [id]="'repair-' + repair.id">
             <div class="u-p-6 repair-row" (click)="toggleExpanded(repair)">
               <div class="u-flex u-flex-col sm:u-flex-row u-justify-between u-gap-4 repair-row__main">
                 <div class="u-flex-1">
