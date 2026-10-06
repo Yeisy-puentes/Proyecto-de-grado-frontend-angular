@@ -1,0 +1,167 @@
+:host {
+  display: block;
+  position: relative;
+  font-family: var(--font-family-base);
+  /* Tonos derivados del color base (--hbar-color llega desde el input `color`) */
+  --hbar-strong: color-mix(in srgb, var(--hbar-color) 85%, black);
+  --hbar-soft: color-mix(in srgb, var(--hbar-color) 45%, white);
+}
+
+/* Columnas compartidas por todas las filas (subgrid): puesto | nombre (180px) | barra | valor.
+   Tamaños fijos: la gráfica no se escala con el ancho (8 filas × 36px + separación ≈ 300px). */
+.hbar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1.25rem 180px minmax(0, 1fr) max-content;
+  column-gap: var(--space-3);
+  row-gap: 2px;
+}
+
+.hbar-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+  column-gap: var(--space-3);
+  height: 36px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: default;
+  transition: opacity var(--transition-base), background-color var(--transition-fast);
+}
+.hbar-row.is-active { background-color: var(--color-slate-50); }
+.hbar-row.is-dim { opacity: 0.4; }
+
+/* ---- Puesto en un círculo ---- */
+.hbar-rank {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-500);
+}
+.is-top .hbar-rank { background-color: var(--hbar-strong); color: var(--color-white); }
+
+/* ---- Nombre: se corta con "…" según el ancho real ---- */
+.hbar-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-slate-700);
+}
+
+/* ---- Riel (100 %) y barra ---- */
+.hbar-track {
+  display: block;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-slate-100);
+  overflow: hidden;
+}
+.hbar-bar {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--hbar-soft) 70%, white), var(--hbar-soft));
+  transform-origin: left center;
+  animation: hbar-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.is-top .hbar-bar {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--hbar-color) 60%, white), var(--hbar-strong));
+}
+
+/* ---- Valor: "12 arreglos" ---- */
+.hbar-value {
+  font-size: var(--font-size-xs);
+  color: var(--color-slate-400);
+  white-space: nowrap;
+  animation: hbar-fade 300ms ease-out both;
+}
+.hbar-value strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-slate-800);
+}
+
+@keyframes hbar-grow { from { transform: scaleX(0); } }
+@keyframes hbar-fade { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hbar-bar,
+  .hbar-value { animation: none; }
+  .hbar-row { transition: none; }
+}
+
+/* ---- Celular: puesto, nombre y valor arriba; la barra debajo a todo el ancho ---- */
+@media (max-width: 639px) {
+  .hbar { display: flex; flex-direction: column; }
+  .hbar-row {
+    height: auto;
+    padding: var(--space-1) var(--space-2);
+    grid-template-columns: 1.25rem minmax(0, 1fr) max-content;
+    grid-template-areas:
+      'rank  name  value'
+      'track track track';
+    row-gap: var(--space-1);
+  }
+  .hbar-rank { grid-area: rank; }
+  .hbar-name { grid-area: name; }
+  .hbar-track { grid-area: track; }
+  .hbar-value { grid-area: value; }
+}
+
+/* ---- Tooltip: mismo estilo que la gráfica de barras ---- */
+.hbar-tooltip {
+  position: absolute;
+  transform: translate(10px, -50%);
+  min-width: 9rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-slate-100);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+}
+.hbar-tooltip--flip { transform: translate(calc(-100% - 10px), -50%); }
+.hbar-tooltip__label {
+  margin-bottom: 0.25rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-slate-800);
+}
+.hbar-tooltip__row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-slate-600);
+}
+.hbar-tooltip__dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--hbar-strong);
+}
+.hbar-tooltip__name { flex: 1; }
+.hbar-tooltip__row strong { margin-left: var(--space-3); color: var(--color-slate-800); }
+
+.chart-empty {
+  min-height: 10rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-slate-400);
+  font-size: var(--font-size-sm);
+}

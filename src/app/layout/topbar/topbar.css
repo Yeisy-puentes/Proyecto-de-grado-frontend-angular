@@ -35,9 +35,48 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding-left: var(--space-6);
+  padding: 0.25rem 0.5rem 0.25rem var(--space-6);
   border-left: 1px solid var(--color-slate-200);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  transition: background-color var(--transition-fast);
 }
+.topbar__user:hover { background-color: var(--color-slate-50); }
+.topbar__user-chevron { color: var(--color-slate-400); transition: transform var(--transition-fast); }
+.user-menu.is-open .topbar__user-chevron { transform: rotate(180deg); }
+
+/* ---- Menú del usuario: datos + cerrar sesión ---- */
+.user-menu { position: relative; }
+.user-menu__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 14rem;
+  background-color: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--color-slate-200);
+  z-index: 50;
+  overflow: hidden;
+  display: none;
+}
+.user-menu.is-open .user-menu__panel { display: block; }
+.user-menu__info {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-slate-100);
+}
+.user-menu__logout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-red-600);
+  text-align: left;
+  transition: background-color var(--transition-fast);
+}
+.user-menu__logout:hover { background-color: var(--color-red-50); }
 .topbar__user-name { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-slate-800); }
 .topbar__user-role { font-size: var(--font-size-xs); color: var(--color-slate-500); text-transform: capitalize; }
 .avatar {
@@ -149,6 +188,7 @@
   .btn-menu-mobile { display: block; }
   .topbar__title { font-size: var(--font-size-lg); }
   .topbar__user-text { display: none; }
+  .topbar__user { padding-left: var(--space-3); }
 
   /* El panel se ancla a los bordes de la pantalla (la campana no está en la esquina). */
   .notif { position: static; }

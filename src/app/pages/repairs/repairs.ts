@@ -1,9 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, computed, inject, linkedSignal, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
 import {
+  DEFAULT_PAYMENT_METHOD,
   PAYMENT_METHODS,
   PaymentMethod,
   REPAIR_STATUSES,
@@ -20,11 +21,13 @@ import { ToastService } from '../../core/services/toast.service';
 import { fromDateKey, nowTime, todayKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
+import { DatePickerDialog } from '../../shared/components/date-picker-dialog/date-picker-dialog';
 import { FieldError } from '../../shared/forms/field-error/field-error';
 import { FormValidation } from '../../shared/forms/form-validation.directive';
 import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
-import { Pagination, clampPage, paginate } from '../../shared/components/pagination/pagination';
+import { Pagination, paginate } from '../../shared/components/pagination/pagination';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
+import { SelectDropdown, SelectOption } from '../../shared/components/select-dropdown/select-dropdown';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { Time12Pipe } from '../../shared/pipes/time12.pipe';
@@ -87,13 +90,13 @@ function emptyForm(): RepairForm {
     deliveryTime: DEFAULT_DELIVERY_TIME,
     cost: 0,
     initialPayment: 0,
-    paymentMethod: null,
+    paymentMethod: DEFAULT_PAYMENT_METHOD,
   };
 }
 
 @Component({
   selector: 'app-repairs',
-  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation, Pagination],
+  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation, Pagination, SelectDropdown, DatePickerDialog],
   templateUrl: './repairs.html',
   styleUrl: './repairs.css',
   host: {
@@ -108,6 +111,7 @@ export class Repairs implements OnInit, OnDestroy {
   private readonly clientService = inject(ClientService);
   private readonly paymentService = inject(PaymentService);
   private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
   private readonly confirm = inject(ConfirmService);
 
   protected readonly clients = this.clientService.clients;
@@ -139,8 +143,8 @@ export class Repairs implements OnInit, OnDestroy {
   ];
 
   /**
-   * Primero lo que falta por entregar, de la entrega más cercana a la más lejana (sin fecha al final);
-   * después los entregados, del más reciente al más antiguo.
+   * De la fecha más reciente a la más antigua: por fecha de entrega (o de ingreso si no tiene) y,
+   * dentro del mismo día, por hora. En el filtro Pendientes, al revés: primero los más antiguos.
    */
   protected readonly filteredRepairs = computed(() => {
     const term = normalizeSearch(this.search());
@@ -155,13 +159,14 @@ export class Repairs implements OnInit, OnDestroy {
       return matchesSearch && (status === 'all' || r.status === status);
     });
 
-    const active = matches
-      .filter((r) => r.status !== 'entregado')
-      .sort((a, b) => (a.deliveryDate ?? '9999').localeCompare(b.deliveryDate ?? '9999') || (a.deliveryTime ?? '').localeCompare(b.deliveryTime ?? ''));
-    const delivered = matches
-      .filter((r) => r.status === 'entregado')
-      .sort((a, b) => (b.deliveryDate ?? b.receivedDate).localeCompare(a.deliveryDate ?? a.receivedDate) || b.id - a.id);
-    return [...active, ...delivered];
+    const direction = status === 'pendiente' ? 1 : -1;
+    return matches.sort(
+      (a, b) =>
+        direction *
+        ((a.deliveryDate ?? a.receivedDate).localeCompare(b.deliveryDate ?? b.receivedDate) ||
+          (a.deliveryTime ?? '').localeCompare(b.deliveryTime ?? '') ||
+          a.id - b.id),
+    );
   });
 
   // ---------- Paginación ----------
@@ -174,26 +179,20 @@ export class Repairs implements OnInit, OnDestroy {
   private readonly rowsBody = viewChild<ElementRef<HTMLElement>>('rowsBody');
 
   /** Filas que caben en pantalla sin desplazamiento (10 fijas en celular). */
+  /** Alto vacío al final de la tabla para que conserve su tamaño aunque haya pocos resultados. */
+  protected readonly fillHeight = signal(0);
+
   protected readonly pageSize = autoPageSize({
     items: this.filteredRepairs,
     page: this.page,
     list: this.rowsBody,
     itemSelector: 'tr.repair-row',
-    reservedSelector: 'tr.group-row',
-    needsReserved: () => this.firstDeliveredIndex() >= 0,
+    fill: this.fillHeight,
   });
 
   protected readonly pagedRepairs = computed(() => paginate(this.filteredRepairs(), this.page(), this.pageSize()));
 
-  /** Posición en la lista filtrada del primer arreglo de la página actual. */
-  protected readonly pageOffset = computed(
-    () => (clampPage(this.page(), this.filteredRepairs().length, this.pageSize()) - 1) * this.pageSize(),
-  );
-
   /** Índice del primer entregado en "Todos", para mostrar el separador "Entregados". */
-  protected readonly firstDeliveredIndex = computed(() =>
-    this.statusFilter() === 'all' ? this.filteredRepairs().findIndex((r) => r.status === 'entregado') : -1,
-  );
 
   /** El calendario del buscador escribe la fecha elegida como dd/mm/aaaa. */
   protected onSearchDatePicked(value: string): void {
@@ -202,13 +201,37 @@ export class Repairs implements OnInit, OnDestroy {
     this.search.set(`${d}/${m}/${y}`);
   }
 
-  protected openDatePicker(input: HTMLInputElement): void {
-    try {
-      input.showPicker();
-    } catch {
-      input.click();
-    }
+  // ---------- Calendario del buscador ----------
+  protected readonly datePickerOpen = signal(false);
+
+  /** Si la búsqueda actual es una fecha dd/mm/aaaa, su clave yyyy-MM-dd (para abrir el calendario en ella). */
+  protected readonly searchDateKey = computed(() => {
+    const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(this.search().trim());
+    if (!match) return null;
+    const [, d, m, y] = match;
+    const key = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    return Number.isNaN(fromDateKey(key).getTime()) ? null : key;
+  });
+
+  protected openDatePicker(): void {
+    this.datePickerOpen.set(true);
   }
+
+  protected onDateDialogSelected(key: string): void {
+    this.datePickerOpen.set(false);
+    this.onSearchDatePicked(key);
+  }
+
+  /** "Limpiar" del calendario: borra la búsqueda solo si es una fecha. */
+  protected onDateDialogCleared(): void {
+    this.datePickerOpen.set(false);
+    if (this.searchDateKey()) this.search.set('');
+  }
+
+  /** Opciones del desplegable de celular: los mismos filtros que los botones, con su cantidad. */
+  protected readonly statusOptions = computed<SelectOption<StatusFilter>[]>(() =>
+    this.pillFilters.map((pill) => ({ ...pill, count: this.countByStatus(pill.value) })),
+  );
 
   protected countByStatus(status: StatusFilter): number {
     return status === 'all'
@@ -230,12 +253,15 @@ export class Repairs implements OnInit, OnDestroy {
   }
 
   // ---------- Alertas de entrega y saldo ----------
-  /** 'overdue' si ya pasó la fecha de entrega sin entregarse, 'today' si se entrega hoy. */
+  /**
+   * 'overdue' si ya pasó la fecha de entrega y sigue Pendiente o En Taller (los Listos no cuentan
+   * como atrasados: ya están terminados), 'today' si se entrega hoy.
+   */
   protected deliveryAlert(repair: Repair): { kind: 'overdue' | 'today'; label: string } | null {
     if (repair.status === 'entregado' || !repair.deliveryDate) return null;
     const today = todayKey();
     if (repair.deliveryDate === today) return { kind: 'today', label: 'Entrega hoy' };
-    if (repair.deliveryDate < today) {
+    if (repair.deliveryDate < today && (repair.status === 'pendiente' || repair.status === 'en_proceso')) {
       const days = Math.round((fromDateKey(today).getTime() - fromDateKey(repair.deliveryDate).getTime()) / 86_400_000);
       return { kind: 'overdue', label: days === 1 ? 'Atrasado 1 día' : `Atrasado ${days} días` };
     }
@@ -289,7 +315,12 @@ export class Repairs implements OnInit, OnDestroy {
   protected async changeStatus(repair: Repair, status: RepairStatus): Promise<void> {
     this.statusMenu.set(null);
     if (status === repair.status) return;
-    if (status === 'entregado' && !(await this.confirmDeliveryWithBalance(repair))) return;
+    // "Entregar" no cambia el estado aquí: lleva al detalle del cliente con ese arreglo abierto
+    // para cobrar el saldo (si lo hay) y marcarlo como entregado desde allí.
+    if (status === 'entregado') {
+      this.router.navigate(['/clientes', repair.clientId], { queryParams: { arreglo: repair.id } });
+      return;
+    }
 
     this.changingStatusId.set(repair.id);
     try {
@@ -313,13 +344,13 @@ export class Repairs implements OnInit, OnDestroy {
   // ---------- Modal registrar pago ----------
   protected readonly paymentRepair = signal<Repair | null>(null);
   protected readonly paymentAmount = signal('');
-  protected readonly paymentMethod = signal<PaymentMethod | null>(null);
+  protected readonly paymentMethod = signal<PaymentMethod | null>(DEFAULT_PAYMENT_METHOD);
   protected readonly savingPayment = signal(false);
 
   protected openPayment(repair: Repair): void {
     this.paymentRepair.set(repair);
     this.paymentAmount.set('');
-    this.paymentMethod.set(null);
+    this.paymentMethod.set(DEFAULT_PAYMENT_METHOD);
   }
 
   protected closePayment(): void {
@@ -435,7 +466,7 @@ export class Repairs implements OnInit, OnDestroy {
       deliveryTime: repair.deliveryTime ?? DEFAULT_DELIVERY_TIME,
       cost: repair.cost,
       initialPayment: 0,
-      paymentMethod: null,
+      paymentMethod: DEFAULT_PAYMENT_METHOD,
     };
     this.selectedClient.set({
       id: repair.clientId,

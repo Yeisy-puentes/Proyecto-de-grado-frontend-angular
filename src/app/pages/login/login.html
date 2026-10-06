@@ -1,72 +1,134 @@
 <div class="login-page">
+
+  <!-- Fondo: ondas translúcidas en SVG (decorativo) -->
+  <svg class="login-bg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <defs>
+      <pattern id="login-dots" width="14" height="14" patternUnits="userSpaceOnUse">
+        <circle cx="2" cy="2" r="1.1" fill="#fff" />
+      </pattern>
+    </defs>
+
+    <g class="wave wave--slow">
+      <path d="M-240,250 C120,120 380,380 720,260 C1060,140 1300,330 1680,210 L1680,-40 L-240,-40 Z" fill="#fff" fill-opacity="0.1" />
+      <path d="M-240,300 C140,170 400,420 740,300 C1080,180 1320,370 1680,250" fill="none" stroke="#fff" stroke-opacity="0.25" stroke-width="1" />
+    </g>
+
+    <g class="wave wave--mid">
+      <path d="M-240,560 C100,430 420,700 760,560 C1100,420 1340,640 1680,520 L1680,980 L-240,980 Z" fill="#fff" fill-opacity="0.12" />
+      <path d="M-240,560 C100,430 420,700 760,560 C1100,420 1340,640 1680,520 L1680,980 L-240,980 Z" fill="url(#login-dots)" fill-opacity="0.16" />
+      <path d="M-240,610 C120,480 440,740 780,610 C1120,480 1360,690 1680,570" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1" />
+    </g>
+
+    <g class="wave wave--fast wave--extra">
+      <path d="M-240,720 C160,620 460,840 820,730 C1180,620 1380,800 1680,700 L1680,980 L-240,980 Z" fill="#fff" fill-opacity="0.18" />
+      <path d="M-240,690 C160,590 460,810 820,700 C1180,590 1380,770 1680,670" fill="none" stroke="#fff" stroke-opacity="0.18" stroke-width="1" />
+    </g>
+
+    <g class="wave wave--slow-reverse wave--extra">
+      <path d="M-240,140 C200,60 520,240 880,150 C1240,60 1420,190 1680,120" fill="none" stroke="#fff" stroke-opacity="0.16" stroke-width="1" />
+      <path d="M-240,420 C160,340 480,500 860,410 C1240,320 1400,460 1680,390 L1680,520 C1380,600 1220,470 860,560 C500,650 180,480 -240,560 Z" fill="url(#login-dots)" fill-opacity="0.1" />
+    </g>
+  </svg>
+
+  <!-- Brillo radial detrás de la tarjeta -->
+  <div class="login-glow" aria-hidden="true"></div>
+
   <div class="login-card">
 
     <div class="login-card__header">
+      <!-- Ondas sutiles y punto de luz del encabezado -->
+      <svg class="login-card__waves" viewBox="0 0 440 120" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path d="M0,70 C90,40 170,100 260,70 C340,44 400,80 440,62 L440,120 L0,120 Z" fill="#fff" fill-opacity="0.06" />
+        <path d="M0,88 C100,62 190,112 280,86 C360,64 410,96 440,82" fill="none" stroke="#fff" stroke-opacity="0.18" stroke-width="1" vector-effect="non-scaling-stroke" />
+      </svg>
+      <span class="login-card__light" aria-hidden="true"></span>
+
       <div class="login-card__header-content">
-        <img src="assets/logo-interfajas.svg" alt="Interfajas" class="login-card__logo" />
+        <div class="login-card__logo-box">
+          <img src="assets/logo-interfajas.svg" alt="Interfajas" class="login-card__logo" />
+        </div>
         <h2>Bienvenido</h2>
         <p>Sistema de Gestión de Arreglos Textiles</p>
       </div>
-      <div class="login-card__deco login-card__deco--tl"></div>
-      <div class="login-card__deco login-card__deco--br"></div>
     </div>
 
-    <form class="login-form" appFormValidation #f="ngForm" (ngSubmit)="f.valid && onSubmit()">
-      <div class="login-form__fields">
+    <div class="login-card__sheet">
+      <form class="login-form" appFormValidation #f="ngForm" (ngSubmit)="f.valid && onSubmit()">
+        <div class="login-form__fields">
 
-        <div class="field">
-          <label for="input-email">Correo Electrónico</label>
-          <div class="input-icon">
-            <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input
-              type="email"
-              id="input-email"
-              name="email"
-              class="input"
-              required
-              placeholder="ejemplo@interfajas.com"
-              autocomplete="username"
-              email
-              [(ngModel)]="credentials.email"
-              #emailCtrl="ngModel"
-            />
+          <div class="field">
+            <label for="input-email">Correo Electrónico</label>
+            <div class="input-icon">
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input
+                type="email"
+                id="input-email"
+                name="email"
+                class="input"
+                required
+                placeholder="ejemplo@interfajas.com"
+                autocomplete="username"
+                email
+                [(ngModel)]="credentials.email"
+                #emailCtrl="ngModel"
+              />
+            </div>
+            <app-field-error [control]="emailCtrl" [form]="f" />
           </div>
-          <app-field-error [control]="emailCtrl" [form]="f" />
+
+          <div class="field">
+            <label for="input-password">Contraseña</label>
+            <div class="input-icon">
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input
+                [type]="showPassword() ? 'text' : 'password'"
+                id="input-password"
+                name="password"
+                class="input input--with-toggle"
+                required
+                placeholder="••••••••"
+                autocomplete="current-password"
+                [(ngModel)]="credentials.password"
+                #passwordCtrl="ngModel"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                [attr.aria-pressed]="showPassword()"
+                [title]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                (click)="showPassword.set(!showPassword())"
+              >
+                @if (showPassword()) {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                } @else {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                }
+              </button>
+            </div>
+            <app-field-error [control]="passwordCtrl" [form]="f" />
+          </div>
+
         </div>
 
-        <div class="field">
-          <label for="input-password">Contraseña</label>
-          <div class="input-icon">
-            <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input
-              type="password"
-              id="input-password"
-              name="password"
-              class="input"
-              required
-              placeholder="••••••••"
-              autocomplete="current-password"
-              [(ngModel)]="credentials.password"
-              #passwordCtrl="ngModel"
-            />
-          </div>
-          <app-field-error [control]="passwordCtrl" [form]="f" />
-        </div>
+        @if (errorMessage()) {
+          <p class="login-error" role="alert">
+            <span class="login-alert-icon" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="17.5" x2="12.01" y2="17.5"/></svg>
+            </span>
+            {{ errorMessage() }}
+          </p>
+        }
 
+        <button type="submit" class="btn btn--full login-submit" [class.is-loading]="loading()" [disabled]="loading()">
+          <span class="btn-label">{{ loading() ? 'Ingresando...' : 'Iniciar Sesión' }}</span>
+          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </form>
+
+      <div class="login-card__footer">
+        <p>&copy; {{ currentYear }} Interfajas. Todos los derechos reservados.</p>
       </div>
-
-      @if (errorMessage()) {
-        <p class="login-error" role="alert">{{ errorMessage() }}</p>
-      }
-
-      <button type="submit" class="btn btn--navy btn--full" [class.is-loading]="loading()" [disabled]="loading()">
-        <span class="btn-label">{{ loading() ? 'Ingresando...' : 'Iniciar Sesión' }}</span>
-        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </button>
-    </form>
-
-    <div class="login-card__footer">
-      <p>&copy; {{ currentYear }} Interfajas. Todos los derechos reservados.</p>
     </div>
 
   </div>

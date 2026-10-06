@@ -2,6 +2,13 @@
 
 .search-box { max-width: 28rem; }
 
+/* Teléfono: título centrado y "+ Nuevo Cliente" a todo el ancho debajo (como en Arreglos) */
+@media (max-width: 767px) {
+  .clients-header { flex-direction: column; align-items: stretch; }
+  .clients-header > div { text-align: center; }
+  .clients-header .btn { width: 100%; justify-content: center; }
+}
+
 .client-avatar {
   width: 3rem;
   height: 3rem;

@@ -1,22 +1,41 @@
-<div class="u-container u-stack-4">
+<div class="u-container u-stack-4 agenda-page">
 
   <div class="section-header section-header--flush">
     <div>
       <h2>Agenda de Entregas</h2>
       <p>Calendario de compromisos y recordatorios</p>
     </div>
-    <div class="u-flex u-items-center u-gap-3">
+    <div class="u-flex u-items-center u-gap-3 agenda-actions">
       <div class="tab-toggle-group">
-        <button type="button" class="tab-toggle" [class.is-active]="view() === 'month'" (click)="setView('month')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Mes
-        </button>
         <button type="button" class="tab-toggle" [class.is-active]="view() === 'day'" (click)="setView('day')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg> Día
         </button>
+        <button type="button" class="tab-toggle" [class.is-active]="view() === 'week'" (click)="setView('week')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13.5" width="12" height="4" rx="1" fill="currentColor" fill-opacity="0.25"/></svg> Semana
+        </button>
+        <button type="button" class="tab-toggle" [class.is-active]="view() === 'month'" (click)="setView('month')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Mes
+        </button>
       </div>
-      <button type="button" class="btn btn--cyan btn--sm" (click)="openReminderModal()">
+      <!-- Teléfonos y tabletas: desplegable con el mismo signal view -->
+      <app-select-dropdown
+        class="view-select"
+        ariaLabel="Vista del calendario"
+        [options]="viewOptions"
+        [iconTemplate]="viewIcon"
+        [value]="view()"
+        (valueChange)="setView($event)"
+      />
+      <ng-template #viewIcon let-option>
+        @switch (option.value) {
+          @case ('day') { <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg> }
+          @case ('week') { <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13.5" width="12" height="4" rx="1" fill="currentColor" fill-opacity="0.25"/></svg> }
+          @default { <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> }
+        }
+      </ng-template>
+      <button type="button" class="btn btn--cyan btn--sm reminder-btn" aria-label="Nuevo recordatorio" (click)="openReminderModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Recordatorio
+        <span class="reminder-btn__text">Recordatorio</span>
       </button>
     </div>
   </div>
@@ -24,19 +43,22 @@
   <div class="calendar-card">
 
     <div class="calendar-nav">
-      <button class="calendar-nav__btn" type="button" aria-label="Anterior" (click)="prev()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div>
+      <button class="calendar-nav__btn calendar-nav__btn--prev" type="button" aria-label="Anterior" (click)="prev()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="calendar-nav__center">
         @if (view() === 'month') {
           <h3 class="calendar-nav__title">{{ currentMonth() | date: 'MMMM y' | titlecase }}</h3>
           <p class="calendar-nav__subtitle">{{ monthDeliveries() }} entregas este mes</p>
+        } @else if (view() === 'week') {
+          <h3 class="calendar-nav__title calendar-nav__title--plain">{{ weekTitle() }}</h3>
+          <p class="calendar-nav__subtitle">{{ weekDeliveries() }} {{ weekDeliveries() === 1 ? 'entrega' : 'entregas' }} esta semana</p>
         } @else {
           <h3 class="calendar-nav__title">{{ selectedDateValue() | date: "EEEE d 'de' MMMM y" | titlecase }}</h3>
           <p class="calendar-nav__subtitle">{{ dayCounts().repairs }} entrega(s) · {{ dayCounts().reminders }} recordatorio(s)</p>
         }
       </div>
-      <div class="u-flex u-items-center u-gap-2">
+      <div class="u-flex u-items-center u-gap-2 calendar-nav__actions">
         <button class="calendar-nav__today" type="button" (click)="goToday()">Hoy</button>
-        <button class="calendar-nav__btn" type="button" aria-label="Siguiente" (click)="next()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <button class="calendar-nav__btn calendar-nav__btn--next" type="button" aria-label="Siguiente" (click)="next()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
     </div>
 
@@ -52,8 +74,8 @@
       <!-- ===== VISTA MES ===== -->
       <div class="calendar-scroll">
         <div class="calendar-weekdays">
-          @for (weekday of weekdays; track weekday) {
-            <span>{{ weekday }}</span>
+          @for (weekday of weekdays; track weekday; let i = $index) {
+            <span><span class="weekday-long">{{ weekday }}</span><span class="weekday-short" aria-hidden="true">{{ weekdayLetters[i] }}</span></span>
           }
         </div>
         <div class="calendar-grid">
@@ -73,11 +95,23 @@
                     </div>
                   }
                 </div>
+                <!-- Teléfonos: un punto por estado (máx. 3) y "+N" -->
+                <div class="calendar-day__dots" aria-hidden="true">
+                  @for (event of day.events.slice(0, 3); track event.type) {
+                    <span [class]="'status-dot status-dot--sm status-dot--' + statusClass(event.type)" [title]="event.label"></span>
+                  }
+                  @if (day.events.length > 3) {
+                    <span class="calendar-day__more">+{{ day.events.length - 3 }}</span>
+                  }
+                </div>
               }
             </div>
           }
         </div>
       </div>
+    } @else if (view() === 'week') {
+      <!-- ===== VISTA SEMANA ===== -->
+      <app-week-view [days]="weekDays()" (dayClick)="openDay($event)" (repairClick)="openRepair($event.key, $event.repairId)" />
     } @else {
       <!-- ===== VISTA DÍA ===== -->
       <div class="day-view">

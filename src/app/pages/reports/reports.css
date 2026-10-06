@@ -6,13 +6,107 @@
 
 .report-tabs { padding: 0.5rem 1rem; }
 
+/* Piezas solo para teléfono: en tabletas y computador no cambian el diseño */
+.toolbar__field,
+.toolbar__presets { display: contents; }
+.toolbar__label,
+.report-tabs-select { display: none; }
+
+/* ---------------- Teléfono ---------------- */
+@media (max-width: 767px) {
+  /* Título centrado; exportar en dos columnas iguales debajo */
+  .reports-header { flex-direction: column; align-items: stretch; }
+  .reports-header > div:first-child { text-align: center; }
+  .export-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .export-actions .btn { justify-content: center; min-width: 0; }
+
+  /* Fechas en dos columnas con etiqueta encima, atajos y rango debajo */
+  .toolbar { flex-direction: column; align-items: stretch; padding: var(--space-4); }
+  .toolbar__dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+  .toolbar__dash,
+  .toolbar__divider { display: none; }
+  .toolbar__field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .toolbar__label { display: block; font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-slate-500); }
+  .toolbar__date { width: 100%; min-width: 0; min-height: 44px; }
+
+  /* Atajos como control segmentado */
+  .toolbar__presets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .toolbar__presets .btn {
+    min-height: 44px;
+    border: none;
+    border-radius: 0;
+    border-left: 1px solid var(--color-slate-200);
+    white-space: normal;
+  }
+  .toolbar__presets .btn:first-child { border-left: none; }
+  .toolbar__presets .btn.is-active { background-color: var(--color-brand-blue); color: var(--color-white); }
+
+  .toolbar__range { margin-left: 0; text-align: center; }
+
+  /* Pestañas: desplegable a todo el ancho */
+  .report-tabs { display: none; }
+  .report-tabs-select { display: block; padding: var(--space-3) var(--space-4); --select-height: 44px; --select-option-height: 44px; }
+
+  /* Totales: que los montos grandes no desborden en 360 px */
+  .kpi-card { padding: var(--space-4); min-width: 0; }
+  .kpi-card__value { font-size: var(--font-size-lg); overflow-wrap: anywhere; }
+}
+
 .chart-card { padding: var(--space-5); }
 .chart-card__icon { color: var(--color-brand-blue); }
+
+/* Resumen general: título a la izquierda, total y variación a la derecha */
+.chart-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.chart-card__stats { display: flex; align-items: center; gap: var(--space-2); }
+.chart-card__total { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-slate-800); }
+.trend {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-slate-100);
+  color: var(--color-slate-600);
+}
+.trend--up { background: var(--color-green-50); color: var(--color-green-700); }
+.trend--down { background: var(--color-red-50); color: var(--color-red-700); }
+
+/* Las dos tarjetas a la misma altura, una al lado de la otra */
+.summary-charts { align-items: stretch; }
+.summary-chart-box { height: 18rem; }
+.donut-box { min-height: 18rem; display: flex; align-items: center; justify-content: center; }
+.donut-box app-donut-chart { width: 100%; }
 .chart-box--center { display: flex; align-items: center; justify-content: center; }
 /* Alto de las gráficas de barras (incluye la leyenda) */
 .bar-chart-box { height: 18rem; }
 
 .table-title { padding: var(--space-5); }
+
+/* Título + buscador: el buscador a la derecha (máx. 400px); en celular, debajo a todo el ancho */
+.table-title--search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+}
+.table-search { flex: 1 1 16rem; max-width: 400px; }
+@media (max-width: 767px) {
+  .table-title--search { flex-direction: column; align-items: stretch; }
+  .table-search { flex-basis: auto; max-width: none; }
+}
 
 /* Recuadros por estado: mismo espacio entre tarjetas que los totales (KPI) */
 .summary-grid {

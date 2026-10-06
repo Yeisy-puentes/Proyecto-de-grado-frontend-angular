@@ -61,12 +61,6 @@
   background-color: var(--color-slate-50);
 }
 
-@media (max-width: 640px) {
-  .calendar-weekdays,
-  .calendar-grid {
-    min-width: 560px;
-  }
-}
 .calendar-weekdays span {
   padding: var(--space-3);
   text-align: center;
@@ -121,6 +115,15 @@
   color: var(--color-slate-600);
   line-height: 1;
 }
+
+/* ---- Vista de semana (estilos en week-view/) ---- */
+/* El rango "4 – 10 de octubre 2026" va en minúsculas (el título del mes usa capitalize). */
+.calendar-nav__title--plain { text-transform: none; }
+
+/* Piezas solo para teléfonos y tabletas (ver agenda.touch.css) */
+.view-select,
+.weekday-short,
+.calendar-day__dots { display: none; }
 
 /* ---- Vista de día ---- */
 .day-view { padding: var(--space-5); }
@@ -346,3 +349,37 @@
 
 /* Chip activo: el punto de color se aclara (como en Figma) */
 .day-filter-chip.is-active .status-dot { background-color: rgb(255 255 255 / 0.7); }
+
+/* ---- Computador: calendario más grande (día, semana y mes) ----
+   Usa todo el ancho disponible y el alto de la pantalla; teléfonos y tabletas no cambian. */
+@media (min-width: 1025px) and (hover: hover) {
+  .agenda-page { max-width: none; }
+
+  .calendar-weekdays span { padding: var(--space-4) var(--space-3); font-size: var(--font-size-sm); }
+
+  /* Mes: las filas reparten el alto de la pantalla (mínimo 8rem cada una). */
+  .calendar-day {
+    min-height: max(8rem, calc((100vh - 23rem) / 6));
+    padding: var(--space-3);
+  }
+  .calendar-day__number { font-size: var(--font-size-base); }
+  .calendar-day__number.is-today { width: 2.25rem; height: 2.25rem; }
+  .calendar-day__events { gap: 0.5rem; }
+  .calendar-day__event-row { font-size: var(--font-size-sm); }
+  .status-dot--sm { width: 0.625rem; height: 0.625rem; }
+
+  /* Día: tarjetas y textos más grandes. */
+  .day-view { padding: var(--space-6); }
+  .day-filter-chip { font-size: var(--font-size-sm); padding: 0.5rem 1rem; }
+  .repair-card__summary { padding: var(--space-5) var(--space-6); }
+  .repair-card__time { font-size: var(--font-size-sm); }
+  .repair-card__client { font-size: var(--font-size-base); }
+  .repair-card__desc { font-size: var(--font-size-sm); }
+  .repair-card__balance-value { font-size: var(--font-size-base); }
+  .repair-card__field-label { font-size: var(--font-size-sm); }
+  .repair-card__field-value,
+  .repair-card__text { font-size: var(--font-size-base); }
+  .reminder-card { padding: var(--space-5); }
+  .reminder-card__title { font-size: var(--font-size-lg); }
+  .reminder-card__desc { font-size: var(--font-size-base); }
+}

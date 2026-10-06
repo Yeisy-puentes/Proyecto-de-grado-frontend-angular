@@ -19,6 +19,8 @@ export class Login {
   protected readonly currentYear = new Date().getFullYear();
   protected readonly loading = signal(false);
   protected readonly errorMessage = signal('');
+  /** Muestra u oculta la contraseña (cambia el type del input entre password y text). */
+  protected readonly showPassword = signal(false);
   protected credentials = { email: '', password: '' };
 
   protected async onSubmit(): Promise<void> {

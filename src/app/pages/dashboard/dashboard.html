@@ -54,7 +54,7 @@
 
       <div class="delivery-list">
         @for (repair of visibleItems(); track repair.id) {
-          <ng-container *ngTemplateOutlet="row; context: { $implicit: repair, showDate: list.group === 'listos', narrow: false }" />
+          <ng-container *ngTemplateOutlet="row; context: { $implicit: repair, showDate: list.group === 'listos', narrow: false, toAgenda: list.group !== 'listos' }" />
         } @empty {
           <div class="delivery-empty">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -101,9 +101,16 @@
 <!--
   Fila de un arreglo: recuadro de hora/fecha, cliente y descripción, estado y teléfono.
   En la tarjeta angosta (narrow) el estado va debajo del nombre, en lugar de la descripción.
+  toAgenda: el clic lleva a la Agenda (vista de día) en lugar del detalle del cliente.
 -->
-<ng-template #row let-repair let-showDate="showDate" let-narrow="narrow">
-  <a class="delivery-row" [class.delivery-row--narrow]="narrow" [routerLink]="['/clientes', repair.clientId]">
+<ng-template #row let-repair let-showDate="showDate" let-narrow="narrow" let-toAgenda="toAgenda">
+  <!-- Pendientes de hoy/mañana: vista de día de la Agenda con el arreglo desplegado; el resto, al cliente. -->
+  <a
+    class="delivery-row"
+    [class.delivery-row--narrow]="narrow"
+    [routerLink]="toAgenda ? ['/agenda'] : ['/clientes', repair.clientId]"
+    [queryParams]="toAgenda ? { fecha: repair.deliveryDate, arreglo: repair.id } : null"
+  >
     <div class="delivery-when">
       @if (showDate) {
         <span class="delivery-when__main">{{ repair.deliveryDate ? (fromDateKey(repair.deliveryDate) | date: 'd MMM') : '—' }}</span>

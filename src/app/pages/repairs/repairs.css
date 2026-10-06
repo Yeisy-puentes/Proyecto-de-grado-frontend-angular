@@ -29,16 +29,6 @@
   color: inherit;
 }
 .search-box__clear { right: 2.5rem; }
-/* Input de fecha invisible: solo aporta el calendario nativo. */
-.search-box__picker {
-  position: absolute;
-  right: 0.5rem;
-  bottom: 0;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
 
 .btn--outline-thin { border-width: 1px; }
 
@@ -208,6 +198,9 @@
 .repair-row { cursor: pointer; }
 .data-table tbody tr.repair-row.is-selected { background-color: var(--color-blue-50); }
 .data-table tbody tr.group-row:hover { background: none; }
+/* Espacio vacío al final de la tabla (mantiene su alto cuando hay pocos resultados). */
+.data-table tbody tr.fill-row:hover { background: none; }
+.data-table tbody tr.fill-row td { padding: 0; border-bottom: none; }
 .group-row td {
   padding: 0.625rem var(--space-4);
   background-color: var(--color-slate-50);
@@ -350,9 +343,19 @@
 
 
 /* ---------------- Celular: la tabla se muestra como tarjetas ---------------- */
+/* Desplegable de estados: solo en celular (en computador se ven los botones) */
+.status-select { display: none; }
+
 @media (max-width: 767px) {
+  /* Título y subtítulo centrados; el botón sigue a todo el ancho debajo */
+  .repairs-header { flex-direction: column; align-items: stretch; }
+  .repairs-header > div { text-align: center; }
   .repairs-header .btn { width: 100%; justify-content: center; }
   .filters-bar .search-box { max-width: none; }
+
+  /* Filtros de estado: el desplegable reemplaza la fila de botones, debajo del buscador */
+  .pill-filters { display: none; }
+  .status-select { display: block; width: 100%; }
 
   .table-wrap:has(.repairs-table) {
     background: none;

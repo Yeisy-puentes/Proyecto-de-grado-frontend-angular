@@ -29,10 +29,17 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       }
-      <button type="button" class="search-box__btn" title="Buscar por fecha" aria-label="Elegir fecha en el calendario" (click)="openDatePicker(datePicker)">
+      <button type="button" class="search-box__btn" title="Buscar por fecha" aria-label="Elegir fecha en el calendario" aria-haspopup="dialog" [attr.aria-expanded]="datePickerOpen()" (click)="openDatePicker()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </button>
-      <input #datePicker type="date" class="search-box__picker" tabindex="-1" aria-hidden="true" (change)="onSearchDatePicked(datePicker.value); datePicker.value = ''" />
+      @if (datePickerOpen()) {
+        <app-date-picker-dialog
+          [value]="searchDateKey()"
+          (dateSelected)="onDateDialogSelected($event)"
+          (cleared)="onDateDialogCleared()"
+          (closed)="datePickerOpen.set(false)"
+        />
+      }
     </div>
 
     <div class="u-flex u-items-center u-gap-2 pill-filters">
@@ -48,6 +55,9 @@
         </button>
       }
     </div>
+
+    <!-- Celular: los mismos filtros en un desplegable (mismo signal statusFilter) -->
+    <app-select-dropdown class="status-select" ariaLabel="Filtrar por estado" [options]="statusOptions()" [(value)]="statusFilter" />
   </div>
 
   <!-- Tabla de arreglos -->
@@ -67,11 +77,6 @@
         <tbody #rowsBody>
           @for (repair of pagedRepairs(); track repair.id) {
             @let alert = deliveryAlert(repair);
-            @if (pageOffset() + $index === firstDeliveredIndex()) {
-              <tr class="group-row">
-                <td colspan="6">Entregados</td>
-              </tr>
-            }
             <tr
               class="repair-row"
               [class.is-selected]="detailRepair()?.id === repair.id"
@@ -164,6 +169,9 @@
                 {{ loading() ? 'Cargando arreglos...' : 'No se encontraron arreglos con los filtros actuales.' }}
               </td>
             </tr>
+          }
+          @if (fillHeight() > 0) {
+            <tr class="fill-row" aria-hidden="true"><td colspan="6" [style.height.px]="fillHeight()"></td></tr>
           }
         </tbody>
       </table>
@@ -297,11 +305,13 @@
         (click)="changeStatus(menu.repair, status)"
       >
         <span [class]="'status-dot status-dot--' + status.replace('_', '-')"></span>
-        {{ statusLabels[status] }}
+        {{ status === 'entregado' && status !== menu.repair.status ? 'Entregar' : statusLabels[status] }}
         @if (status === menu.repair.status) {
           <svg class="status-menu__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         } @else if (status === 'listo') {
           <span class="status-menu__hint">avisa por correo</span>
+        } @else if (status === 'entregado') {
+          <span class="status-menu__hint">ir al cliente</span>
         }
       </button>
     }

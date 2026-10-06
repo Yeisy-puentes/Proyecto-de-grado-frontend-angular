@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Client } from '../../core/models/client.model';
-import { Payment, PaymentMethod, Repair, RepairStatus } from '../../core/models/repair.model';
+import { DEFAULT_PAYMENT_METHOD, Payment, PaymentMethod, Repair, RepairStatus } from '../../core/models/repair.model';
 import { ClientService } from '../../core/services/client.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { PaymentService } from '../../core/services/payment.service';
@@ -30,6 +30,8 @@ export class ClientDetail implements OnInit {
 
   /** Parámetro de ruta :id (enlazado con withComponentInputBinding). */
   readonly id = input.required<string>();
+  /** ?arreglo=ID (viene de "Entregar" en Arreglos): ese arreglo se abre al cargar. */
+  readonly arreglo = input<string>();
 
   protected readonly fromDateKey = fromDateKey;
   protected readonly loading = signal(true);
@@ -42,9 +44,14 @@ export class ClientDetail implements OnInit {
         this.repairService.load(),
       ]);
       this.client.set(client);
-      // Igual que en la maqueta: se abre por defecto el primer arreglo aún no entregado.
-      const firstActive = this.clientRepairs().find((r) => r.status !== 'entregado');
-      if (firstActive) this.expand(firstActive);
+      // Si viene de "Entregar", se abre ese arreglo; si no, igual que en la maqueta,
+      // el primer arreglo aún no entregado.
+      const requested = this.clientRepairs().find((r) => r.id === Number(this.arreglo()));
+      const toOpen = requested ?? this.clientRepairs().find((r) => r.status !== 'entregado');
+      if (toOpen) this.expand(toOpen);
+      if (requested) {
+        setTimeout(() => document.getElementById(`repair-${requested.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      }
     } catch (err) {
       this.toast.error(apiErrorMessage(err, 'No se pudo cargar el cliente'));
     } finally {
@@ -94,7 +101,7 @@ export class ClientDetail implements OnInit {
   protected readonly expandedId = signal<number | null>(null);
   protected readonly payments = signal<Payment[]>([]);
   protected readonly paymentAmount = signal('');
-  protected readonly paymentMethod = signal<PaymentMethod | null>(null);
+  protected readonly paymentMethod = signal<PaymentMethod | null>(DEFAULT_PAYMENT_METHOD);
   protected readonly busy = signal(false);
 
   protected toggleExpanded(repair: Repair): void {
@@ -108,7 +115,7 @@ export class ClientDetail implements OnInit {
   private async expand(repair: Repair): Promise<void> {
     this.expandedId.set(repair.id);
     this.paymentAmount.set('');
-    this.paymentMethod.set(null);
+    this.paymentMethod.set(DEFAULT_PAYMENT_METHOD);
     this.payments.set([]);
     try {
       const payments = await this.paymentService.getByRepair(repair.id);
@@ -138,7 +145,7 @@ export class ClientDetail implements OnInit {
       const payment = await this.paymentService.create(repair.id, amount, method);
       this.payments.update((list) => [...list, payment]);
       this.paymentAmount.set('');
-      this.paymentMethod.set(null);
+      this.paymentMethod.set(DEFAULT_PAYMENT_METHOD);
       this.toast.success(`Pago de $${amount.toLocaleString('es-CO')} registrado en ${repair.code}.`);
     } catch (err) {
       // El backend valida que el monto no supere el saldo pendiente.

@@ -1,39 +1,65 @@
-@if (hasData()) {
-  <svg [attr.viewBox]="viewBox" preserveAspectRatio="none" aria-hidden="true">
-    <!-- Cuadrícula horizontal punteada (sin líneas de eje) -->
-    @for (tick of ticks(); track tick.y) {
-      <line [attr.x1]="left" [attr.x2]="right" [attr.y1]="tick.y" [attr.y2]="tick.y" stroke="#e2e8f0" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" />
-    }
-    <defs>
-      <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" [attr.stop-color]="color()" stop-opacity="0.1" />
-        <stop offset="95%" [attr.stop-color]="color()" stop-opacity="0" />
-      </linearGradient>
-    </defs>
-    <path [attr.d]="areaPath()" [attr.fill]="'url(#' + gradientId + ')'" />
+<div class="plot" #plot>
+  @if (hasData()) {
+    <svg [attr.viewBox]="viewBox()" aria-hidden="true">
+      <defs>
+        <!-- Área: más visible arriba y se desvanece hacia abajo -->
+        <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" [style.stop-color]="color()" stop-opacity="0.28" />
+          <stop offset="0.6" [style.stop-color]="color()" stop-opacity="0.08" />
+          <stop offset="1" [style.stop-color]="color()" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+
+      <!-- Eje Y y guías punteadas -->
+      @for (tick of ticks(); track $index) {
+        <line class="grid-line" [class.grid-line--base]="$first" [attr.x1]="pad.left" [attr.x2]="plotRight()" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+        <text class="axis-y" [attr.x]="pad.left - 10" [attr.y]="tick.y">{{ tick.label }}</text>
+      }
+
+      <path class="area" [attr.d]="areaPath()" [attr.fill]="'url(#' + gradientId + ')'" />
+
+      @if (active(); as a) {
+        <line class="guide-line" [attr.x1]="a.x" [attr.x2]="a.x" [attr.y1]="pad.top" [attr.y2]="baseline()" />
+      }
+
+      <path class="line" [attr.d]="solidPath()" [style.stroke]="color()" />
+      @if (dashedPath()) {
+        <path class="line line--dashed" [attr.d]="dashedPath()" [style.stroke]="color()" />
+      }
+
+      <!-- Punto en cada mes -->
+      @for (c of coords(); track $index; let i = $index) {
+        <circle
+          class="dot"
+          [class.is-active]="activeIndex() === i"
+          [class.is-partial]="partialLast() && $last"
+          [attr.cx]="c.x" [attr.cy]="c.y"
+          [attr.r]="activeIndex() === i ? 5 : 3.5"
+          [style.stroke]="color()"
+          [style.fill]="activeIndex() === i ? color() : null"
+        />
+        @if (i % labelStep() === 0) {
+          <text class="axis-x" [class.is-active]="activeIndex() === i" [attr.x]="c.x" [attr.y]="baseline() + 19">{{ c.label }}</text>
+        }
+      }
+    </svg>
+
     @if (active(); as a) {
-      <!-- Línea guía del hover -->
-      <line [attr.x1]="a.x" [attr.x2]="a.x" [attr.y1]="top" [attr.y2]="bottom" stroke="#cbd5e1" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <div class="chart-tooltip" [class.chart-tooltip--flip]="a.flip" [style.left.px]="a.x" [style.top.px]="a.y">
+        <p class="chart-tooltip__label">
+          {{ a.fullLabel }}
+          @if (a.partial) {
+            <span class="chart-tooltip__tag">Mes en curso</span>
+          }
+        </p>
+        <p class="chart-tooltip__row">
+          <span class="chart-tooltip__dot" [style.background]="color()"></span>
+          <span class="chart-tooltip__name">{{ seriesName() }}</span>
+          <strong>{{ a.text }}</strong>
+        </p>
+      </div>
     }
-    <path [attr.d]="linePath()" fill="none" [attr.stroke]="color()" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
-  </svg>
-
-  <!-- Eje Y -->
-  @for (tick of ticks(); track tick.y) {
-    <span class="axis-label axis-label--y" [style.top.%]="tick.top" [style.width.%]="(left - 10) / 6.5">{{ tick.label }}</span>
+  } @else {
+    <p class="chart-empty">{{ emptyText() }}</p>
   }
-  <!-- Eje X -->
-  @for (c of coords(); track $index) {
-    <span class="axis-label axis-label--x" [style.left.%]="pctX(c.x)" [class.is-active]="activeIndex() === $index">{{ c.label }}</span>
-  }
-
-  @if (active(); as a) {
-    <span class="active-dot" [style.left.%]="a.left" [style.top.%]="a.top" [style.background]="color()"></span>
-    <div class="chart-tooltip" [class.chart-tooltip--flip]="a.flip" [style.left.%]="a.left" [style.top.%]="a.top">
-      <p class="chart-tooltip__label">{{ a.label }}</p>
-      <p class="chart-tooltip__value" [style.color]="color()">{{ seriesName() }} : {{ formatValue(a.value) }}</p>
-    </div>
-  }
-} @else {
-  <p class="chart-empty">{{ emptyText() }}</p>
-}
+</div>

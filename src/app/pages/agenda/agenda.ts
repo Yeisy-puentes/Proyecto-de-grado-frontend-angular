@@ -1,5 +1,5 @@
-import { DatePipe, TitleCasePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe, TitleCasePipe, formatDate } from '@angular/common';
+import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { REMINDER_COLORS, Reminder, ReminderColor } from '../../core/models/reminder.model';
 import { Repair, RepairStatus, STATUS_LABELS, statusClass } from '../../core/models/repair.model';
@@ -12,9 +12,11 @@ import { apiErrorMessage } from '../../core/utils/http-error';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { Time12Pipe } from '../../shared/pipes/time12.pipe';
 import { FieldError } from '../../shared/forms/field-error/field-error';
+import { SelectDropdown, SelectOption } from '../../shared/components/select-dropdown/select-dropdown';
 import { FormValidation } from '../../shared/forms/form-validation.directive';
+import { AgendaEvent, WeekDay, WeekView } from './week-view/week-view';
 
-type AgendaView = 'month' | 'day';
+type AgendaView = 'month' | 'week' | 'day';
 type DayFilter = 'all' | 'pendiente' | 'en_proceso' | 'listo' | 'recordatorio';
 /** Estados que se muestran en la agenda (los entregados ya no son compromisos). */
 type AgendaStatus = Exclude<RepairStatus, 'entregado'>;
@@ -28,7 +30,12 @@ interface CalendarDay {
 }
 
 /** Los arreglos solo tienen fecha de entrega (sin hora): van primero, luego los recordatorios por hora. */
-type DayEvent = { kind: 'repair'; time: string; repair: Repair } | { kind: 'reminder'; time: string; reminder: Reminder };
+type DayEvent = AgendaEvent;
+
+/** Mes abreviado sin punto: "sept", "oct". */
+function shortMonth(date: Date): string {
+  return formatDate(date, 'MMM', 'es').replace('.', '');
+}
 
 const EVENT_LABELS: Record<AgendaStatus | 'recordatorio', [string, string]> = {
   pendiente: ['pendiente', 'pendientes'],
@@ -39,9 +46,10 @@ const EVENT_LABELS: Record<AgendaStatus | 'recordatorio', [string, string]> = {
 
 @Component({
   selector: 'app-agenda',
-  imports: [FormsModule, DatePipe, TitleCasePipe, CopCurrencyPipe, Time12Pipe, FieldError, FormValidation],
+  imports: [FormsModule, DatePipe, TitleCasePipe, CopCurrencyPipe, Time12Pipe, FieldError, FormValidation, WeekView, SelectDropdown],
   templateUrl: './agenda.html',
-  styleUrl: './agenda.css',
+  // agenda.touch.css: ajustes para teléfonos y tabletas (aparte por el límite de tamaño por hoja de estilos).
+  styleUrls: ['./agenda.css', './agenda.touch.css'],
 })
 export class Agenda implements OnInit {
   private readonly repairService = inject(RepairService);
@@ -52,12 +60,31 @@ export class Agenda implements OnInit {
   protected readonly statusClass = statusClass;
   protected readonly statusLabels = STATUS_LABELS;
   protected readonly weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  /** Encabezado del mes en teléfonos. */
+  protected readonly weekdayLetters = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  /** Desplegable de vista (teléfonos y tabletas): mismas vistas que los botones. */
+  protected readonly viewOptions: SelectOption<AgendaView>[] = [
+    { value: 'day', label: 'Día' },
+    { value: 'week', label: 'Semana' },
+    { value: 'month', label: 'Mes' },
+  ];
   protected readonly reminderColors = REMINDER_COLORS;
 
   private readonly today = new Date();
   private readonly todayKey = toDateKey(this.today);
 
+  /** ?fecha=yyyy-MM-dd (p. ej. desde el Dashboard): abre la vista de día en esa fecha. */
+  readonly fecha = input<string>();
+  /** ?arreglo=ID junto con ?fecha: ese arreglo aparece desplegado. */
+  readonly arreglo = input<string>();
+
   async ngOnInit(): Promise<void> {
+    const fecha = this.fecha();
+    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      const repairId = Number(this.arreglo());
+      if (repairId) this.openRepair(fecha, repairId);
+      else this.openDay(fecha);
+    }
     try {
       await Promise.all([this.repairService.load(), this.reminderService.load()]);
     } catch (err) {
@@ -70,7 +97,8 @@ export class Agenda implements OnInit {
   protected readonly currentMonth = signal(new Date(this.today.getFullYear(), this.today.getMonth(), 1));
   /** Día seleccionado en la vista de día (yyyy-MM-dd). */
   protected readonly selectedDate = signal(this.todayKey);
-  protected readonly dayFilter = signal<DayFilter>('all');
+  /** Filtro de la vista de día: por defecto, solo los pendientes. */
+  protected readonly dayFilter = signal<DayFilter>('pendiente');
 
   /** Arreglos que siguen activos (no entregados), con datos del cliente. */
   private readonly agendaRepairs = computed(() =>
@@ -115,9 +143,53 @@ export class Agenda implements OnInit {
       .filter((e) => e.count > 0);
   }
 
+  // ---------- Vista de semana ----------
+  /** Domingo de la semana que contiene el día seleccionado. */
+  private readonly weekStart = computed(() => {
+    const d = this.selectedDateValue();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay());
+  });
+
+  /** 7 columnas (domingo a sábado) con entregas y recordatorios ordenados por hora. */
+  protected readonly weekDays = computed<WeekDay[]>(() => {
+    const start = this.weekStart();
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const key = toDateKey(date);
+      return { key, weekday: this.weekdays[i], day: date.getDate(), isToday: key === this.todayKey, events: this.eventsOn(key) };
+    });
+  });
+
+  /** Entregas visibles en la semana (arreglos activos, como las tarjetas). */
+  protected readonly weekDeliveries = computed(() =>
+    this.weekDays().reduce((total, day) => total + day.events.filter((e) => e.kind === 'repair').length, 0),
+  );
+
+  /** "4 – 10 de octubre 2026", "28 sept – 4 oct 2026" o "28 dic 2025 – 3 ene 2026". */
+  protected readonly weekTitle = computed(() => {
+    const start = this.weekStart();
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+    if (start.getFullYear() !== end.getFullYear()) {
+      return `${start.getDate()} ${shortMonth(start)} ${start.getFullYear()} – ${end.getDate()} ${shortMonth(end)} ${end.getFullYear()}`;
+    }
+    if (start.getMonth() !== end.getMonth()) {
+      return `${start.getDate()} ${shortMonth(start)} – ${end.getDate()} ${shortMonth(end)} ${end.getFullYear()}`;
+    }
+    return `${start.getDate()} – ${end.getDate()} de ${formatDate(start, 'MMMM', 'es')} ${end.getFullYear()}`;
+  });
+
+  /** Clic en una tarjeta de arreglo de la semana: vista de día con ese arreglo desplegado. */
+  protected openRepair(key: string, repairId: number): void {
+    this.openDay(key);
+    // Si el arreglo no está pendiente, se muestran todos para que se vea desplegado.
+    const repair = this.repairService.repairs().find((r) => r.id === repairId);
+    if (repair && repair.status !== 'pendiente') this.dayFilter.set('all');
+    this.expandedRepairId.set(repairId);
+  }
+
   // ---------- Vista de día ----------
-  private readonly allDayEvents = computed<DayEvent[]>(() => {
-    const key = this.selectedDate();
+  /** Entregas (arreglos activos) y recordatorios de una fecha, ordenados por hora. */
+  private eventsOn(key: string): DayEvent[] {
     const repairs: DayEvent[] = this.agendaRepairs()
       .filter((r) => r.deliveryDate === key)
       .map((repair) => ({ kind: 'repair', time: repair.deliveryTime ?? '', repair }));
@@ -126,7 +198,9 @@ export class Agenda implements OnInit {
       .filter((r) => r.date === key)
       .map((reminder) => ({ kind: 'reminder', time: reminder.time, reminder }));
     return [...repairs, ...reminders].sort((a, b) => a.time.localeCompare(b.time));
-  });
+  }
+
+  private readonly allDayEvents = computed<DayEvent[]>(() => this.eventsOn(this.selectedDate()));
 
   protected readonly dayEvents = computed(() => {
     const filter = this.dayFilter();
@@ -201,13 +275,27 @@ export class Agenda implements OnInit {
   protected readonly selectedDateValue = computed(() => fromDateKey(this.selectedDate()));
 
   // ---------- Navegación ----------
+  /** Cambia de vista conservando la fecha de referencia (el día seleccionado). */
   protected setView(view: AgendaView): void {
+    if (this.view() === 'month' && view !== 'month') {
+      // Desde Mes, la referencia debe estar en el mes visible: el día seleccionado si está ahí;
+      // si no, hoy (si es el mes actual) o el día 1.
+      const prefix = toDateKey(this.currentMonth()).slice(0, 7);
+      if (!this.selectedDate().startsWith(prefix)) {
+        this.selectedDate.set(this.todayKey.startsWith(prefix) ? this.todayKey : `${prefix}-01`);
+      }
+    }
+    if (view === 'month') {
+      const d = this.selectedDateValue();
+      this.currentMonth.set(new Date(d.getFullYear(), d.getMonth(), 1));
+    }
+    if (view === 'day' && this.view() !== 'day') this.dayFilter.set('pendiente');
     this.view.set(view);
   }
 
   protected openDay(key: string): void {
     this.selectedDate.set(key);
-    this.dayFilter.set('all');
+    this.dayFilter.set('pendiente');
     this.view.set('day');
   }
 
@@ -228,8 +316,10 @@ export class Agenda implements OnInit {
     if (this.view() === 'month') {
       this.currentMonth.update((m) => new Date(m.getFullYear(), m.getMonth() + step, 1));
     } else {
+      // Semana: 7 días por paso; día: 1.
       const d = this.selectedDateValue();
-      const nextDay = new Date(d.getFullYear(), d.getMonth(), d.getDate() + step);
+      const days = this.view() === 'week' ? step * 7 : step;
+      const nextDay = new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
       this.selectedDate.set(toDateKey(nextDay));
       this.currentMonth.set(new Date(nextDay.getFullYear(), nextDay.getMonth(), 1));
     }
