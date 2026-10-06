@@ -27,8 +27,9 @@ export function toApiClient(data: ClientFormData): ApiClienteInput {
   return {
     nombre_completo: data.name.trim(),
     cedula: data.cedula.trim(),
-    correo: data.email.trim(),
+    // Correo y dirección son opcionales: vacíos se envían como null.
+    correo: data.email.trim() || null,
     telefono: data.phone.trim(),
-    direccion: data.address.trim(),
+    direccion: data.address.trim() || null,
   };
 }
