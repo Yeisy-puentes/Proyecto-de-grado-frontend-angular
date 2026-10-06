@@ -251,7 +251,7 @@
 
     @case ('clients') {
       <!-- ===== TAB: CLIENTES ===== -->
-      <div class="report-panel u-stack-6">
+      <div class="report-panel report-panel--clients u-stack-6">
         <div class="card chart-card">
           <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
             <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -295,30 +295,6 @@
           </div>
         </div>
         <app-pagination [total]="filteredClientRows().length" [pageSize]="reportPageSize" [(page)]="clientsPage" />
-        <div class="table-wrap">
-          <div class="u-border-b table-title table-title--search">
-            <h3 class="u-font-semibold u-text-dark">Todos los clientes registrados</h3>
-            <app-search-box class="table-search" placeholder="Buscar por nombre, correo, cédula o teléfono..." [value]="allClientsSearch.text()" (valueChange)="allClientsSearch.set($event)" />
-          </div>
-          <div class="table-scroll">
-            <table class="data-table report-table">
-              <thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Email</th></tr></thead>
-              <tbody>
-                @for (client of pagedAllClientRows(); track client.id_cliente) {
-                  <tr>
-                    <td class="u-font-medium">{{ client.nombre_completo }}</td>
-                    <td class="cell-muted">{{ client.cedula }}</td>
-                    <td class="cell-muted">{{ client.telefono }}</td>
-                    <td class="cell-muted">{{ client.correo }}</td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="4" class="cell-zero">@if (allClientsSearch.term()) { No se encontraron resultados para «{{ allClientsSearch.term() }}» } @else { No hay clientes registrados. }</td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <app-pagination [total]="filteredAllClientRows().length" [pageSize]="reportPageSize" [(page)]="allClientsPage" />
       </div>
     }
   }

@@ -311,17 +311,6 @@ export class Reports implements OnInit {
   });
   protected readonly pagedClientRows = computed(() => paginate(this.filteredClientRows(), this.clientsPage(), REPORT_PAGE_SIZE));
 
-  protected readonly allClientsSearch = debouncedSearch(this.pageResetKey);
-  protected readonly allClientRows = computed(() => this.clientes()?.todosClientes ?? []);
-  protected readonly filteredAllClientRows = computed(() =>
-    filterRows(this.allClientRows(), this.allClientsSearch.term(), (c) => [c.nombre_completo, c.cedula, c.telefono, c.correo]),
-  );
-  protected readonly allClientsPage = linkedSignal({
-    source: () => `${this.pageResetKey()}|${this.allClientsSearch.term()}`,
-    computation: () => 1,
-  });
-  protected readonly pagedAllClientRows = computed(() => paginate(this.filteredAllClientRows(), this.allClientsPage(), REPORT_PAGE_SIZE));
-
   /** Totales de "Resumen por cliente" sobre los clientes filtrados (no solo la página visible). */
   protected readonly clientTotals = computed(() =>
     this.filteredClientRows().reduce(

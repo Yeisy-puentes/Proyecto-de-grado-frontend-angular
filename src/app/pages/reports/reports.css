@@ -137,3 +137,6 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
+
+/* Pestaña Clientes: sin filas, la paginación no dibuja nada; se oculta para no dejar su margen como hueco al final */
+.report-panel--clients > app-pagination:empty { display: none; }
