@@ -18,6 +18,33 @@
 
 .client-id { color: var(--color-blue-100, #dbeafe); }
 
+/* Botones del encabezado: Editar (translúcido) y Nuevo arreglo (blanco) */
+.client-header { flex-wrap: wrap; }
+.client-header__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.client-header__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  background-color: rgb(255 255 255 / 0.18);
+  border: 1px solid rgb(255 255 255 / 0.3);
+  transition: background-color var(--transition-fast);
+}
+.client-header__btn:hover { background-color: rgb(255 255 255 / 0.28); }
+.client-header__btn--solid { background-color: var(--color-white); color: var(--color-brand-navy-dark); border-color: var(--color-white); }
+.client-header__btn--solid:hover { background-color: var(--color-blue-50); }
+@media (max-width: 639px) {
+  .client-header__actions { width: 100%; }
+  .client-header__btn { flex: 1 1 0; justify-content: center; }
+}
+
+/* Dato opcional sin registrar (correo o dirección) */
+.contact-row__empty { color: var(--color-slate-400); font-style: italic; font-weight: var(--font-weight-normal, 400); }
+
 .section-title { color: var(--color-slate-700); }
 .contact-row { color: var(--color-slate-600); }
 

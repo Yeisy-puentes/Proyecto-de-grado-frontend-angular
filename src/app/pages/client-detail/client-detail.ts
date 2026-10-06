@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Client } from '../../core/models/client.model';
+import { Client, ClientFormData } from '../../core/models/client.model';
 import { DEFAULT_PAYMENT_METHOD, Payment, PaymentMethod, Repair, RepairStatus } from '../../core/models/repair.model';
 import { ClientService } from '../../core/services/client.service';
 import { ConfirmService } from '../../core/services/confirm.service';
@@ -10,6 +10,8 @@ import { RepairService } from '../../core/services/repair.service';
 import { ToastService } from '../../core/services/toast.service';
 import { fromDateKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
+import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
+import { NewRepairModal } from '../../shared/components/new-repair-modal/new-repair-modal';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
@@ -17,7 +19,7 @@ import { Time12Pipe } from '../../shared/pipes/time12.pipe';
 
 @Component({
   selector: 'app-client-detail',
-  imports: [RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector],
+  imports: [RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, NewRepairModal],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.css',
 })
@@ -56,6 +58,35 @@ export class ClientDetail implements OnInit {
       this.toast.error(apiErrorMessage(err, 'No se pudo cargar el cliente'));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  // ---------- Nuevo arreglo (modal en esta misma página) ----------
+  protected readonly newRepairOpen = signal(false);
+
+  /** Al registrarlo, se limpia el filtro y se abre el arreglo nuevo en el historial. */
+  protected onRepairCreated(repair: Repair): void {
+    this.newRepairOpen.set(false);
+    this.searchId.set('');
+    this.statusFilter.set('all');
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.expand(repair);
+    setTimeout(() => document.getElementById(`repair-${repair.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
+
+  // ---------- Editar cliente ----------
+  protected readonly editOpen = signal(false);
+
+  protected async updateClient(data: ClientFormData): Promise<void> {
+    const client = this.client();
+    if (!client) return;
+    try {
+      this.client.set(await this.clientService.update(client.id, data));
+      this.editOpen.set(false);
+      this.toast.success('Cliente actualizado.');
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'No se pudo actualizar el cliente'));
     }
   }
 

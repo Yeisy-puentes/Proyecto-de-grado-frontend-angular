@@ -1,0 +1,7 @@
+:host { display: contents; }
+
+/* Filas internas: fecha/hora de recepción y fecha/hora de entrega (igual que en Arreglos) */
+.form-row { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+@media (min-width: 640px) {
+  .form-row--2 { grid-template-columns: repeat(2, 1fr); }
+}
