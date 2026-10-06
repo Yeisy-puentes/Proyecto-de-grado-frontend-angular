@@ -148,6 +148,14 @@
 
 .expanded-panel { padding-top: 0; }
 
+/* Botones "Reenviar correo" y "Marcar como Entregado" (mismo diseño que las utilidades anteriores) */
+.repair-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
 .payment-box {
   background: linear-gradient(to bottom right, var(--color-orange-50), var(--color-amber-50));
   border: 1px solid var(--color-orange-200);
@@ -192,20 +200,67 @@
   .history-pagination { padding: var(--space-4); }
   .card-header-gradient { padding: var(--space-5) var(--space-4); }
 
-  /* Montos en una fila de 2–3 columnas, separada de la descripción */
+  /* Encabezado del cliente: nombres largos se parten en vez de empujar la tarjeta */
+  .client-header > .u-flex-1 { min-width: 0; overflow-wrap: anywhere; }
+
+  /* Filtros: los campos (incluidas las fechas) no superan el ancho de la tarjeta */
+  .field { min-width: 0; }
+  .input,
+  .select { min-width: 0; max-width: 100%; }
+
+  /* Fila del arreglo: el bloque de montos ocupa todo el ancho (antes quedaba centrado) */
   .repair-row { padding: var(--space-4); }
+  .repair-row__main { align-items: stretch; }
+  .repair-row__main > * { min-width: 0; }
+  .repair-row__desc { overflow-wrap: anywhere; }
+  .repair-row__meta > * { min-width: 0; }
+
+  /* Montos: tantas columnas iguales como montos haya (2 o 3), etiqueta arriba y valor abajo */
   .repair-amounts {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: var(--space-3);
     align-items: start;
     text-align: left;
+    width: 100%;
     padding-top: var(--space-3);
     border-top: 1px dashed var(--color-slate-200);
   }
-  .repair-amount__value--total { font-size: var(--font-size-base); }
+  .repair-amount { min-width: 0; container-type: inline-size; }
+  /* Si el valor ($1.250.000) no cabe en su columna, la letra se reduce en vez de cortarse */
+  .repair-amount__value { font-size: clamp(0.75rem, 15cqi, var(--font-size-base)); }
+
   .expanded-panel { padding: 0 var(--space-4) var(--space-4); }
+
+  /* Panel de registrar pago */
   .payment-box { padding: var(--space-4); }
+  .payment-box__head { flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+  .payment-box__head > * { min-width: 0; }
+  .payment-box__actions > * { min-width: 0; }
   .payment-box__actions > .u-flex { width: 100%; }
-  .payment-box__actions .btn { flex: 1 1 0; justify-content: center; }
+  .payment-box__actions .btn { flex: 1 1 0; justify-content: center; min-width: 0; max-width: 100%; }
   .payment-box__amount { width: 100%; }
+
+  /* Historial de pagos: fecha + badge a la izquierda y monto a la derecha; si no cabe, el monto baja */
+  .payments-history__row {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: var(--space-1) var(--space-3);
+  }
+  .payments-history__row > * { min-width: 0; }
+  .payments-history__date { white-space: nowrap; }
+  .payments-history__amount { margin-left: auto; white-space: nowrap; }
+
+  /* Acciones del arreglo: uno debajo del otro a todo el ancho, primero "Marcar como Entregado" */
+  .repair-actions { flex-direction: column; }
+  .repair-actions .btn {
+    width: 100%;
+    max-width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
+  .repair-actions .btn--green { order: -1; }
 }
