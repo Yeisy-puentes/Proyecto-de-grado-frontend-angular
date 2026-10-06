@@ -423,7 +423,7 @@ export class Reports implements OnInit {
   protected readonly incomeChart = computed(() => {
     const rows = this.ingresos()?.porMes ?? [];
     const series: BarSeries[] = [
-      { name: 'Cobrado', color: 'var(--color-brand-blue)', values: rows.map((r) => Number(r.cobrado)) },
+      { name: 'Cobrado', color: 'var(--color-brand-navy-dark)', values: rows.map((r) => Number(r.cobrado)) },
       { name: 'Pendiente', color: 'var(--color-orange-500)', values: rows.map((r) => Number(r.pendiente)) },
     ];
     return { labels: rows.map((r) => monthLabel(r.mes)), series };
