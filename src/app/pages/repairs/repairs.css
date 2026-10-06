@@ -37,6 +37,18 @@
 
 .cell-client { color: var(--color-slate-500); }
 .cell-description { max-width: 16rem; }
+
+/* Tableta y computador: columnas de ancho fijo (no cambian al filtrar). Lo largo se corta con "…" */
+@media (min-width: 768px) {
+  .repairs-table { table-layout: fixed; min-width: 52rem; }
+  .repairs-table .col-delivery { width: 10rem; }
+  .repairs-table .col-status { width: 9.5rem; }
+  .repairs-table .col-pay { width: 10rem; }
+  .repairs-table .col-actions { width: 10rem; }
+  .repairs-table .cell-ref,
+  .repairs-table .cell-description { overflow: hidden; }
+  .repairs-table .cell-description { max-width: none; }
+}
 .cell-date { color: var(--color-slate-700); white-space: nowrap; }
 .cell-time { padding-left: 1.5rem; }
 .cell-amount { color: var(--color-slate-700); }
@@ -363,7 +375,8 @@
     box-shadow: none;
     border-radius: 0;
   }
-  .repairs-table thead { display: none; }
+  .repairs-table thead,
+  .repairs-table colgroup { display: none; }
   .repairs-table,
   .repairs-table tbody { display: block; }
   .repairs-table tbody { display: flex; flex-direction: column; gap: var(--space-3); }

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, inject, input, linkedSignal, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
 import { DEFAULT_PAYMENT_METHOD, Payment, PaymentMethod, Repair, RepairStatus } from '../../core/models/repair.model';
@@ -12,6 +12,7 @@ import { fromDateKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { NewRepairModal } from '../../shared/components/new-repair-modal/new-repair-modal';
+import { pageMinHeight } from '../../shared/components/pagination/page-min-height';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
@@ -142,6 +143,15 @@ export class ClientDetail implements OnInit {
     computation: () => 1,
   });
   protected readonly pagedRepairs = computed(() => paginate(this.filteredRepairs(), this.historyPage(), HISTORY_PAGE_SIZE));
+
+  private readonly historyList = viewChild<ElementRef<HTMLElement>>('historyList');
+  /** Alto de una página completa del historial (medido con arreglos cerrados): no se encoge al filtrar (0 en celular). */
+  protected readonly historyMinHeight = pageMinHeight({
+    list: this.historyList,
+    itemSelector: ':scope > .repair-item:not(:has(.expanded-panel))',
+    pageSize: () => HISTORY_PAGE_SIZE,
+    items: this.pagedRepairs,
+  });
 
   /** Al cambiar de página, sube al inicio del historial para leer la nueva página desde arriba. */
   protected scrollToHistory(): void {

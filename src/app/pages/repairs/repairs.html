@@ -64,6 +64,15 @@
   <div class="table-wrap">
     <div class="table-scroll">
       <table class="data-table repairs-table">
+        <!-- Anchos fijos en tableta y computador: Referencia/Cliente y Descripción se reparten el resto -->
+        <colgroup>
+          <col />
+          <col />
+          <col class="col-delivery" />
+          <col class="col-status" />
+          <col class="col-pay" />
+          <col class="col-actions" />
+        </colgroup>
         <thead>
           <tr>
             <th>Referencia / Cliente</th>
@@ -84,7 +93,7 @@
               [class.row--overdue]="alert?.kind === 'overdue'" [class.row--today]="alert?.kind === 'today'" [class.row--debt]="hasDebt(repair)">
               <td class="cell-ref">
                 <div class="u-font-bold u-text-navy">{{ repair.code }}</div>
-                <div class="cell-client">{{ repair.clientName }}</div>
+                <div class="u-truncate cell-client" [title]="repair.clientName">{{ repair.clientName }}</div>
               </td>
               <td class="u-truncate cell-description" [title]="repair.description">{{ repair.description }}</td>
               <td class="cell-delivery">
@@ -130,7 +139,7 @@
               </td>
               <td class="cell-pay">
                 <div class="u-flex u-flex-col">
-                  <span class="u-flex u-items-center u-gap-2">
+                  <span class="u-flex u-flex-wrap u-items-center u-gap-2">
                     <span class="u-font-medium cell-amount">{{ repair.paid | cop }}</span>
                     @if (lastMethod(repair); as method) {
                       <span [class]="'badge badge--sm badge--pago-' + method" title="Último método de pago">{{ paymentLabel(method) }}</span>
@@ -165,12 +174,13 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="empty-row">
+              <!-- Sin resultados: el relleno se reparte arriba y abajo para centrar el mensaje -->
+              <td colspan="6" class="empty-row" [style.padding-block]="'calc(var(--space-8) + ' + fillHeight() / 2 + 'px)'">
                 {{ loading() ? 'Cargando arreglos...' : 'No se encontraron arreglos con los filtros actuales.' }}
               </td>
             </tr>
           }
-          @if (fillHeight() > 0) {
+          @if (fillHeight() > 0 && pagedRepairs().length) {
             <tr class="fill-row" aria-hidden="true"><td colspan="6" [style.height.px]="fillHeight()"></td></tr>
           }
         </tbody>

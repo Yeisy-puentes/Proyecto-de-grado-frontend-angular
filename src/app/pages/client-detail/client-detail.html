@@ -138,8 +138,8 @@
         </div>
       </div>
 
-      <!-- Lista de arreglos -->
-      <div>
+      <!-- Lista de arreglos (alto fijo de una página en tableta y computador) -->
+      <div #historyList class="history-list" [style.min-height.px]="historyMinHeight() || null">
         @for (repair of pagedRepairs(); track repair.id) {
           <div class="repair-item" [id]="'repair-' + repair.id">
             <div class="u-p-6 repair-row" (click)="toggleExpanded(repair)">
