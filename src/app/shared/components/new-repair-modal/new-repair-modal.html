@@ -1,0 +1,81 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal modal--lg" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <h3 class="modal__title">Nuevo Arreglo</h3>
+      <button class="modal__close" type="button" aria-label="Cerrar" (click)="close.emit()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form class="modal__body" appFormValidation #f="ngForm" (ngSubmit)="f.valid && submit()">
+      <div class="u-grid u-grid-cols-1 md:u-grid-cols-2 u-gap-6">
+
+        <!-- Cliente: fijo, es el del detalle -->
+        <div class="field u-col-span-2">
+          <label>Cliente</label>
+          <div class="client-found-box">
+            <div class="client-found-box__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="u-flex-1">
+              <p class="u-font-semibold u-text-dark">{{ client().name }}</p>
+              <p class="u-text-sm u-text-muted">Cédula: {{ client().cedula }} • Tel: {{ client().phone }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="u-col-span-2 form-row form-row--2">
+          <div class="field">
+            <label for="new-repair-received-date">Fecha de Recepción</label>
+            <input type="date" id="new-repair-received-date" name="receivedDate" class="input" required [(ngModel)]="form.receivedDate" #receivedDateCtrl="ngModel" />
+            <app-field-error [control]="receivedDateCtrl" [form]="f" />
+          </div>
+          <div class="field">
+            <label for="new-repair-received-time">Hora de Recepción</label>
+            <input type="time" id="new-repair-received-time" name="receivedTime" class="input" required [(ngModel)]="form.receivedTime" #receivedTimeCtrl="ngModel" />
+            <app-field-error [control]="receivedTimeCtrl" [form]="f" />
+          </div>
+        </div>
+
+        <div class="field u-col-span-2">
+          <label for="new-repair-description">Descripción del Arreglo</label>
+          <textarea id="new-repair-description" name="description" class="textarea" rows="3" required [(ngModel)]="form.description" #descriptionCtrl="ngModel"></textarea>
+          <app-field-error [control]="descriptionCtrl" [form]="f" [messages]="{ required: 'Describe el arreglo a realizar.' }" />
+        </div>
+
+        <div class="field">
+          <label for="new-repair-cost">Costo Total ($)</label>
+          <input type="number" id="new-repair-cost" name="cost" class="input" required min="0" [(ngModel)]="form.cost" #costCtrl="ngModel" />
+          <app-field-error [control]="costCtrl" [form]="f" [messages]="{ required: 'Ingresa el costo total.', min: 'El costo no puede ser negativo.' }" />
+        </div>
+
+        <div class="field">
+          <label for="new-repair-paid">Abono inicial ($)</label>
+          <input type="number" id="new-repair-paid" name="initialPayment" class="input" min="0" [(ngModel)]="form.initialPayment" #paidCtrl="ngModel" />
+          <app-field-error [control]="paidCtrl" [form]="f" [messages]="{ min: 'El abono no puede ser negativo.' }" />
+        </div>
+
+        <div class="field u-col-span-2">
+          <label>Método de Pago</label>
+          <app-payment-method-selector layout="grid" [(value)]="form.paymentMethod" />
+          <p class="field-hint">Requerido solo si se registra un abono</p>
+        </div>
+
+        <div class="u-col-span-2 form-row form-row--2">
+          <div class="field">
+            <label for="new-repair-delivery-date">Fecha de Entrega Estimada</label>
+            <input type="date" id="new-repair-delivery-date" name="deliveryDate" class="input" [min]="form.receivedDate" [(ngModel)]="form.deliveryDate" />
+          </div>
+          <div class="field">
+            <label for="new-repair-delivery-time">Hora de Entrega</label>
+            <input type="time" id="new-repair-delivery-time" name="deliveryTime" class="input" [disabled]="!form.deliveryDate" [(ngModel)]="form.deliveryTime" />
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" (click)="close.emit()">Cancelar</button>
+        <button type="submit" class="btn btn--navy" [disabled]="saving()">{{ saving() ? 'Guardando...' : 'Registrar Arreglo' }}</button>
+      </div>
+    </form>
+  </div>
+</div>

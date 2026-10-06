@@ -100,28 +100,39 @@
   flex-direction: column;
   align-items: center;
 }
-/* Recuadro del logo (el logo en sí no cambia) */
+/* Contenedor del logo: sin recuadro, el logo va directo sobre el fondo azul. */
 .login-card__logo-box {
   display: inline-flex;
-  padding: var(--space-2) var(--space-3);
   margin-bottom: var(--space-4);
-  border-radius: var(--radius-xl);
-  background-color: rgb(255 255 255 / 0.12);
-  border: 1px solid rgb(255 255 255 / 0.18);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
-.login-card__logo { height: 4rem; object-fit: contain; }
+.login-card__logo { height: 5rem; object-fit: contain; }
 
-.login-card__header h2 {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-white);
+.login-card__divider {
+  width: 3rem;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background-color: rgb(255 255 255 / 0.45);
+  margin-bottom: var(--space-3);
 }
 .login-card__header p {
+  font-size: var(--font-size-base);
+  color: rgb(255 255 255 / 0.85);
+}
+
+/* Saludo arriba del formulario (parte blanca) */
+.login-card__welcome {
+  padding: var(--space-8) var(--space-8) 0;
+  text-align: center;
+}
+.login-card__welcome h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-brand-navy-dark);
+}
+.login-card__welcome p {
   margin-top: var(--space-1);
   font-size: var(--font-size-sm);
-  color: rgb(255 255 255 / 0.78);
+  color: var(--color-slate-500);
 }
 
 /* Cuerpo blanco que sube sobre el encabezado (hoja superpuesta) */
@@ -135,7 +146,7 @@
 
 /* ---------------- FORMULARIO ---------------- */
 .login-form {
-  padding: var(--space-8) var(--space-8) var(--space-6);
+  padding: var(--space-6) var(--space-8) var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -266,12 +277,44 @@
 }
 .login-card__footer p { font-size: var(--font-size-xs); color: var(--color-slate-400); }
 
+/* ---------------- COMPUTADOR / TABLETA: pantalla dividida ----------------
+   Izquierda: panel azul con el logo grande. Derecha: saludo y formulario. */
+@media (min-width: 768px) {
+  .login-card {
+    max-width: 880px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .login-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+  }
+  .login-card__waves { height: 45%; }
+  .login-card__light { width: 12rem; height: 12rem; top: -3.5rem; right: -3.5rem; }
+  .login-card__logo-box { margin-bottom: var(--space-5); }
+  .login-card__logo { height: 8rem; max-width: 100%; }
+  .login-card__divider { width: 5rem; margin-bottom: var(--space-5); }
+  .login-card__header p { font-size: var(--font-size-xl); font-weight: var(--font-weight-medium); line-height: 1.35; max-width: 18rem; }
+
+  .login-card__sheet {
+    margin-top: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .login-card__welcome { text-align: left; padding-top: var(--space-10, 2.5rem); }
+}
+
 /* ---------------- CELULAR ---------------- */
 @media (max-width: 639px) {
   .login-page { padding: var(--space-6) var(--space-4); }
   .login-card { max-width: none; }
   .login-card__header { padding: var(--space-6) var(--space-6) calc(var(--space-6) + 1.5rem); }
-  .login-form { padding: var(--space-6) var(--space-5) var(--space-5); }
+  .login-card__welcome { padding: var(--space-6) var(--space-5) 0; }
+  .login-form { padding: var(--space-5) var(--space-5) var(--space-5); }
   .login-card__footer { margin: 0 var(--space-5); }
   /* Ondas simplificadas */
   .wave--extra { display: none; }
