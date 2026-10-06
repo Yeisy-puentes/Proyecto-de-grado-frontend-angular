@@ -47,12 +47,17 @@
         <div class="login-card__logo-box">
           <img src="assets/logo-interfajas.svg" alt="Interfajas" class="login-card__logo" />
         </div>
-        <h2>Bienvenido</h2>
+        <span class="login-card__divider" aria-hidden="true"></span>
         <p>Sistema de Gestión de Arreglos Textiles</p>
       </div>
     </div>
 
     <div class="login-card__sheet">
+      <div class="login-card__welcome">
+        <h2>Bienvenido</h2>
+        <p>Ingresa con tu cuenta para continuar</p>
+      </div>
+
       <form class="login-form" appFormValidation #f="ngForm" (ngSubmit)="f.valid && onSubmit()">
         <div class="login-form__fields">
 
