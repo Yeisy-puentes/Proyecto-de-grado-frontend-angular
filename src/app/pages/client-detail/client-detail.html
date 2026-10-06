@@ -88,7 +88,7 @@
     </div>
 
     <!-- Historial de arreglos -->
-    <div class="card">
+    <div class="card" id="history">
       <div class="u-p-6 u-border-b">
         <div class="u-flex u-items-center u-justify-between u-mb-6">
           <div class="u-flex u-items-center u-gap-3">
@@ -140,7 +140,7 @@
 
       <!-- Lista de arreglos -->
       <div>
-        @for (repair of filteredRepairs(); track repair.id) {
+        @for (repair of pagedRepairs(); track repair.id) {
           <div class="repair-item" [id]="'repair-' + repair.id">
             <div class="u-p-6 repair-row" (click)="toggleExpanded(repair)">
               <div class="u-flex u-flex-col sm:u-flex-row u-justify-between u-gap-4 repair-row__main">
@@ -260,6 +260,12 @@
           <p class="empty-state">No hay arreglos que coincidan con los filtros.</p>
         }
       </div>
+
+      @if (filteredRepairs().length > 0) {
+        <div class="history-pagination">
+          <app-pagination [total]="filteredRepairs().length" [pageSize]="historyPageSize" [(page)]="historyPage" (pageChange)="scrollToHistory()" />
+        </div>
+      }
     </div>
   } @else if (loading()) {
     <div class="card card-pad empty-state">

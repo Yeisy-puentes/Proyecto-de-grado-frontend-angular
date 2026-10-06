@@ -124,6 +124,7 @@
 .repair-amount__value--total { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-slate-800); }
 
 /* ---- Historial ---- */
+.history-pagination { padding: var(--space-4) var(--space-6) var(--space-5); border-top: 1px solid var(--color-slate-100); }
 .history-icon {
   width: 2.5rem;
   height: 2.5rem;
@@ -188,6 +189,7 @@
 /* ---- Celular: ajustes del cuerpo, historial y pagos (al final para que tengan prioridad) ---- */
 @media (max-width: 639px) {
   .client-body { padding: var(--space-4); gap: var(--space-5); }
+  .history-pagination { padding: var(--space-4); }
   .card-header-gradient { padding: var(--space-5) var(--space-4); }
 
   /* Montos en una fila de 2–3 columnas, separada de la descripción */
