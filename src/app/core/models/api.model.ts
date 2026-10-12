@@ -77,7 +77,8 @@ export interface ApiArregloInput {
   valor: number;
   id_cliente: number;
   id_estado?: number;
-  id_usuario?: number | null;
+  /** Solo al crear: el backend guarda el arreglo y el abono en una sola transacción. */
+  abono_inicial?: { monto: number; id_tipo_pago: number; fecha_pago: string };
 }
 
 export interface ApiPago {
@@ -131,16 +132,29 @@ export interface ApiConteoEstado {
   total: ApiNumber;
 }
 
+/** Cómo se agrupan las gráficas y tablas por período. */
+export type ReportGrouping = 'dia' | 'semana' | 'mes';
+
+/** Período: 'yyyy-MM-dd' (día o lunes de la semana) o 'yyyy-MM' (mes). */
+export interface ApiIngresoPeriodo {
+  periodo: string;
+  cobrado: ApiNumber;
+  pagos: ApiNumber;
+}
+
 export interface ApiReporteResumen extends ApiRango {
+  agrupacion: ReportGrouping;
   totales: {
     arreglos_periodo: ApiNumber;
     valor_total: ApiNumber;
+    /** Dinero recibido en el período (por fecha de pago). */
     cobrado: ApiNumber;
+    /** Saldo de los arreglos recibidos en el período. */
     pendiente: ApiNumber;
     clientes_activos: ApiNumber;
   };
   porEstado: ApiConteoEstado[];
-  ingresosPorMes: { mes: string; cobrado: ApiNumber; facturado: ApiNumber }[];
+  ingresosPorPeriodo: ApiIngresoPeriodo[];
 }
 
 export interface ApiArregloReporte {
@@ -156,15 +170,30 @@ export interface ApiArregloReporte {
   pendiente: ApiNumber;
 }
 
+/** Un pago recibido en el período (detalle de ingresos). */
+export interface ApiPagoReporte {
+  id_pago: number;
+  monto: ApiNumber;
+  fecha_pago: string;
+  id_arreglo: number;
+  tipo_pago: string;
+  descripcion: string | null;
+  id_cliente: number;
+  nombre_completo: string;
+}
+
 export interface ApiReporteIngresos extends ApiRango {
-  detalle: ApiArregloReporte[];
-  porMes: { mes: string; cobrado: ApiNumber; pendiente: ApiNumber }[];
-  totales: { valor: ApiNumber; pagado: ApiNumber; pendiente: ApiNumber };
+  agrupacion: ReportGrouping;
+  detalle: ApiPagoReporte[];
+  porPeriodo: ApiIngresoPeriodo[];
+  porTipoPago: { tipo_pago: string; cobrado: ApiNumber; pagos: ApiNumber }[];
+  totales: { cobrado: ApiNumber; pagos: ApiNumber };
 }
 
 export interface ApiReporteArreglos extends ApiRango {
+  agrupacion: ReportGrouping;
   porEstado: ApiConteoEstado[];
-  porMes: { mes: string; total: ApiNumber }[];
+  porPeriodo: { periodo: string; total: ApiNumber }[];
   listado: Pick<
     ApiArregloReporte,
     'id_arreglo' | 'nombre_completo' | 'descripcion' | 'nombre_estado' | 'fecha_ingreso' | 'fecha_entrega'

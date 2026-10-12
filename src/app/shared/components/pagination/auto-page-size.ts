@@ -2,7 +2,7 @@ import { DestroyRef, ElementRef, Signal, WritableSignal, afterNextRender, afterR
 import { PAGE_SIZE, clampPage } from './pagination';
 
 /** Celular: vista en tarjetas con desplazamiento normal. */
-const MOBILE_QUERY = '(max-width: 767px)';
+export const MOBILE_QUERY = '(max-width: 767px)';
 const MOBILE_PAGE_SIZE = 10;
 const MIN_PAGE_SIZE = 5;
 const RESIZE_DEBOUNCE_MS = 150;

@@ -3,7 +3,8 @@ import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiArreglo, ApiArregloInput } from '../models/api.model';
-import { Repair, RepairFormData, RepairStatus, mapRepair } from '../models/repair.model';
+import { PaymentMethod, Repair, RepairFormData, RepairStatus, mapRepair } from '../models/repair.model';
+import { todayKey } from '../utils/date.utils';
 import { CatalogService } from './catalog.service';
 
 export interface EmailNotification {
@@ -39,8 +40,16 @@ export class RepairService {
     return repair;
   }
 
-  async create(data: RepairFormData): Promise<Repair> {
-    const body = await this.toApi(data);
+  /** Crea el arreglo; si trae abono, el backend guarda los dos en una sola transacción. */
+  async create(data: RepairFormData, initialPayment: { amount: number; method: PaymentMethod } | null = null): Promise<Repair> {
+    const body: ApiArregloInput = await this.toApi(data);
+    if (initialPayment) {
+      body.abono_inicial = {
+        monto: initialPayment.amount,
+        id_tipo_pago: await this.catalog.methodId(initialPayment.method),
+        fecha_pago: todayKey(),
+      };
+    }
     const repair = mapRepair(await firstValueFrom(this.http.post<ApiArreglo>(this.url, body)));
     this.upsert(repair);
     return repair;

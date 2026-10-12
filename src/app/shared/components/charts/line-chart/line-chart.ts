@@ -65,7 +65,7 @@ function monotoneSegments(pts: Coord[]): string[] {
 })
 export class LineChart {
   readonly points = input.required<ChartPoint[]>();
-  readonly color = input('var(--color-brand-blue)');
+  readonly color = input('var(--color-brand-navy-dark)');
   /** Nombre de la serie en el tooltip ("Ingresos"). */
   readonly seriesName = input('Ingresos');
   /** 'money' para valores en pesos; 'count' para cantidades (eje Y con enteros). */

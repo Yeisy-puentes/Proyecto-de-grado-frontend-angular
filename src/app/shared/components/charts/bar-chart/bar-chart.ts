@@ -3,7 +3,7 @@ import { nextChartId, niceMax, shortMoney } from '../chart.utils';
 
 export interface BarSeries {
   name: string;
-  /** Color de la serie (hex o variable CSS, p. ej. 'var(--color-brand-blue)'). */
+  /** Color de la serie (hex o variable CSS, p. ej. 'var(--color-brand-navy-dark)'). */
   color: string;
   values: number[];
 }

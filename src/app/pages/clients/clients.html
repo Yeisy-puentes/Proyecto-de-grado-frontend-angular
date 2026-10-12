@@ -25,7 +25,7 @@
   </div>
 
   <!-- Grid de clientes -->
-  <div #cardsGrid class="u-grid u-grid-cols-1 md:u-grid-cols-2 lg:u-grid-cols-3 u-gap-6">
+  <div #cardsGrid class="u-grid u-grid-cols-1 md:u-grid-cols-2 lg:u-grid-cols-3 u-gap-6 clients-grid" [style.min-height.px]="gridMinHeight() || null">
     @for (client of pagedClients(); track client.id) {
       <div class="card card-pad card-hover">
         <div class="u-flex u-items-center u-gap-4 u-mb-4">

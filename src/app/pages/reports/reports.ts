@@ -6,6 +6,7 @@ import {
   ApiReporteClientes,
   ApiReporteIngresos,
   ApiReporteResumen,
+  ReportGrouping,
   ReportType,
 } from '../../core/models/api.model';
 import {
@@ -18,14 +19,14 @@ import {
 } from '../../core/models/repair.model';
 import { ReportService } from '../../core/services/report.service';
 import { ToastService } from '../../core/services/toast.service';
-import { fromDateKey, fromMonthKey, toDateKey, todayKey } from '../../core/utils/date.utils';
+import { fromDateKey, toDateKey, todayKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
 import { normalize } from '../../core/utils/text.utils';
 import { BarChart, BarSeries } from '../../shared/components/charts/bar-chart/bar-chart';
 import { DonutChart, DonutSegment } from '../../shared/components/charts/donut-chart/donut-chart';
 import { HBarChart } from '../../shared/components/charts/hbar-chart/hbar-chart';
 import { ChartPoint, LineChart } from '../../shared/components/charts/line-chart/line-chart';
-import { Pagination, paginate } from '../../shared/components/pagination/pagination';
+import { Pagination, fillerRows, paginate } from '../../shared/components/pagination/pagination';
 import { SearchBox } from '../../shared/components/search-box/search-box';
 import { SelectDropdown } from '../../shared/components/select-dropdown/select-dropdown';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
@@ -119,8 +120,64 @@ function largestRemainder(counts: number[]): number[] {
   return result;
 }
 
-function monthLabel(month: string): string {
-  return formatDate(fromMonthKey(month), 'MMM yy', 'es');
+// ---------- Períodos (día / semana / mes) ----------
+const GROUPING_NAMES: Record<ReportGrouping, string> = { dia: 'día', semana: 'semana', mes: 'mes' };
+
+/** Atajo de fechas -> agrupación que mejor se lee en las gráficas. */
+const PRESET_GROUPING: Record<Preset, ReportGrouping> = { month: 'dia', '3months': 'semana', year: 'mes' };
+
+/** 'yyyy-MM' o 'yyyy-MM-dd' -> Date local del primer día del período. */
+function periodStart(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d || 1);
+}
+
+/** Clave del período al que pertenece una fecha (igual que la arma el backend). */
+function periodKey(date: Date, grouping: ReportGrouping): string {
+  if (grouping === 'mes') return toDateKey(date).slice(0, 7);
+  if (grouping === 'semana') {
+    const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() - ((date.getDay() + 6) % 7));
+    return toDateKey(monday);
+  }
+  return toDateKey(date);
+}
+
+/** Último día del período, 'yyyy-MM-dd'. */
+function periodEnd(key: string, grouping: ReportGrouping): string {
+  const start = periodStart(key);
+  if (grouping === 'mes') return toDateKey(new Date(start.getFullYear(), start.getMonth() + 1, 0));
+  if (grouping === 'semana') return toDateKey(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6));
+  return key;
+}
+
+/** Todas las claves de período entre dos fechas, para que los días/semanas sin datos salgan en 0. */
+function periodKeys(from: string, to: string, grouping: ReportGrouping): string[] {
+  if (!from || !to || from > to) return [];
+  const keys: string[] = [];
+  let cursor = periodStart(periodKey(fromDateKey(from), grouping));
+  const last = periodKey(fromDateKey(to), grouping);
+  // Tope de seguridad por si el rango es enorme (más de ~3 años por día).
+  while (keys.length < 1200) {
+    const key = periodKey(cursor, grouping);
+    keys.push(key);
+    if (key >= last) break;
+    cursor =
+      grouping === 'mes'
+        ? new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)
+        : new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + (grouping === 'semana' ? 7 : 1));
+  }
+  return keys;
+}
+
+function periodLabel(key: string, grouping: ReportGrouping): string {
+  return formatDate(periodStart(key), grouping === 'mes' ? 'MMM yy' : 'd MMM', 'es');
+}
+
+function periodFullLabel(key: string, grouping: ReportGrouping): string {
+  const start = periodStart(key);
+  if (grouping === 'mes') return formatDate(start, 'MMMM y', 'es');
+  if (grouping === 'semana') return `semana del ${formatDate(start, "d 'de' MMMM", 'es')}`;
+  return formatDate(start, "EEEE d 'de' MMMM", 'es');
 }
 
 @Component({
@@ -149,6 +206,14 @@ export class Reports implements OnInit {
   // ---------- Período ----------
   protected readonly dateFrom = signal(toDateKey(presetStart('3months')));
   protected readonly dateTo = signal(todayKey());
+  /** Cómo se agrupan las gráficas y tablas: por día, semana o mes. */
+  protected readonly grouping = signal<ReportGrouping>(PRESET_GROUPING['3months']);
+  protected readonly groupings: { value: ReportGrouping; label: string }[] = [
+    { value: 'dia', label: 'Día' },
+    { value: 'semana', label: 'Semana' },
+    { value: 'mes', label: 'Mes' },
+  ];
+  protected readonly groupingName = computed(() => GROUPING_NAMES[this.grouping()]);
   /** Atajo de fechas activo (se resalta en el control segmentado de teléfono); null si las fechas se eligieron a mano. */
   protected readonly activePreset = signal<Preset | null>('3months');
   protected readonly loading = signal(false);
@@ -180,12 +245,19 @@ export class Reports implements OnInit {
     this.activePreset.set(preset);
     this.dateFrom.set(toDateKey(presetStart(preset)));
     this.dateTo.set(todayKey());
+    this.grouping.set(PRESET_GROUPING[preset]);
+    this.loadReports();
+  }
+
+  protected setGrouping(grouping: ReportGrouping): void {
+    if (grouping === this.grouping()) return;
+    this.grouping.set(grouping);
     this.loadReports();
   }
 
   /** GET /reportes/resumen, /ingresos, /arreglos y /clientes para el período seleccionado. */
   private async loadReports(): Promise<void> {
-    const range = { desde: this.dateFrom(), hasta: this.dateTo() };
+    const range = { desde: this.dateFrom(), hasta: this.dateTo(), agrupar: this.grouping() };
     if (range.desde && range.hasta && range.desde > range.hasta) {
       this.toast.error('La fecha inicial no puede ser mayor a la final.');
       return;
@@ -215,6 +287,7 @@ export class Reports implements OnInit {
       await this.reportService.download(format, TAB_TO_REPORT[this.activeTab()], {
         desde: this.dateFrom(),
         hasta: this.dateTo(),
+        agrupar: this.grouping(),
       });
     } catch (err) {
       this.toast.error(apiErrorMessage(err, 'No se pudo generar el archivo'));
@@ -257,12 +330,14 @@ export class Reports implements OnInit {
   }
 
   protected readonly incomeSearch = debouncedSearch(this.pageResetKey);
+  /** Pagos recibidos en el período (por fecha de pago). */
   protected readonly incomeRows = computed(() => this.ingresos()?.detalle ?? []);
   protected readonly filteredIncomeRows = computed(() =>
     filterRows(this.incomeRows(), this.incomeSearch.term(), (r) => [
       this.repairCode(r.id_arreglo),
       r.nombre_completo,
-      ...this.dateSearchKeys(r.fecha_ingreso),
+      r.tipo_pago,
+      ...this.dateSearchKeys(r.fecha_pago),
     ]),
   );
   protected readonly incomePage = linkedSignal({
@@ -270,18 +345,10 @@ export class Reports implements OnInit {
     computation: () => 1,
   });
   protected readonly pagedIncomeRows = computed(() => paginate(this.filteredIncomeRows(), this.incomePage(), REPORT_PAGE_SIZE));
+  protected readonly incomeFillers = computed(() => fillerRows(this.pagedIncomeRows().length, REPORT_PAGE_SIZE));
 
-  /** Totales de "Detalle de arreglos — ingresos" sobre los registros filtrados. */
-  protected readonly incomeTotals = computed(() =>
-    this.filteredIncomeRows().reduce(
-      (t, r) => ({
-        cost: t.cost + this.num(r.valor),
-        paid: t.paid + this.num(r.pagado),
-        pending: t.pending + this.num(r.pendiente),
-      }),
-      { cost: 0, paid: 0, pending: 0 },
-    ),
-  );
+  /** Total de "Pagos recibidos" sobre los registros filtrados. */
+  protected readonly incomeTotal = computed(() => this.filteredIncomeRows().reduce((t, r) => t + this.num(r.monto), 0));
 
   protected readonly repairsSearch = debouncedSearch(this.pageResetKey);
   protected readonly repairRows = computed(() => this.arreglos()?.listado ?? []);
@@ -299,6 +366,7 @@ export class Reports implements OnInit {
     computation: () => 1,
   });
   protected readonly pagedRepairRows = computed(() => paginate(this.filteredRepairRows(), this.repairsPage(), REPORT_PAGE_SIZE));
+  protected readonly repairFillers = computed(() => fillerRows(this.pagedRepairRows().length, REPORT_PAGE_SIZE));
 
   protected readonly clientsSearch = debouncedSearch(this.pageResetKey);
   protected readonly clientRows = computed(() => this.clientes()?.resumenPorCliente ?? []);
@@ -310,17 +378,7 @@ export class Reports implements OnInit {
     computation: () => 1,
   });
   protected readonly pagedClientRows = computed(() => paginate(this.filteredClientRows(), this.clientsPage(), REPORT_PAGE_SIZE));
-
-  protected readonly allClientsSearch = debouncedSearch(this.pageResetKey);
-  protected readonly allClientRows = computed(() => this.clientes()?.todosClientes ?? []);
-  protected readonly filteredAllClientRows = computed(() =>
-    filterRows(this.allClientRows(), this.allClientsSearch.term(), (c) => [c.nombre_completo, c.cedula, c.telefono, c.correo]),
-  );
-  protected readonly allClientsPage = linkedSignal({
-    source: () => `${this.pageResetKey()}|${this.allClientsSearch.term()}`,
-    computation: () => 1,
-  });
-  protected readonly pagedAllClientRows = computed(() => paginate(this.filteredAllClientRows(), this.allClientsPage(), REPORT_PAGE_SIZE));
+  protected readonly clientFillers = computed(() => fillerRows(this.pagedClientRows().length, REPORT_PAGE_SIZE));
 
   /** Totales de "Resumen por cliente" sobre los clientes filtrados (no solo la página visible). */
   protected readonly clientTotals = computed(() =>
@@ -387,26 +445,34 @@ export class Reports implements OnInit {
   }
 
   // ---------- Gráficas ----------
-  protected readonly monthlyIncome = computed<ChartPoint[]>(() =>
-    (this.resumen()?.ingresosPorMes ?? []).map((m) => ({
-      label: monthLabel(m.mes),
-      fullLabel: formatDate(fromMonthKey(m.mes), 'MMMM y', 'es'),
-      value: Number(m.cobrado),
-    })),
-  );
+  /** Claves de todos los períodos del rango (los que no tienen datos quedan en 0). */
+  private readonly periodKeys = computed(() => periodKeys(this.dateFrom(), this.dateTo(), this.grouping()));
 
-  /** El último mes está incompleto si el rango termina antes de su último día. */
-  protected readonly incomePartialLast = computed(() => {
-    const last = this.resumen()?.ingresosPorMes.at(-1);
-    if (!last) return false;
-    const month = fromMonthKey(last.mes);
-    const monthEnd = toDateKey(new Date(month.getFullYear(), month.getMonth() + 1, 0));
-    return this.dateTo() < monthEnd;
+  /** Valores por período, rellenando con 0 los períodos sin datos. */
+  private fillPeriods<T extends { periodo: string }>(rows: readonly T[], value: (row: T) => number): number[] {
+    const byKey = new Map(rows.map((r) => [r.periodo, value(r)]));
+    return this.periodKeys().map((key) => byKey.get(key) ?? 0);
+  }
+
+  protected readonly periodIncome = computed<ChartPoint[]>(() => {
+    const grouping = this.grouping();
+    const values = this.fillPeriods(this.resumen()?.ingresosPorPeriodo ?? [], (r) => Number(r.cobrado));
+    return this.periodKeys().map((key, i) => ({
+      label: periodLabel(key, grouping),
+      fullLabel: periodFullLabel(key, grouping),
+      value: values[i],
+    }));
   });
 
-  /** Total del período y variación del último mes completo frente al anterior. */
+  /** El último período está incompleto si el rango termina antes de su último día. */
+  protected readonly incomePartialLast = computed(() => {
+    const last = this.periodKeys().at(-1);
+    return !!last && this.dateTo() < periodEnd(last, this.grouping());
+  });
+
+  /** Total del período y variación del último período completo frente al anterior. */
   protected readonly incomeSummary = computed(() => {
-    const points = this.monthlyIncome();
+    const points = this.periodIncome();
     const total = points.reduce((sum, p) => sum + p.value, 0);
     const lastIndex = points.length - 1 - (this.incomePartialLast() ? 1 : 0);
     const current = points[lastIndex];
@@ -421,18 +487,27 @@ export class Reports implements OnInit {
   });
 
   protected readonly incomeChart = computed(() => {
-    const rows = this.ingresos()?.porMes ?? [];
+    const grouping = this.grouping();
     const series: BarSeries[] = [
-      { name: 'Cobrado', color: 'var(--color-brand-blue)', values: rows.map((r) => Number(r.cobrado)) },
-      { name: 'Pendiente', color: 'var(--color-orange-500)', values: rows.map((r) => Number(r.pendiente)) },
+      {
+        name: 'Cobrado',
+        color: 'var(--color-brand-navy-dark)',
+        values: this.fillPeriods(this.ingresos()?.porPeriodo ?? [], (r) => Number(r.cobrado)),
+      },
     ];
-    return { labels: rows.map((r) => monthLabel(r.mes)), series };
+    return { labels: this.periodKeys().map((k) => periodLabel(k, grouping)), series };
   });
 
   protected readonly repairsChart = computed(() => {
-    const rows = this.arreglos()?.porMes ?? [];
-    const series: BarSeries[] = [{ name: 'Arreglos', color: 'var(--color-brand-navy-dark)', values: rows.map((r) => Number(r.total)) }];
-    return { labels: rows.map((r) => monthLabel(r.mes)), series };
+    const grouping = this.grouping();
+    const series: BarSeries[] = [
+      {
+        name: 'Arreglos',
+        color: 'var(--color-brand-navy-dark)',
+        values: this.fillPeriods(this.arreglos()?.porPeriodo ?? [], (r) => Number(r.total)),
+      },
+    ];
+    return { labels: this.periodKeys().map((k) => periodLabel(k, grouping)), series };
   });
 
   protected readonly topClients = computed(() =>

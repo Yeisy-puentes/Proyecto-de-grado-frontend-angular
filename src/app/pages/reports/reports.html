@@ -37,6 +37,15 @@
         <button type="button" class="btn btn--ghost btn--sm" [class.is-active]="activePreset() === '3months'" [attr.aria-pressed]="activePreset() === '3months'" (click)="applyPreset('3months')">3 meses</button>
         <button type="button" class="btn btn--ghost btn--sm" [class.is-active]="activePreset() === 'year'" [attr.aria-pressed]="activePreset() === 'year'" (click)="applyPreset('year')">Este año</button>
       </div>
+      <div class="toolbar__divider"></div>
+      <div class="toolbar__grouping">
+        <span class="u-text-xs u-text-faint toolbar__grouping-label" id="grouping-label">Agrupar por</span>
+        <div class="toolbar__presets" role="group" aria-labelledby="grouping-label">
+          @for (option of groupings; track option.value) {
+            <button type="button" class="btn btn--ghost btn--sm" [class.is-active]="grouping() === option.value" [attr.aria-pressed]="grouping() === option.value" (click)="setGrouping(option.value)">{{ option.label }}</button>
+          }
+        </div>
+      </div>
       <span class="u-ml-auto u-text-xs u-text-faint toolbar__range">
         @if (loading()) { Cargando... } @else { {{ toDate(dateFrom()) | date: 'd MMM y' }} → {{ toDate(dateTo()) | date: 'd MMM y' }} }
       </span>
@@ -109,9 +118,9 @@
             <div class="chart-card__header">
               <h3 class="u-font-semibold u-text-dark u-flex u-items-center u-gap-2">
                 <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                Ingresos mensuales
+                Ingresos por {{ groupingName() }}
               </h3>
-              @if (monthlyIncome().length) {
+              @if (periodIncome().length) {
                 <div class="chart-card__stats">
                   <span class="chart-card__total">{{ incomeSummary().total | cop }}</span>
                   @if (incomeSummary().change !== null) {
@@ -126,7 +135,7 @@
               }
             </div>
             <div class="chart-box summary-chart-box">
-              <app-line-chart [points]="monthlyIncome()" [partialLast]="incomePartialLast()" />
+              <app-line-chart [points]="periodIncome()" [partialLast]="incomePartialLast()" />
             </div>
           </div>
           <div class="card chart-card">
@@ -150,8 +159,9 @@
         <div class="card chart-card">
           <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
             <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            Ingresos vs Pendiente por mes
+            Ingresos por {{ groupingName() }}
           </h3>
+          <p class="u-text-xs u-text-faint u-mb-4 chart-card__note">Dinero recibido según la fecha de cada pago.</p>
           <div class="chart-box bar-chart-box">
             <app-bar-chart [labels]="incomeChart().labels" [series]="incomeChart().series" [format]="formatMoney" valueType="money" />
           </div>
@@ -159,32 +169,33 @@
 
         <div class="table-wrap">
           <div class="u-border-b table-title table-title--search">
-            <h3 class="u-font-semibold u-text-dark">Detalle de arreglos — ingresos</h3>
-            <app-search-box class="table-search" placeholder="Buscar por referencia, cliente o fecha..." [value]="incomeSearch.text()" (valueChange)="incomeSearch.set($event)" />
+            <h3 class="u-font-semibold u-text-dark">Pagos recibidos</h3>
+            <app-search-box class="table-search" placeholder="Buscar por referencia, cliente, método o fecha..." [value]="incomeSearch.text()" (valueChange)="incomeSearch.set($event)" />
           </div>
           <div class="table-scroll">
             <table class="data-table report-table">
-              <thead><tr><th>Referencia</th><th>Cliente</th><th>Fecha</th><th class="text-right">Costo</th><th class="text-right">Cobrado</th><th class="text-right">Pendiente</th></tr></thead>
+              <colgroup><col style="width: 14%" /><col style="width: 12%" /><col style="width: 36%" /><col style="width: 20%" /><col style="width: 18%" /></colgroup>
+              <thead><tr><th>Fecha de pago</th><th>Referencia</th><th>Cliente</th><th>Método</th><th class="text-right">Monto</th></tr></thead>
               <tbody>
-                @for (row of pagedIncomeRows(); track row.id_arreglo) {
+                @for (row of pagedIncomeRows(); track row.id_pago) {
                   <tr>
+                    <td class="cell-muted">{{ day(row.fecha_pago) | date: 'dd/MM/yy' }}</td>
                     <td class="u-text-xs cell-ref">{{ repairCode(row.id_arreglo) }}</td>
-                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
-                    <td class="cell-muted">{{ day(row.fecha_ingreso) | date: 'dd/MM/yy' }}</td>
-                    <td class="text-right">{{ num(row.valor) | cop }}</td>
-                    <td class="text-right u-text-green u-font-medium">{{ num(row.pagado) | cop }}</td>
-                    <td class="text-right u-font-medium" [class.u-text-orange]="num(row.pendiente) > 0" [class.cell-zero]="num(row.pendiente) === 0">{{ num(row.pendiente) | cop }}</td>
+                    <td class="u-font-medium" [title]="row.nombre_completo">{{ row.nombre_completo }}</td>
+                    <td class="cell-muted">{{ row.tipo_pago }}</td>
+                    <td class="text-right u-text-green u-font-medium">{{ num(row.monto) | cop }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="6" class="cell-zero">@if (incomeSearch.term()) { No se encontraron resultados para «{{ incomeSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
+                  <tr class="empty-row"><td colspan="5" class="cell-zero cell-empty">@if (incomeSearch.term()) { No se encontraron resultados para «{{ incomeSearch.term() }}» } @else { Sin pagos en el período. }</td></tr>
+                }
+                @for (n of incomeFillers(); track n) {
+                  <tr class="filler-row" aria-hidden="true"><td colspan="5"></td></tr>
                 }
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="3" class="cell-total-label">{{ incomeSearch.term() ? 'Total filtrado' : 'Total del período' }}</td>
-                  <td class="text-right">{{ incomeTotals().cost | cop }}</td>
-                  <td class="text-right u-text-green">{{ incomeTotals().paid | cop }}</td>
-                  <td class="text-right u-text-orange">{{ incomeTotals().pending | cop }}</td>
+                  <td colspan="4" class="cell-total-label">{{ incomeSearch.term() ? 'Total filtrado' : 'Total del período' }}</td>
+                  <td class="text-right u-text-green">{{ incomeTotal() | cop }}</td>
                 </tr>
               </tfoot>
             </table>
@@ -208,7 +219,7 @@
         <div class="card chart-card">
           <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
             <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            Arreglos por mes
+            Arreglos recibidos por {{ groupingName() }}
           </h3>
           <div class="chart-box bar-chart-box">
             <app-bar-chart [labels]="repairsChart().labels" [series]="repairsChart().series" />
@@ -221,13 +232,14 @@
           </div>
           <div class="table-scroll">
             <table class="data-table report-table">
+              <colgroup><col style="width: 11%" /><col style="width: 22%" /><col style="width: 26%" /><col style="width: 15%" /><col style="width: 13%" /><col style="width: 13%" /></colgroup>
               <thead><tr><th>Referencia</th><th>Cliente</th><th>Descripción</th><th>Estado</th><th>Recibido</th><th>Entrega</th></tr></thead>
               <tbody>
                 @for (row of pagedRepairRows(); track row.id_arreglo) {
                   <tr>
                     <td class="u-text-xs cell-ref">{{ repairCode(row.id_arreglo) }}</td>
-                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
-                    <td class="u-truncate cell-desc">{{ row.descripcion }}</td>
+                    <td class="u-font-medium" [title]="row.nombre_completo">{{ row.nombre_completo }}</td>
+                    <td class="u-truncate cell-desc" [title]="row.descripcion">{{ row.descripcion }}</td>
                     <td>
                       <span
                         class="status-pill"
@@ -239,7 +251,10 @@
                     <td class="cell-muted">{{ row.fecha_entrega ? (day(row.fecha_entrega) | date: 'dd/MM/yy') : '—' }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="6" class="cell-zero">@if (repairsSearch.term()) { No se encontraron resultados para «{{ repairsSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
+                  <tr class="empty-row"><td colspan="6" class="cell-zero cell-empty">@if (repairsSearch.term()) { No se encontraron resultados para «{{ repairsSearch.term() }}» } @else { Sin arreglos en el período. }</td></tr>
+                }
+                @for (n of repairFillers(); track n) {
+                  <tr class="filler-row" aria-hidden="true"><td colspan="6"></td></tr>
                 }
               </tbody>
             </table>
@@ -251,7 +266,7 @@
 
     @case ('clients') {
       <!-- ===== TAB: CLIENTES ===== -->
-      <div class="report-panel u-stack-6">
+      <div class="report-panel report-panel--clients u-stack-6">
         <div class="card chart-card">
           <h3 class="u-font-semibold u-text-dark u-mb-4 u-flex u-items-center u-gap-2">
             <svg width="18" height="18" class="chart-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -266,18 +281,22 @@
           </div>
           <div class="table-scroll">
             <table class="data-table report-table">
+              <colgroup><col style="width: 40%" /><col style="width: 12%" /><col style="width: 16%" /><col style="width: 16%" /><col style="width: 16%" /></colgroup>
               <thead><tr><th>Cliente</th><th class="text-right">Arreglos</th><th class="text-right">Total facturado</th><th class="text-right">Total cobrado</th><th class="text-right">Saldo</th></tr></thead>
               <tbody>
                 @for (row of pagedClientRows(); track row.id_cliente) {
                   <tr>
-                    <td class="u-font-medium">{{ row.nombre_completo }}</td>
+                    <td class="u-font-medium" [title]="row.nombre_completo">{{ row.nombre_completo }}</td>
                     <td class="text-right">{{ num(row.total_arreglos) }}</td>
                     <td class="text-right">{{ num(row.total_facturado) | cop }}</td>
                     <td class="text-right u-text-green u-font-medium">{{ num(row.total_cobrado) | cop }}</td>
                     <td class="text-right u-font-medium" [class.u-text-orange]="num(row.saldo) > 0" [class.cell-zero]="num(row.saldo) === 0">{{ num(row.saldo) | cop }}</td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="5" class="cell-zero">@if (clientsSearch.term()) { No se encontraron resultados para «{{ clientsSearch.term() }}» } @else { Sin clientes con arreglos en el período. }</td></tr>
+                  <tr class="empty-row"><td colspan="5" class="cell-zero cell-empty">@if (clientsSearch.term()) { No se encontraron resultados para «{{ clientsSearch.term() }}» } @else { Sin clientes con arreglos en el período. }</td></tr>
+                }
+                @for (n of clientFillers(); track n) {
+                  <tr class="filler-row" aria-hidden="true"><td colspan="5"></td></tr>
                 }
               </tbody>
               @if (filteredClientRows().length) {
@@ -295,30 +314,6 @@
           </div>
         </div>
         <app-pagination [total]="filteredClientRows().length" [pageSize]="reportPageSize" [(page)]="clientsPage" />
-        <div class="table-wrap">
-          <div class="u-border-b table-title table-title--search">
-            <h3 class="u-font-semibold u-text-dark">Todos los clientes registrados</h3>
-            <app-search-box class="table-search" placeholder="Buscar por nombre, correo, cédula o teléfono..." [value]="allClientsSearch.text()" (valueChange)="allClientsSearch.set($event)" />
-          </div>
-          <div class="table-scroll">
-            <table class="data-table report-table">
-              <thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Email</th></tr></thead>
-              <tbody>
-                @for (client of pagedAllClientRows(); track client.id_cliente) {
-                  <tr>
-                    <td class="u-font-medium">{{ client.nombre_completo }}</td>
-                    <td class="cell-muted">{{ client.cedula }}</td>
-                    <td class="cell-muted">{{ client.telefono }}</td>
-                    <td class="cell-muted">{{ client.correo }}</td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="4" class="cell-zero">@if (allClientsSearch.term()) { No se encontraron resultados para «{{ allClientsSearch.term() }}» } @else { No hay clientes registrados. }</td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <app-pagination [total]="filteredAllClientRows().length" [pageSize]="reportPageSize" [(page)]="allClientsPage" />
       </div>
     }
   }

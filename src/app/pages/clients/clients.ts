@@ -7,6 +7,7 @@ import { apiErrorMessage } from '../../core/utils/http-error';
 import { normalize } from '../../core/utils/text.utils';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
+import { pageMinHeight } from '../../shared/components/pagination/page-min-height';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
 
 @Component({
@@ -54,6 +55,14 @@ export class Clients implements OnInit {
   });
 
   protected readonly pagedClients = computed(() => paginate(this.filteredClients(), this.page(), this.pageSize()));
+
+  /** Alto de una página completa de tarjetas: el grid no se encoge al buscar (0 en celular). */
+  protected readonly gridMinHeight = pageMinHeight({
+    list: this.cardsGrid,
+    itemSelector: ':scope > .card',
+    pageSize: this.pageSize,
+    items: this.pagedClients,
+  });
 
   protected async createClient(data: ClientFormData): Promise<void> {
     try {

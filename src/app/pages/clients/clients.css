@@ -31,5 +31,11 @@
   color: var(--color-slate-400);
 }
 
+/* Grid con alto fijo de una página (min-height desde pageMinHeight): las tarjetas no se estiran
+   y, sin resultados, el mensaje queda centrado en ese espacio */
+.clients-grid { align-content: start; }
+.clients-grid:has(> .empty-state) { align-content: center; }
+.clients-grid > .empty-state { grid-column: 1 / -1; }
+
 /* Dato opcional sin registrar (correo o dirección) */
 .client-info__empty { color: var(--color-slate-400); font-style: italic; }

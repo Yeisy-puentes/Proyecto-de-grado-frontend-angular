@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, inject, input, linkedSignal, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
 import { DEFAULT_PAYMENT_METHOD, Payment, PaymentMethod, Repair, RepairStatus } from '../../core/models/repair.model';
@@ -12,14 +12,20 @@ import { fromDateKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { NewRepairModal } from '../../shared/components/new-repair-modal/new-repair-modal';
+import { pageMinHeight } from '../../shared/components/pagination/page-min-height';
+import { Pagination, paginate } from '../../shared/components/pagination/pagination';
+import { PaymentEditModal } from '../../shared/components/payment-edit-modal/payment-edit-modal';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { Time12Pipe } from '../../shared/pipes/time12.pipe';
 
+/** Arreglos por página en el historial del cliente. */
+const HISTORY_PAGE_SIZE = 5;
+
 @Component({
   selector: 'app-client-detail',
-  imports: [RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, NewRepairModal],
+  imports: [RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, PaymentEditModal, ClientFormModal, NewRepairModal, Pagination],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.css',
 })
@@ -50,7 +56,10 @@ export class ClientDetail implements OnInit {
       // el primer arreglo aún no entregado.
       const requested = this.clientRepairs().find((r) => r.id === Number(this.arreglo()));
       const toOpen = requested ?? this.clientRepairs().find((r) => r.status !== 'entregado');
-      if (toOpen) this.expand(toOpen);
+      if (toOpen) {
+        this.showPageOf(toOpen);
+        this.expand(toOpen);
+      }
       if (requested) {
         setTimeout(() => document.getElementById(`repair-${requested.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
       }
@@ -71,6 +80,7 @@ export class ClientDetail implements OnInit {
     this.statusFilter.set('all');
     this.dateFrom.set('');
     this.dateTo.set('');
+    this.showPageOf(repair);
     this.expand(repair);
     setTimeout(() => document.getElementById(`repair-${repair.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
@@ -97,14 +107,12 @@ export class ClientDetail implements OnInit {
       .sort((a, b) => b.receivedDate.localeCompare(a.receivedDate) || b.id - a.id),
   );
 
-  // ---------- Estadísticas ----------
+  // ---------- Saldo pendiente ----------
   protected readonly stats = computed(() => {
-    const repairs = this.clientRepairs();
+    const withDebt = this.clientRepairs().filter((r) => r.balance > 0);
     return {
-      total: repairs.length,
-      active: repairs.filter((r) => r.status !== 'entregado').length,
-      spent: repairs.reduce((sum, r) => sum + r.cost, 0),
-      pending: repairs.reduce((sum, r) => sum + r.balance, 0),
+      pending: withDebt.reduce((sum, r) => sum + r.balance, 0),
+      withDebt: withDebt.length,
     };
   });
 
@@ -127,6 +135,35 @@ export class ClientDetail implements OnInit {
         (!to || r.receivedDate <= to),
     );
   });
+
+  // ---------- Paginación del historial ----------
+  protected readonly historyPageSize = HISTORY_PAGE_SIZE;
+  /** Vuelve a la página 1 cada vez que cambia algún filtro. */
+  protected readonly historyPage = linkedSignal({
+    source: () => [this.searchId(), this.statusFilter(), this.dateFrom(), this.dateTo()],
+    computation: () => 1,
+  });
+  protected readonly pagedRepairs = computed(() => paginate(this.filteredRepairs(), this.historyPage(), HISTORY_PAGE_SIZE));
+
+  private readonly historyList = viewChild<ElementRef<HTMLElement>>('historyList');
+  /** Alto de una página completa del historial (medido con arreglos cerrados): no se encoge al filtrar (0 en celular). */
+  protected readonly historyMinHeight = pageMinHeight({
+    list: this.historyList,
+    itemSelector: ':scope > .repair-item:not(:has(.expanded-panel))',
+    pageSize: () => HISTORY_PAGE_SIZE,
+    items: this.pagedRepairs,
+  });
+
+  /** Al cambiar de página, sube al inicio del historial para leer la nueva página desde arriba. */
+  protected scrollToHistory(): void {
+    document.getElementById('history')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /** Cambia a la página donde está ese arreglo (al abrirlo desde otra pantalla o al crearlo). */
+  private showPageOf(repair: Repair): void {
+    const index = this.filteredRepairs().findIndex((r) => r.id === repair.id);
+    if (index >= 0) this.historyPage.set(Math.floor(index / HISTORY_PAGE_SIZE) + 1);
+  }
 
   // ---------- Panel expandido (pagos / entregar) ----------
   protected readonly expandedId = signal<number | null>(null);
@@ -151,6 +188,26 @@ export class ClientDetail implements OnInit {
     try {
       const payments = await this.paymentService.getByRepair(repair.id);
       if (this.expandedId() === repair.id) this.payments.set(payments);
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'No se pudieron cargar los pagos'));
+    }
+  }
+
+  // ---------- Editar / eliminar un pago ----------
+  protected readonly editingPayment = signal<Payment | null>(null);
+  protected readonly editingPaymentRepair = computed(() => {
+    const payment = this.editingPayment();
+    return payment ? (this.clientRepairs().find((r) => r.id === payment.repairId) ?? null) : null;
+  });
+
+  /** Después de editar o eliminar, se recarga el historial del arreglo abierto. */
+  protected async onPaymentSaved(): Promise<void> {
+    const repairId = this.editingPayment()?.repairId;
+    this.editingPayment.set(null);
+    if (repairId === undefined) return;
+    try {
+      const payments = await this.paymentService.getByRepair(repairId);
+      if (this.expandedId() === repairId) this.payments.set(payments);
     } catch (err) {
       this.toast.error(apiErrorMessage(err, 'No se pudieron cargar los pagos'));
     }

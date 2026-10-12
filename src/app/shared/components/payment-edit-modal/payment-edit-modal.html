@@ -1,0 +1,60 @@
+<div class="modal-overlay" (click)="closed.emit()">
+  <div class="modal payment-edit-modal" role="dialog" aria-modal="true" aria-labelledby="payment-edit-title" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <div>
+        <h3 class="modal__title" id="payment-edit-title">Editar pago</h3>
+        <p class="u-text-sm u-text-muted">{{ repair().code }} · {{ repair().clientName }}</p>
+      </div>
+      <button class="modal__close" type="button" aria-label="Cerrar" (click)="closed.emit()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form class="modal__body u-stack-4" (submit)="$event.preventDefault(); save()">
+      <p class="u-text-sm u-text-muted">
+        Registrado el {{ fromDateKey(payment().date) | date: "d 'de' MMMM y" }} por {{ payment().amount | cop }}.
+      </p>
+
+      <div class="field">
+        <label for="payment-edit-amount">Monto</label>
+        <div class="input-icon">
+          <span class="icon payment-edit-currency">$</span>
+          <input
+            id="payment-edit-amount"
+            name="amount"
+            type="text"
+            inputmode="numeric"
+            class="input input--thick"
+            autocomplete="off"
+            [value]="amount()"
+            (input)="onAmountInput($any($event.target).value)"
+          />
+        </div>
+        <p class="field-hint">Máximo {{ maxAmount() | cop }} (saldo del arreglo más este pago).</p>
+      </div>
+
+      <div class="field">
+        <label for="payment-edit-date">Fecha del pago</label>
+        <input id="payment-edit-date" name="date" type="date" class="input" [max]="today" [value]="date()" (change)="date.set($any($event.target).value)" />
+      </div>
+
+      <div class="field">
+        <label>Método de pago</label>
+        <app-payment-method-selector [(value)]="method" />
+        @if (isLegacyMethod()) {
+          <p class="field-hint">Método actual: {{ payment().methodLabel }}. Se conserva si no eliges otro.</p>
+        }
+      </div>
+
+      <div class="modal__footer payment-edit-footer">
+        <button type="button" class="btn btn--ghost payment-edit-delete" [disabled]="busy()" (click)="remove()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Eliminar
+        </button>
+        <span class="u-flex-1"></span>
+        <button type="button" class="btn btn--ghost" (click)="closed.emit()">Cancelar</button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy()">{{ busy() ? 'Guardando...' : 'Guardar' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
