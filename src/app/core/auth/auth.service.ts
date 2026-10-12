@@ -32,6 +32,16 @@ export class AuthService {
     this.write(USER_KEY, JSON.stringify(res.usuario));
   }
 
+  /** Pide el enlace de recuperación (el backend responde igual exista o no el correo). */
+  async requestPasswordReset(correo: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/auth/olvide-contrasena`, { correo }));
+  }
+
+  /** Cambia la contraseña con el token del enlace enviado al correo. */
+  async resetPassword(token: string, contrasena: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/auth/restablecer-contrasena`, { token, contrasena }));
+  }
+
   logout(): void {
     this.tokenState.set(null);
     this.userState.set(null);

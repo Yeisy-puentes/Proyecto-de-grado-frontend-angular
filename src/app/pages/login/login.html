@@ -53,13 +53,15 @@
     </div>
 
     <div class="login-card__sheet">
-      <div class="login-card__welcome">
-        <h2>Bienvenido</h2>
-        <p>Ingresa con tu cuenta para continuar</p>
-      </div>
+      @switch (view()) {
+        @case ('login') {
+          <div class="login-card__welcome">
+            <h2>Bienvenido</h2>
+            <p>Ingresa con tu cuenta para continuar</p>
+          </div>
 
-      <form class="login-form" appFormValidation #f="ngForm" (ngSubmit)="f.valid && onSubmit()">
-        <div class="login-form__fields">
+          <form class="login-form" appFormValidation #f="ngForm" (ngSubmit)="f.valid && onSubmit()">
+            <div class="login-form__fields">
 
           <div class="field">
             <label for="input-email">Correo Electrónico</label>
@@ -71,7 +73,7 @@
                 name="email"
                 class="input"
                 required
-                placeholder="ejemplo@interfajas.com"
+                placeholder="correo@ejemplo.com"
                 autocomplete="username"
                 email
                 [(ngModel)]="credentials.email"
@@ -114,7 +116,9 @@
             <app-field-error [control]="passwordCtrl" [form]="f" />
           </div>
 
-        </div>
+            </div>
+
+            <button type="button" class="login-link login-link--forgot" (click)="openForgot()">¿Olvidaste tu contraseña?</button>
 
         @if (errorMessage()) {
           <p class="login-error" role="alert">
@@ -125,11 +129,179 @@
           </p>
         }
 
-        <button type="submit" class="btn btn--full login-submit" [class.is-loading]="loading()" [disabled]="loading()">
-          <span class="btn-label">{{ loading() ? 'Ingresando...' : 'Iniciar Sesión' }}</span>
-          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
-      </form>
+            <button type="submit" class="btn btn--full login-submit" [class.is-loading]="loading()" [disabled]="loading()">
+              <span class="btn-label">{{ loading() ? 'Ingresando...' : 'Iniciar Sesión' }}</span>
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </form>
+        }
+
+        @case ('forgot') {
+          <div class="login-card__welcome">
+            <h2>Recuperar contraseña</h2>
+            <p>Escribe el correo de tu cuenta y te enviaremos un enlace para crear una nueva contraseña.</p>
+          </div>
+
+          <form class="login-form" appFormValidation #fForgot="ngForm" (ngSubmit)="fForgot.valid && onForgotSubmit()">
+            <div class="login-form__fields">
+          <div class="field">
+            <label for="forgot-email">Correo Electrónico</label>
+            <div class="input-icon">
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input
+                type="email"
+                id="forgot-email"
+                name="email"
+                class="input"
+                required
+                placeholder="correo@ejemplo.com"
+                autocomplete="username"
+                email
+                [(ngModel)]="forgotEmail"
+                #forgotEmailCtrl="ngModel"
+              />
+            </div>
+            <app-field-error [control]="forgotEmailCtrl" [form]="fForgot" />
+          </div>
+
+            </div>
+
+        @if (errorMessage()) {
+          <p class="login-error" role="alert">
+            <span class="login-alert-icon" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="17.5" x2="12.01" y2="17.5"/></svg>
+            </span>
+            {{ errorMessage() }}
+          </p>
+        }
+
+            <button type="submit" class="btn btn--full login-submit" [class.is-loading]="loading()" [disabled]="loading()">
+              <span class="btn-label">{{ loading() ? 'Enviando...' : 'Enviar enlace' }}</span>
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <button type="button" class="login-link login-link--back" (click)="backToLogin()">← Volver a iniciar sesión</button>
+          </form>
+        }
+
+        @case ('forgot-sent') {
+          <div class="login-card__welcome">
+            <h2>Revisa tu correo</h2>
+            <p>Si <strong>{{ forgotEmail.trim() }}</strong> está registrado, te enviamos un enlace para restablecer la contraseña.</p>
+          </div>
+          <div class="login-form">
+            <p class="login-success" role="status">
+              <span class="login-alert-icon login-alert-icon--success" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              El enlace vence en 30 minutos. Si no lo ves, revisa la carpeta de correo no deseado.
+            </p>
+            <button type="button" class="btn btn--full login-submit" (click)="backToLogin()">
+              <span class="btn-label">Volver a iniciar sesión</span>
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        }
+
+        @case ('reset') {
+          <div class="login-card__welcome">
+            <h2>Nueva contraseña</h2>
+            <p>Crea una contraseña de al menos 8 caracteres.</p>
+          </div>
+
+          @if (!token()) {
+            <div class="login-form">
+              <p class="login-error" role="alert">El enlace no es válido. Solicita uno nuevo.</p>
+              <button type="button" class="btn btn--full login-submit" (click)="openForgot()">
+                <span class="btn-label">Solicitar un enlace nuevo</span>
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          } @else {
+            <form class="login-form" appFormValidation #fReset="ngForm" (ngSubmit)="fReset.valid && onResetSubmit()">
+              <div class="login-form__fields">
+                <div class="field">
+                  <label for="reset-password">Nueva contraseña</label>
+                  <div class="input-icon">
+                    <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <input
+                      [type]="showPassword() ? 'text' : 'password'"
+                      id="reset-password"
+                      name="newPassword"
+                      class="input input--with-toggle"
+                      required
+                      minlength="8"
+                      placeholder="••••••••"
+                      autocomplete="new-password"
+                      [(ngModel)]="reset.password"
+                      #newPasswordCtrl="ngModel"
+                    />
+                    <button
+                      type="button"
+                      class="password-toggle"
+                      [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                      [attr.aria-pressed]="showPassword()"
+                      [title]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                      (click)="showPassword.set(!showPassword())"
+                    >
+                      @if (showPassword()) {
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                      } @else {
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      }
+                    </button>
+                  </div>
+                  <app-field-error [control]="newPasswordCtrl" [form]="fReset" [messages]="{ minlength: 'Debe tener al menos 8 caracteres.' }" />
+                </div>
+
+                <div class="field">
+                  <label for="reset-confirm">Confirmar contraseña</label>
+                  <div class="input-icon">
+                    <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <input
+                      [type]="showPassword() ? 'text' : 'password'"
+                      id="reset-confirm"
+                      name="confirmPassword"
+                      class="input"
+                      required
+                      placeholder="••••••••"
+                      autocomplete="new-password"
+                      [(ngModel)]="reset.confirm"
+                      #confirmCtrl="ngModel"
+                    />
+                  </div>
+                  <app-field-error [control]="confirmCtrl" [form]="fReset" />
+                </div>
+              </div>
+
+        @if (errorMessage()) {
+          <p class="login-error" role="alert">
+            <span class="login-alert-icon" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="17.5" x2="12.01" y2="17.5"/></svg>
+            </span>
+            {{ errorMessage() }}
+          </p>
+        }
+
+              <button type="submit" class="btn btn--full login-submit" [class.is-loading]="loading()" [disabled]="loading()">
+                <span class="btn-label">{{ loading() ? 'Guardando...' : 'Guardar contraseña' }}</span>
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+              <button type="button" class="login-link login-link--back" (click)="backToLogin()">← Volver a iniciar sesión</button>
+            </form>
+          }
+        }
+
+        @case ('reset-done') {
+          <div class="login-card__welcome">
+            <h2>¡Contraseña actualizada!</h2>
+            <p>Ya puedes iniciar sesión con tu nueva contraseña.</p>
+          </div>
+          <div class="login-form">
+            <button type="button" class="btn btn--full login-submit" (click)="backToLogin()">
+              <span class="btn-label">Iniciar sesión</span>
+              <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        }
+      }
 
       <div class="login-card__footer">
         <p>&copy; {{ currentYear }} Interfajas. Todos los derechos reservados.</p>

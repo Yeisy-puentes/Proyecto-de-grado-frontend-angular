@@ -5,6 +5,13 @@ import { Login } from './pages/login/login';
 
 export const routes: Routes = [
   { path: 'login', component: Login, canActivate: [guestGuard], title: 'Iniciar Sesión · Interfajas' },
+  // Enlace del correo de recuperación (sin guard: debe abrir aunque haya una sesión iniciada).
+  {
+    path: 'restablecer-contrasena',
+    component: Login,
+    data: { mode: 'reset' },
+    title: 'Restablecer contraseña · Interfajas',
+  },
   {
     path: '',
     component: MainLayout,

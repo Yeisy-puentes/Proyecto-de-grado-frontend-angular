@@ -268,6 +268,34 @@
 .login-submit .icon { transition: transform var(--transition-fast); }
 .login-submit:hover:not(:disabled) .icon { transform: translateX(3px); }
 
+/* ---------------- Recuperar contraseña ---------------- */
+.login-link {
+  align-self: flex-end;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-brand-blue);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.login-link:hover { text-decoration: underline; }
+.login-link--forgot { margin-top: calc(var(--space-2) * -1); }
+.login-link--back { align-self: center; color: var(--color-slate-500); }
+
+.login-success {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-green-50);
+  border: 1px solid var(--color-green-200);
+  color: var(--color-green-700);
+  font-size: var(--font-size-sm);
+}
+.login-alert-icon--success { background-color: var(--color-green-600); }
+
 /* ---------------- PIE ---------------- */
 .login-card__footer {
   margin: 0 var(--space-8);
