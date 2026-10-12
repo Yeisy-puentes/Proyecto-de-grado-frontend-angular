@@ -59,9 +59,26 @@
   .report-tabs { display: none; }
   .report-tabs-select { display: block; padding: var(--space-3) var(--space-4); --select-height: 44px; --select-option-height: 44px; }
 
-  /* Totales: que los montos grandes no desborden en 360 px */
-  .kpi-card { padding: var(--space-4); min-width: 0; }
-  .kpi-card__value { font-size: var(--font-size-lg); overflow-wrap: anywhere; }
+  /* Totales en cuadrícula de 2 x 2: icono y nombre arriba, valor abajo a todo el ancho */
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+  .kpi-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'icon label'
+      'value value';
+    align-items: center;
+    gap: var(--space-3) var(--space-2);
+    padding: var(--space-3);
+    min-width: 0;
+  }
+  .kpi-card__icon { grid-area: icon; width: 2rem; height: 2rem; margin: 0; }
+  .kpi-card__icon svg { width: 16px; height: 16px; }
+  .kpi-card__label { grid-area: label; margin: 0; font-size: var(--font-size-xs); line-height: 1.25; }
+  .kpi-card__value { grid-area: value; font-size: var(--font-size-lg); line-height: 1.2; overflow-wrap: anywhere; }
+
+  /* La gráfica de línea no se lee bien en pantallas angostas: en celular solo se ve la dona */
+  .chart-card--line { display: none; }
 }
 
 .chart-card { padding: var(--space-5); }

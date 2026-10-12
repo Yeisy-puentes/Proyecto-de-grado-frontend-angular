@@ -211,7 +211,7 @@
                             class="input input--thick payment-box__input"
                             placeholder="0"
                             [value]="paymentAmount()"
-                            (input)="paymentAmount.set($any($event.target).value)"
+                            (input)="onPaymentAmountInput($any($event.target).value)"
                           />
                         </div>
                       </div>

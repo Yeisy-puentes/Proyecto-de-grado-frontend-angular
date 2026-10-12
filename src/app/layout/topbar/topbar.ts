@@ -18,7 +18,7 @@ import { StatusBadge } from '../../shared/components/status-badge/status-badge';
   styleUrl: './topbar.css',
   host: {
     '(document:click)': 'onDocumentClick($event)',
-    '(document:keydown.escape)': 'userMenuOpen.set(false)',
+    '(document:keydown.escape)': 'closeMenus()',
   },
 })
 export class Topbar {
@@ -72,11 +72,17 @@ export class Topbar {
     this.userMenuOpen.update((open) => !open);
   }
 
-  /** Clic fuera del menú del usuario: se cierra. */
+  /** Clic fuera del menú del usuario o del panel de notificaciones: se cierran. */
   protected onDocumentClick(event: MouseEvent): void {
-    if (!this.userMenuOpen()) return;
-    const menu = (this.host.nativeElement as HTMLElement).querySelector('.user-menu');
-    if (menu && !menu.contains(event.target as Node)) this.userMenuOpen.set(false);
+    const host = this.host.nativeElement as HTMLElement;
+    const target = event.target as Node;
+    if (this.userMenuOpen() && !host.querySelector('.user-menu')?.contains(target)) this.userMenuOpen.set(false);
+    if (this.notifOpen() && !host.querySelector('.notif')?.contains(target)) this.notifOpen.set(false);
+  }
+
+  protected closeMenus(): void {
+    this.userMenuOpen.set(false);
+    this.notifOpen.set(false);
   }
 
   protected logout(): void {

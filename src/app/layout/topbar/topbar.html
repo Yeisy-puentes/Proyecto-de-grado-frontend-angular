@@ -28,7 +28,14 @@
 
         <div class="notif__list">
           @for (repair of todayRepairs(); track repair.id) {
-            <div class="notif__item">
+            <!-- Lleva a la vista de día de la Agenda con este arreglo desplegado -->
+            <a
+              class="notif__item"
+              routerLink="/agenda"
+              [queryParams]="{ fecha: repair.deliveryDate, arreglo: repair.id }"
+              [title]="'Ver ' + repair.code + ' en la agenda'"
+              (click)="notifOpen.set(false)"
+            >
               <div class="u-flex u-justify-between u-gap-3">
                 <app-status-badge [status]="repair.status" />
                 <span class="u-text-xs u-text-faint">{{ repair.deliveryTime ? (repair.deliveryTime | time12) : 'Entrega hoy' }}</span>
@@ -41,7 +48,7 @@
                   <span class="notif__balance">Saldo: {{ repair.balance | cop }}</span>
                 }
               </div>
-            </div>
+            </a>
           } @empty {
             <div class="notif__empty">
               <p class="u-font-medium">Sin entregas para hoy</p>
