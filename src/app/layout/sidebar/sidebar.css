@@ -133,9 +133,14 @@
     transform: translateX(0);
     box-shadow: var(--shadow-2xl);
   }
-  /* En móvil el menú se abre con el botón del topbar y siempre muestra textos. */
-  .sidebar .sidebar__brand img { display: block; }
-  .sidebar .sidebar__brand .icon-scissors { display: none; }
+  /* En móvil el menú se abre con el botón del topbar y siempre muestra logo y textos.
+     Se repite :not(.is-expanded) para igualar la especificidad de las reglas del menú contraído. */
+  .sidebar .sidebar__brand img,
+  .sidebar:not(.is-expanded) .sidebar__brand img { display: block; }
+  .sidebar .sidebar__brand .icon-scissors,
+  .sidebar:not(.is-expanded) .sidebar__brand .icon-scissors { display: none; }
   .sidebar .nav-item__label,
-  .sidebar .btn-logout span { opacity: 1; }
+  .sidebar .btn-logout span,
+  .sidebar:not(.is-expanded) .nav-item__label,
+  .sidebar:not(.is-expanded) .btn-logout span { opacity: 1; }
 }
