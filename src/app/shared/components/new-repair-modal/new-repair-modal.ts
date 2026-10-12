@@ -18,9 +18,11 @@ const DEFAULT_DELIVERY_TIME = '17:30';
  * Modal para registrar un arreglo nuevo de un cliente ya conocido (detalle del cliente).
  * Mismos campos y validaciones que "Nuevo Arreglo" en Arreglos, sin la búsqueda de cliente.
  */
+import { MoneyInput } from '../../forms/money-input.directive';
+
 @Component({
   selector: 'app-new-repair-modal',
-  imports: [FormsModule, FieldError, FormValidation, PaymentMethodSelector],
+  imports: [FormsModule, FieldError, FormValidation, MoneyInput, PaymentMethodSelector],
   templateUrl: './new-repair-modal.html',
   styleUrl: './new-repair-modal.css',
 })

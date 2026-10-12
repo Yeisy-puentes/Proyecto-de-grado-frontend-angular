@@ -43,14 +43,14 @@
 
         <div class="field">
           <label for="new-repair-cost">Costo Total ($)</label>
-          <input type="number" id="new-repair-cost" name="cost" class="input" required min="0" [(ngModel)]="form.cost" #costCtrl="ngModel" />
-          <app-field-error [control]="costCtrl" [form]="f" [messages]="{ required: 'Ingresa el costo total.', min: 'El costo no puede ser negativo.' }" />
+          <input type="text" appMoneyInput placeholder="0" id="new-repair-cost" name="cost" class="input" required [(ngModel)]="form.cost" #costCtrl="ngModel" />
+          <app-field-error [control]="costCtrl" [form]="f" [messages]="{ required: 'Ingresa el costo total.' }" />
         </div>
 
         <div class="field">
           <label for="new-repair-paid">Abono inicial ($)</label>
-          <input type="number" id="new-repair-paid" name="initialPayment" class="input" min="0" [(ngModel)]="form.initialPayment" #paidCtrl="ngModel" />
-          <app-field-error [control]="paidCtrl" [form]="f" [messages]="{ min: 'El abono no puede ser negativo.' }" />
+          <input type="text" appMoneyInput placeholder="0" id="new-repair-paid" name="initialPayment" class="input" [(ngModel)]="form.initialPayment" #paidCtrl="ngModel" />
+          <app-field-error [control]="paidCtrl" [form]="f" />
         </div>
 
         <div class="field u-col-span-2">

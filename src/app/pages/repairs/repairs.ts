@@ -96,9 +96,11 @@ function emptyForm(): RepairForm {
   };
 }
 
+import { MoneyInput } from '../../shared/forms/money-input.directive';
+
 @Component({
   selector: 'app-repairs',
-  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, PaymentEditModal, ClientFormModal, FieldError, FormValidation, Pagination, SelectDropdown, DatePickerDialog],
+  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, PaymentEditModal, ClientFormModal, FieldError, FormValidation, MoneyInput, Pagination, SelectDropdown, DatePickerDialog],
   templateUrl: './repairs.html',
   styleUrl: './repairs.css',
   host: {

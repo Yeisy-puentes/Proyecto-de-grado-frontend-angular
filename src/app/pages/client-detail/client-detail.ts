@@ -214,7 +214,13 @@ export class ClientDetail implements OnInit {
   }
 
   protected payAll(repair: Repair): void {
-    this.paymentAmount.set(String(repair.balance));
+    this.paymentAmount.set(repair.balance.toLocaleString('es-CO'));
+  }
+
+  /** Muestra el monto con punto de miles mientras se escribe (50.000). */
+  protected onPaymentAmountInput(value: string): void {
+    const digits = value.replace(/\D/g, '');
+    this.paymentAmount.set(digits ? Number(digits).toLocaleString('es-CO') : '');
   }
 
   protected async registerPayment(repair: Repair): Promise<void> {
