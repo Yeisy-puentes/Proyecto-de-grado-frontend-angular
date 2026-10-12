@@ -14,6 +14,7 @@ import { ClientFormModal } from '../../shared/components/client-form-modal/clien
 import { NewRepairModal } from '../../shared/components/new-repair-modal/new-repair-modal';
 import { pageMinHeight } from '../../shared/components/pagination/page-min-height';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
+import { PaymentEditModal } from '../../shared/components/payment-edit-modal/payment-edit-modal';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
@@ -24,7 +25,7 @@ const HISTORY_PAGE_SIZE = 5;
 
 @Component({
   selector: 'app-client-detail',
-  imports: [RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, NewRepairModal, Pagination],
+  imports: [RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, PaymentEditModal, ClientFormModal, NewRepairModal, Pagination],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.css',
 })
@@ -187,6 +188,26 @@ export class ClientDetail implements OnInit {
     try {
       const payments = await this.paymentService.getByRepair(repair.id);
       if (this.expandedId() === repair.id) this.payments.set(payments);
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'No se pudieron cargar los pagos'));
+    }
+  }
+
+  // ---------- Editar / eliminar un pago ----------
+  protected readonly editingPayment = signal<Payment | null>(null);
+  protected readonly editingPaymentRepair = computed(() => {
+    const payment = this.editingPayment();
+    return payment ? (this.clientRepairs().find((r) => r.id === payment.repairId) ?? null) : null;
+  });
+
+  /** Después de editar o eliminar, se recarga el historial del arreglo abierto. */
+  protected async onPaymentSaved(): Promise<void> {
+    const repairId = this.editingPayment()?.repairId;
+    this.editingPayment.set(null);
+    if (repairId === undefined) return;
+    try {
+      const payments = await this.paymentService.getByRepair(repairId);
+      if (this.expandedId() === repairId) this.payments.set(payments);
     } catch (err) {
       this.toast.error(apiErrorMessage(err, 'No se pudieron cargar los pagos'));
     }

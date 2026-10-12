@@ -279,6 +279,9 @@
               <span class="payment-history__date">{{ fromDateKey(payment.date) | date: 'd MMM y' }}</span>
               <span [class]="'badge badge--sm badge--pago-' + payment.method">{{ payment.methodLabel }}</span>
               <strong>{{ payment.amount | cop }}</strong>
+              <button type="button" class="btn btn--icon btn--ghost payment-history__edit" title="Editar o eliminar pago" aria-label="Editar o eliminar pago" (click)="editingPayment.set(payment)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+              </button>
             </li>
           } @empty {
             <li class="payment-history__empty">Aún no hay pagos registrados.</li>
@@ -326,6 +329,13 @@
       </button>
     }
   </div>
+}
+
+<!-- ============ MODAL: Editar / eliminar pago ============ -->
+@if (editingPayment(); as payment) {
+  @if (detailRepair(); as repair) {
+    <app-payment-edit-modal [payment]="payment" [repair]="repair" (closed)="editingPayment.set(null)" (saved)="editingPayment.set(null)" />
+  }
 }
 
 <!-- ============ MODAL: Registrar Pago ============ -->

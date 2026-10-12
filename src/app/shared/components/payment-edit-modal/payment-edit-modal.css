@@ -1,0 +1,5 @@
+.payment-edit-modal { max-width: 28rem; }
+.payment-edit-currency { font-weight: var(--font-weight-semibold); display: flex; align-items: center; justify-content: center; }
+.payment-edit-footer { align-items: center; }
+.payment-edit-delete { color: var(--color-red-600); }
+.payment-edit-delete:hover { background-color: var(--color-red-50); }

@@ -9,6 +9,9 @@
 /* Piezas solo para teléfono: en tabletas y computador no cambian el diseño */
 .toolbar__field,
 .toolbar__presets { display: contents; }
+.toolbar__grouping { display: flex; align-items: center; gap: var(--space-2); }
+.toolbar__grouping .btn.is-active { background-color: var(--color-blue-50); color: var(--color-brand-blue); font-weight: var(--font-weight-semibold); }
+.chart-card__note { margin-top: calc(var(--space-4) * -0.75); }
 .toolbar__label,
 .report-tabs-select { display: none; }
 
@@ -46,6 +49,9 @@
   }
   .toolbar__presets .btn:first-child { border-left: none; }
   .toolbar__presets .btn.is-active { background-color: var(--color-brand-blue); color: var(--color-white); }
+
+  .toolbar__grouping { flex-direction: column; align-items: stretch; gap: var(--space-1); }
+  .toolbar__grouping-label { font-weight: var(--font-weight-semibold); color: var(--color-slate-500); }
 
   .toolbar__range { margin-left: 0; text-align: center; }
 

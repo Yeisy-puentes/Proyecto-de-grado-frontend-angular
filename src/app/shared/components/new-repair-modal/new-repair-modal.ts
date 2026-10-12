@@ -69,8 +69,9 @@ export class NewRepairModal {
 
     this.saving.set(true);
     try {
-      // Al crear, el arreglo siempre empieza "Pendiente".
-      let repair = await this.repairService.create({
+      // Al crear, el arreglo siempre empieza "Pendiente". El abono se guarda junto con el arreglo.
+      const abono = initialPayment > 0 && f.paymentMethod ? { amount: initialPayment, method: f.paymentMethod } : null;
+      const repair = await this.repairService.create({
         clientId: this.client().id,
         description: f.description,
         status: 'pendiente',
@@ -79,11 +80,8 @@ export class NewRepairModal {
         deliveryDate: f.deliveryDate,
         deliveryTime: f.deliveryDate ? f.deliveryTime : '',
         cost: Number(f.cost) || 0,
-      });
-      if (initialPayment > 0 && f.paymentMethod) {
-        await this.paymentService.create(repair.id, initialPayment, f.paymentMethod);
-        repair = this.repairService.repairs().find((r) => r.id === repair.id) ?? repair;
-      }
+      }, abono);
+      if (abono) await this.paymentService.syncRepair(repair.id);
       this.toast.success(`Arreglo ${repair.code} registrado.`);
       this.created.emit(repair);
     } catch (err) {

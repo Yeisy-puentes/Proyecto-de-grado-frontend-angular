@@ -7,12 +7,15 @@ import {
   ApiReporteClientes,
   ApiReporteIngresos,
   ApiReporteResumen,
+  ReportGrouping,
   ReportType,
 } from '../models/api.model';
 
 export interface DateRange {
   desde?: string;
   hasta?: string;
+  /** Agrupación de gráficas y tablas por período (por defecto mes). */
+  agrupar?: ReportGrouping;
 }
 
 /** Consume /api/reportes (datos y exportación a Excel / PDF). */
@@ -53,6 +56,7 @@ export class ReportService {
     let params = new HttpParams();
     if (range.desde) params = params.set('desde', range.desde);
     if (range.hasta) params = params.set('hasta', range.hasta);
+    if (range.agrupar) params = params.set('agrupar', range.agrupar);
     return params;
   }
 }

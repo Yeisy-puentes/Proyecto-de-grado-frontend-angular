@@ -197,6 +197,9 @@
   color: var(--color-slate-600);
 }
 .payments-history__row:last-child { border-bottom: none; }
+.payments-history__amount { margin-left: auto; }
+.payments-history__edit { padding: 0.375rem; color: var(--color-slate-400); }
+.payments-history__edit:hover { color: var(--color-brand-blue); }
 
 /* ---- Celular: ajustes del cuerpo, historial y pagos (al final para que tengan prioridad) ---- */
 @media (max-width: 639px) {

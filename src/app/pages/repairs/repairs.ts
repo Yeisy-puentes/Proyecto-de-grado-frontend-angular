@@ -6,6 +6,7 @@ import { Client, ClientFormData } from '../../core/models/client.model';
 import {
   DEFAULT_PAYMENT_METHOD,
   PAYMENT_METHODS,
+  Payment,
   PaymentMethod,
   REPAIR_STATUSES,
   Repair,
@@ -26,6 +27,7 @@ import { FieldError } from '../../shared/forms/field-error/field-error';
 import { FormValidation } from '../../shared/forms/form-validation.directive';
 import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
+import { PaymentEditModal } from '../../shared/components/payment-edit-modal/payment-edit-modal';
 import { PaymentMethodSelector } from '../../shared/components/payment-method-selector/payment-method-selector';
 import { SelectDropdown, SelectOption } from '../../shared/components/select-dropdown/select-dropdown';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
@@ -96,7 +98,7 @@ function emptyForm(): RepairForm {
 
 @Component({
   selector: 'app-repairs',
-  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, ClientFormModal, FieldError, FormValidation, Pagination, SelectDropdown, DatePickerDialog],
+  imports: [FormsModule, RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, PaymentEditModal, ClientFormModal, FieldError, FormValidation, Pagination, SelectDropdown, DatePickerDialog],
   templateUrl: './repairs.html',
   styleUrl: './repairs.css',
   host: {
@@ -305,7 +307,7 @@ export class Repairs implements OnInit, OnDestroy {
 
   protected onEscape(): void {
     if (this.statusMenu()) this.statusMenu.set(null);
-    else if (!this.paymentRepair() && !this.repairModalOpen()) this.detailId.set(null);
+    else if (!this.paymentRepair() && !this.repairModalOpen() && !this.editingPayment()) this.detailId.set(null);
   }
 
   protected closeStatusMenu(): void {
@@ -433,6 +435,9 @@ export class Repairs implements OnInit, OnDestroy {
   protected closeDetail(): void {
     this.detailId.set(null);
   }
+
+  /** Pago que se está corrigiendo desde el panel de detalle (modal Editar pago). */
+  protected readonly editingPayment = signal<Payment | null>(null);
 
   // ---------- Modal nuevo / editar arreglo ----------
   protected readonly repairModalOpen = signal(false);
@@ -579,10 +584,10 @@ export class Repairs implements OnInit, OnDestroy {
         this.toast.success(`Arreglo ${repair.code} actualizado.`);
         this.notifyEmailResult(repair, email);
       } else {
-        const repair = await this.repairService.create(data);
-        if (initialPayment > 0 && this.form.paymentMethod) {
-          await this.paymentService.create(repair.id, initialPayment, this.form.paymentMethod);
-        }
+        // El arreglo y su abono se guardan juntos en el backend (si uno falla, no se guarda ninguno).
+        const abono = initialPayment > 0 && this.form.paymentMethod ? { amount: initialPayment, method: this.form.paymentMethod } : null;
+        const repair = await this.repairService.create(data, abono);
+        if (abono) await this.paymentService.syncRepair(repair.id);
         this.toast.success(`Arreglo ${repair.code} registrado.`);
       }
       this.repairModalOpen.set(false);
