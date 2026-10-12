@@ -112,9 +112,17 @@
 .week-item--red    { background: var(--color-red-100);    border-color: var(--color-red-200);    color: #991b1b; }
 .week-item--purple { background: var(--color-purple-100); border-color: var(--color-purple-200); color: var(--color-purple-800); }
 
-/* ---- Celular: los días uno debajo del otro ---- */
+/* ---- Celular: los días uno debajo del otro, dentro de un cuadro con desplazamiento propio
+   (como el Dashboard), así una semana con muchos arreglos no alarga la página ---- */
 @media (max-width: 767px) {
-  .week-view { grid-template-columns: 1fr; }
+  .week-view {
+    grid-template-columns: 1fr;
+    height: max(22rem, calc(100dvh - 17rem));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  /* El día queda fijo arriba mientras se recorren sus arreglos */
+  .week-col__header { position: sticky; top: 0; z-index: 1; }
   .week-col { border-right: none; border-bottom: 1px solid var(--color-slate-200); }
   .week-col:last-child { border-bottom: none; }
   .week-col__header {

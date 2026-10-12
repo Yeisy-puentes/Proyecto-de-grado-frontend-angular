@@ -1,5 +1,5 @@
 import { DatePipe, TitleCasePipe, formatDate } from '@angular/common';
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { REMINDER_COLORS, Reminder, ReminderColor } from '../../core/models/reminder.model';
 import { Repair, RepairStatus, STATUS_LABELS, statusClass } from '../../core/models/repair.model';
@@ -78,13 +78,18 @@ export class Agenda implements OnInit {
   /** ?arreglo=ID junto con ?fecha: ese arreglo aparece desplegado. */
   readonly arreglo = input<string>();
 
-  async ngOnInit(): Promise<void> {
-    const fecha = this.fecha();
-    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+  constructor() {
+    // Se reacciona a los parámetros (no solo al iniciar): si ya se está en la Agenda y se
+    // elige un arreglo desde las notificaciones, solo cambian ?fecha y ?arreglo.
+    effect(() => {
+      const fecha = this.fecha();
       const repairId = Number(this.arreglo());
-      if (repairId) this.openRepair(fecha, repairId);
-      else this.openDay(fecha);
-    }
+      if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return;
+      untracked(() => (repairId ? this.openRepair(fecha, repairId) : this.openDay(fecha)));
+    });
+  }
+
+  async ngOnInit(): Promise<void> {
     try {
       await Promise.all([this.repairService.load(), this.reminderService.load()]);
     } catch (err) {
