@@ -63,6 +63,24 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "azure": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "14kB",
+                  "maximumError": "16kB"
+                }
+              ],
+              "outputHashing": "all",
+              "outputMode": "static",
+              "server": false,
+              "ssr": false
             }
           },
           "defaultConfiguration": "production"
