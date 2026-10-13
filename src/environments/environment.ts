@@ -1,4 +1,4 @@
 /** Configuración de producción (`ng build`). */
 export const environment = {
-  apiUrl: 'http://localhost:3000/api',
+  apiUrl: 'https://interfajas-backend-hyercmerbvathzd7.mexicocentral-01.azurewebsites.net/api',
 };
