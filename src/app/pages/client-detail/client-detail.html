@@ -186,7 +186,7 @@
                           <svg width="18" height="18" class="payment-box__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                           Registrar Pago
                         </h4>
-                        <p class="u-text-sm payment-box__hint">Complete el monto a pagar</p>
+                        <p class="u-text-sm payment-box__hint">Seleccione el método de pago</p>
                       </div>
                       <div class="u-text-right">
                         <p class="u-text-xs u-mb-1 payment-box__hint">Saldo pendiente</p>
@@ -199,28 +199,12 @@
                       <app-payment-method-selector [(value)]="paymentMethod" />
                     </div>
 
-                    <div class="u-flex u-flex-wrap u-gap-3 payment-box__actions">
-                      <div class="payment-box__amount">
-                        <label class="u-text-sm u-font-medium u-mb-2 payment-box__label" [for]="'payment-amount-' + repair.id">Monto a pagar</label>
-                        <div class="input-icon">
-                          <span class="prefix-dollar">$</span>
-                          <input
-                            type="text"
-                            inputmode="numeric"
-                            [id]="'payment-amount-' + repair.id"
-                            class="input input--thick payment-box__input"
-                            placeholder="0"
-                            [value]="paymentAmount()"
-                            (input)="onPaymentAmountInput($any($event.target).value)"
-                          />
-                        </div>
-                      </div>
-                      <div class="u-flex u-gap-2">
-                        <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="registerPayment(repair)">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Registrar
-                        </button>
-                        <button type="button" class="btn btn--outline" (click)="payAll(repair)">Pagar todo</button>
-                      </div>
+                    <!-- Registra todo el saldo pendiente con el método elegido -->
+                    <div class="payment-box__actions">
+                      <button type="button" class="btn btn--green" [disabled]="busy()" (click)="registerPayment(repair)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Registrar pago
+                      </button>
                     </div>
                   </div>
                 }
@@ -242,7 +226,8 @@
                   }
                 </div>
 
-                @if (repair.status !== 'entregado') {
+                <!-- Con saldo, el botón verde está en "Registrar Pago"; aquí solo se entrega -->
+                @if (repair.status !== 'entregado' && (repair.status === 'listo' || repair.balance <= 0)) {
                   <div class="repair-actions">
                     @if (repair.status === 'listo') {
                       <button type="button" class="btn btn--outline" [disabled]="busy()" (click)="notifyReady(repair)">
@@ -250,13 +235,7 @@
                         Reenviar correo
                       </button>
                     }
-                    <!-- Con saldo: paga todo lo que falta; sin saldo: entrega -->
-                    @if (repair.balance > 0) {
-                      <button type="button" class="btn btn--green" [disabled]="busy()" (click)="payBalance(repair)">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                        Registrar pago
-                      </button>
-                    } @else {
+                    @if (repair.balance <= 0) {
                       <button type="button" class="btn btn--green" [disabled]="busy()" (click)="markDelivered(repair)">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         Marcar como Entregado

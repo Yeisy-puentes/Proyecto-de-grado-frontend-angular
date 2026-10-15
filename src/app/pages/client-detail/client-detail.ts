@@ -168,7 +168,6 @@ export class ClientDetail implements OnInit {
   // ---------- Panel expandido (pagos / entregar) ----------
   protected readonly expandedId = signal<number | null>(null);
   protected readonly payments = signal<Payment[]>([]);
-  protected readonly paymentAmount = signal('');
   protected readonly paymentMethod = signal<PaymentMethod | null>(DEFAULT_PAYMENT_METHOD);
   protected readonly busy = signal(false);
 
@@ -182,7 +181,6 @@ export class ClientDetail implements OnInit {
 
   private async expand(repair: Repair): Promise<void> {
     this.expandedId.set(repair.id);
-    this.paymentAmount.set('');
     this.paymentMethod.set(DEFAULT_PAYMENT_METHOD);
     this.payments.set([]);
     try {
@@ -213,32 +211,26 @@ export class ClientDetail implements OnInit {
     }
   }
 
-  protected payAll(repair: Repair): void {
-    this.paymentAmount.set(repair.balance.toLocaleString('es-CO'));
-  }
-
-  /** Muestra el monto con punto de miles mientras se escribe (50.000). */
-  protected onPaymentAmountInput(value: string): void {
-    const digits = value.replace(/\D/g, '');
-    this.paymentAmount.set(digits ? Number(digits).toLocaleString('es-CO') : '');
-  }
-
+  /** Registra todo el saldo pendiente con el método elegido en "Registrar Pago". */
   protected async registerPayment(repair: Repair): Promise<void> {
-    const amount = Number(this.paymentAmount().replace(/[^\d]/g, ''));
     const method = this.paymentMethod();
-    if (!amount || amount <= 0) {
-      this.toast.error('Ingresa un monto válido.');
-      return;
-    }
     if (!method) {
       this.toast.error('Selecciona el método de pago.');
       return;
     }
+    const amount = repair.balance;
+    const methodLabel = PAYMENT_METHODS.find((m) => m.value === method)?.label ?? method;
+    const ok = await this.confirm.ask({
+      title: 'Registrar pago',
+      message: `¿Registrar pago de $${amount.toLocaleString('es-CO')} en ${methodLabel}?`,
+      confirmLabel: 'Registrar',
+      tone: 'warning',
+    });
+    if (!ok) return;
     this.busy.set(true);
     try {
       const payment = await this.paymentService.create(repair.id, amount, method);
       this.payments.update((list) => [...list, payment]);
-      this.paymentAmount.set('');
       this.paymentMethod.set(DEFAULT_PAYMENT_METHOD);
       this.toast.success(`Pago de $${amount.toLocaleString('es-CO')} registrado en ${repair.code}.`);
     } catch (err) {
@@ -247,25 +239,6 @@ export class ClientDetail implements OnInit {
     } finally {
       this.busy.set(false);
     }
-  }
-
-  /** Botón verde con saldo: registra todo el saldo pendiente con el método elegido en "Registrar Pago". */
-  protected async payBalance(repair: Repair): Promise<void> {
-    const method = this.paymentMethod();
-    if (!method) {
-      this.toast.error('Selecciona el método de pago.');
-      return;
-    }
-    const methodLabel = PAYMENT_METHODS.find((m) => m.value === method)?.label ?? method;
-    const ok = await this.confirm.ask({
-      title: 'Registrar pago',
-      message: `¿Registrar pago de $${repair.balance.toLocaleString('es-CO')} en ${methodLabel}?`,
-      confirmLabel: 'Registrar',
-      tone: 'warning',
-    });
-    if (!ok) return;
-    this.payAll(repair);
-    await this.registerPayment(repair);
   }
 
   protected async markDelivered(repair: Repair): Promise<void> {

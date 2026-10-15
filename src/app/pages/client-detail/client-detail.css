@@ -172,12 +172,9 @@
   color: var(--color-slate-700);
 }
 .payment-box__hint { color: var(--color-slate-600); }
-.payment-box__actions { align-items: flex-end; }
-.payment-box__amount { width: 16rem; max-width: 100%; }
-.payment-box__input {
-  padding-left: 2rem;
-  font-weight: 600;
-  font-size: 1.125rem;
+.payment-box__actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .empty-state {
@@ -244,10 +241,14 @@
   .payment-box { padding: var(--space-4); }
   .payment-box__head { flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
   .payment-box__head > * { min-width: 0; }
-  .payment-box__actions > * { min-width: 0; }
-  .payment-box__actions > .u-flex { width: 100%; }
-  .payment-box__actions .btn { flex: 1 1 0; justify-content: center; min-width: 0; max-width: 100%; }
-  .payment-box__amount { width: 100%; }
+  .payment-box__actions .btn {
+    width: 100%;
+    max-width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
 
   /* Historial de pagos: fecha + badge a la izquierda y monto a la derecha; si no cabe, el monto baja */
   .payments-history__row {
@@ -259,7 +260,7 @@
   .payments-history__date { white-space: nowrap; }
   .payments-history__amount { margin-left: auto; white-space: nowrap; }
 
-  /* Acciones del arreglo: uno debajo del otro a todo el ancho, primero el verde ("Registrar pago" / "Marcar como Entregado") */
+  /* Acciones del arreglo: uno debajo del otro a todo el ancho, primero "Marcar como Entregado" */
   .repair-actions { flex-direction: column; }
   .repair-actions .btn {
     width: 100%;
