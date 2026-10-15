@@ -259,7 +259,7 @@
   .payments-history__date { white-space: nowrap; }
   .payments-history__amount { margin-left: auto; white-space: nowrap; }
 
-  /* Acciones del arreglo: uno debajo del otro a todo el ancho, primero "Marcar como Entregado" */
+  /* Acciones del arreglo: uno debajo del otro a todo el ancho, primero el verde ("Registrar pago" / "Marcar como Entregado") */
   .repair-actions { flex-direction: column; }
   .repair-actions .btn {
     width: 100%;

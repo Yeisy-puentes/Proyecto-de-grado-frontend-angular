@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, ElementRef, OnInit, computed, inject, input, linkedSignal, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
-import { DEFAULT_PAYMENT_METHOD, Payment, PaymentMethod, Repair, RepairStatus } from '../../core/models/repair.model';
+import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS, Payment, PaymentMethod, Repair, RepairStatus } from '../../core/models/repair.model';
 import { ClientService } from '../../core/services/client.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { PaymentService } from '../../core/services/payment.service';
@@ -247,6 +247,25 @@ export class ClientDetail implements OnInit {
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** Botón verde con saldo: registra todo el saldo pendiente con el método elegido en "Registrar Pago". */
+  protected async payBalance(repair: Repair): Promise<void> {
+    const method = this.paymentMethod();
+    if (!method) {
+      this.toast.error('Selecciona el método de pago.');
+      return;
+    }
+    const methodLabel = PAYMENT_METHODS.find((m) => m.value === method)?.label ?? method;
+    const ok = await this.confirm.ask({
+      title: 'Registrar pago',
+      message: `¿Registrar pago de $${repair.balance.toLocaleString('es-CO')} en ${methodLabel}?`,
+      confirmLabel: 'Registrar',
+      tone: 'warning',
+    });
+    if (!ok) return;
+    this.payAll(repair);
+    await this.registerPayment(repair);
   }
 
   protected async markDelivered(repair: Repair): Promise<void> {
