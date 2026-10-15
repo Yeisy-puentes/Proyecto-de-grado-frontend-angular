@@ -1,5 +1,6 @@
 import { DatePipe, NgTemplateOutlet, formatDate } from '@angular/common';
 import { Component, DestroyRef, OnInit, Signal, computed, inject, linkedSignal, signal, untracked } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
   ApiConteoEstado,
   ApiReporteArreglos,
@@ -21,6 +22,7 @@ import { ReportService } from '../../core/services/report.service';
 import { ToastService } from '../../core/services/toast.service';
 import { fromDateKey, toDateKey, todayKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
+import { syncUrlParam, urlPage, urlParam } from '../../core/utils/url-state';
 import { normalize } from '../../core/utils/text.utils';
 import { BarChart, BarSeries } from '../../shared/components/charts/bar-chart/bar-chart';
 import { DonutChart, DonutSegment } from '../../shared/components/charts/donut-chart/donut-chart';
@@ -41,11 +43,14 @@ const SEARCH_DEBOUNCE_MS = 200;
 /**
  * Buscador con espera: `text` es lo que se ve en el input y `term` (sin espacios sobrantes)
  * se actualiza 200 ms después de dejar de escribir. Ambos se limpian cuando cambia `resetKey`
- * (rango de fechas o pestaña). Debe crearse en un contexto de inyección.
+ * (rango de fechas o pestaña). El término se guarda en la URL (?`urlName`=) y se restaura al
+ * cargar. Debe crearse en un contexto de inyección.
  */
-function debouncedSearch(resetKey: Signal<string>) {
-  const text = linkedSignal({ source: resetKey, computation: () => '' });
-  const query = linkedSignal({ source: resetKey, computation: () => '' });
+function debouncedSearch(resetKey: Signal<string>, urlName: string) {
+  const initial = inject(ActivatedRoute).snapshot.queryParamMap.get(urlName)?.trim() ?? '';
+  const text = linkedSignal<string, string>({ source: resetKey, computation: (_, previous) => (previous ? '' : initial) });
+  const query = linkedSignal<string, string>({ source: resetKey, computation: (_, previous) => (previous ? '' : initial) });
+  syncUrlParam(urlName, () => query().trim(), '');
   let timer: ReturnType<typeof setTimeout> | undefined;
   inject(DestroyRef).onDestroy(() => clearTimeout(timer));
 
@@ -195,7 +200,8 @@ export class Reports implements OnInit {
   protected readonly repairCode = repairCode;
   protected readonly formatMoney = (v: number) => `$${Math.round(v).toLocaleString('es-CO')}`;
 
-  protected readonly activeTab = signal<ReportTab>('summary');
+  // Pestaña, período, buscadores y páginas se guardan en la URL para conservarlos al recargar o volver.
+  protected readonly activeTab = urlParam<ReportTab>('pestana', 'summary', ['summary', 'income', 'repairs', 'clients']);
   protected readonly tabs: { value: ReportTab; label: string }[] = [
     { value: 'summary', label: 'Resumen General' },
     { value: 'income', label: 'Ingresos' },
@@ -204,10 +210,10 @@ export class Reports implements OnInit {
   ];
 
   // ---------- Período ----------
-  protected readonly dateFrom = signal(toDateKey(presetStart('3months')));
-  protected readonly dateTo = signal(todayKey());
+  protected readonly dateFrom = urlParam('desde', toDateKey(presetStart('3months')));
+  protected readonly dateTo = urlParam('hasta', todayKey());
   /** Cómo se agrupan las gráficas y tablas: por día, semana o mes. */
-  protected readonly grouping = signal<ReportGrouping>(PRESET_GROUPING['3months']);
+  protected readonly grouping = urlParam<ReportGrouping>('agrupar', PRESET_GROUPING['3months'], ['dia', 'semana', 'mes']);
   protected readonly groupings: { value: ReportGrouping; label: string }[] = [
     { value: 'dia', label: 'Día' },
     { value: 'semana', label: 'Semana' },
@@ -215,7 +221,7 @@ export class Reports implements OnInit {
   ];
   protected readonly groupingName = computed(() => GROUPING_NAMES[this.grouping()]);
   /** Atajo de fechas activo (se resalta en el control segmentado de teléfono); null si las fechas se eligieron a mano. */
-  protected readonly activePreset = signal<Preset | null>('3months');
+  protected readonly activePreset = signal<Preset | null>(this.presetOf(this.dateFrom(), this.dateTo(), this.grouping()));
   protected readonly loading = signal(false);
   protected readonly exporting = signal(false);
 
@@ -227,6 +233,12 @@ export class Reports implements OnInit {
 
   ngOnInit(): void {
     this.loadReports();
+  }
+
+  /** Atajo que corresponde a ese período (p. ej. al restaurarlo de la URL); null si se eligió a mano. */
+  private presetOf(from: string, to: string, grouping: ReportGrouping): Preset | null {
+    const presets: Preset[] = ['month', '3months', 'year'];
+    return presets.find((p) => from === toDateKey(presetStart(p)) && to === todayKey() && grouping === PRESET_GROUPING[p]) ?? null;
   }
 
   protected setDateFrom(value: string): void {
@@ -329,7 +341,7 @@ export class Reports implements OnInit {
     return [formatDate(date, 'dd/MM/yy', 'es'), formatDate(date, 'dd/MM/yyyy', 'es'), toDateKey(date)];
   }
 
-  protected readonly incomeSearch = debouncedSearch(this.pageResetKey);
+  protected readonly incomeSearch = debouncedSearch(this.pageResetKey, 'buscar_ingresos');
   /** Pagos recibidos en el período (por fecha de pago). */
   protected readonly incomeRows = computed(() => this.ingresos()?.detalle ?? []);
   protected readonly filteredIncomeRows = computed(() =>
@@ -340,17 +352,14 @@ export class Reports implements OnInit {
       ...this.dateSearchKeys(r.fecha_pago),
     ]),
   );
-  protected readonly incomePage = linkedSignal({
-    source: () => `${this.pageResetKey()}|${this.incomeSearch.term()}`,
-    computation: () => 1,
-  });
+  protected readonly incomePage = urlPage('pagina_ingresos', () => `${this.pageResetKey()}|${this.incomeSearch.term()}`);
   protected readonly pagedIncomeRows = computed(() => paginate(this.filteredIncomeRows(), this.incomePage(), REPORT_PAGE_SIZE));
   protected readonly incomeFillers = computed(() => fillerRows(this.pagedIncomeRows().length, REPORT_PAGE_SIZE));
 
   /** Total de "Pagos recibidos" sobre los registros filtrados. */
   protected readonly incomeTotal = computed(() => this.filteredIncomeRows().reduce((t, r) => t + this.num(r.monto), 0));
 
-  protected readonly repairsSearch = debouncedSearch(this.pageResetKey);
+  protected readonly repairsSearch = debouncedSearch(this.pageResetKey, 'buscar_arreglos');
   protected readonly repairRows = computed(() => this.arreglos()?.listado ?? []);
   protected readonly filteredRepairRows = computed(() =>
     filterRows(this.repairRows(), this.repairsSearch.term(), (r) => [
@@ -361,22 +370,16 @@ export class Reports implements OnInit {
       this.statusLabels[this.statusKey(r.nombre_estado)],
     ]),
   );
-  protected readonly repairsPage = linkedSignal({
-    source: () => `${this.pageResetKey()}|${this.repairsSearch.term()}`,
-    computation: () => 1,
-  });
+  protected readonly repairsPage = urlPage('pagina_arreglos', () => `${this.pageResetKey()}|${this.repairsSearch.term()}`);
   protected readonly pagedRepairRows = computed(() => paginate(this.filteredRepairRows(), this.repairsPage(), REPORT_PAGE_SIZE));
   protected readonly repairFillers = computed(() => fillerRows(this.pagedRepairRows().length, REPORT_PAGE_SIZE));
 
-  protected readonly clientsSearch = debouncedSearch(this.pageResetKey);
+  protected readonly clientsSearch = debouncedSearch(this.pageResetKey, 'buscar_clientes');
   protected readonly clientRows = computed(() => this.clientes()?.resumenPorCliente ?? []);
   protected readonly filteredClientRows = computed(() =>
     filterRows(this.clientRows(), this.clientsSearch.term(), (r) => [r.nombre_completo]),
   );
-  protected readonly clientsPage = linkedSignal({
-    source: () => `${this.pageResetKey()}|${this.clientsSearch.term()}`,
-    computation: () => 1,
-  });
+  protected readonly clientsPage = urlPage('pagina_clientes', () => `${this.pageResetKey()}|${this.clientsSearch.term()}`);
   protected readonly pagedClientRows = computed(() => paginate(this.filteredClientRows(), this.clientsPage(), REPORT_PAGE_SIZE));
   protected readonly clientFillers = computed(() => fillerRows(this.pagedClientRows().length, REPORT_PAGE_SIZE));
 

@@ -2,9 +2,9 @@
 
   <!-- Header con botón volver -->
   <div class="u-flex u-items-center u-gap-4">
-    <a routerLink="/clientes" class="btn btn--icon btn--ghost" aria-label="Volver">
+    <button type="button" class="btn btn--icon btn--ghost" aria-label="Volver" (click)="goBack()">
       <svg width="24" height="24" class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    </a>
+    </button>
     <div>
       <h2 class="u-text-2xl u-font-bold u-text-navy">Detalle del Cliente</h2>
       <p class="u-text-sm u-text-muted">Información y historial completo</p>
@@ -264,7 +264,7 @@
   } @else {
     <div class="card card-pad empty-state">
       <p>No se encontró el cliente solicitado.</p>
-      <a routerLink="/clientes" class="btn btn--navy btn--sm u-mt-4">Volver a clientes</a>
+      <button type="button" class="btn btn--navy btn--sm u-mt-4" (click)="goBack()">Volver a clientes</button>
     </div>
   }
 </div>

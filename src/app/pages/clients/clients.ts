@@ -1,9 +1,10 @@
-import { Component, ElementRef, OnInit, computed, inject, linkedSignal, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
 import { ClientService } from '../../core/services/client.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/http-error';
+import { urlPage, urlParam } from '../../core/utils/url-state';
 import { normalize } from '../../core/utils/text.utils';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { autoPageSize } from '../../shared/components/pagination/auto-page-size';
@@ -21,7 +22,8 @@ export class Clients implements OnInit {
   private readonly toast = inject(ToastService);
 
   protected readonly loading = this.clientService.loading;
-  protected readonly search = signal('');
+  /** Búsqueda y página se guardan en la URL (?buscar=&pagina=) para conservarlas al volver del detalle. */
+  protected readonly search = urlParam('buscar', '');
   protected readonly newClientModalOpen = signal(false);
   protected readonly editingClient = signal<Client | null>(null);
 
@@ -42,7 +44,7 @@ export class Clients implements OnInit {
   });
 
   /** Vuelve a la página 1 cada vez que cambia la búsqueda. */
-  protected readonly page = linkedSignal({ source: this.search, computation: () => 1 });
+  protected readonly page = urlPage('pagina', this.search);
 
   private readonly cardsGrid = viewChild<ElementRef<HTMLElement>>('cardsGrid');
 

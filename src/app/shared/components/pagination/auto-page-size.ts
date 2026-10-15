@@ -48,9 +48,18 @@ export function autoPageSize(options: AutoPageSizeOptions): Signal<number> {
   let reservedHeight = 0;
   let belowHeight = 0;
 
+  // El tamaño inicial (PAGE_SIZE) es provisional: la página que viene de la URL ya se calculó con
+  // el tamaño medido, así que la primera medición no la convierte.
+  let measured = false;
+
   /** Cambia el tamaño manteniendo a la vista el registro que estaba primero. */
   const apply = (size: number): void => {
     const current = untracked(pageSize);
+    if (!measured) {
+      measured = true;
+      pageSize.set(size);
+      return;
+    }
     if (size === current) return;
     const firstIndex = (clampPage(untracked(options.page), untracked(options.items).length, current) - 1) * current;
     pageSize.set(size);

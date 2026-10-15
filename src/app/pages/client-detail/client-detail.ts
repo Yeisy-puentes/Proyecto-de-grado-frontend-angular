@@ -1,6 +1,6 @@
-import { DatePipe } from '@angular/common';
-import { Component, ElementRef, OnInit, computed, inject, input, linkedSignal, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { DatePipe, Location } from '@angular/common';
+import { Component, ElementRef, OnInit, computed, inject, input, signal, viewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
 import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS, Payment, PaymentMethod, Repair, RepairStatus } from '../../core/models/repair.model';
 import { ClientService } from '../../core/services/client.service';
@@ -10,6 +10,7 @@ import { RepairService } from '../../core/services/repair.service';
 import { ToastService } from '../../core/services/toast.service';
 import { fromDateKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
+import { urlPage, urlParam } from '../../core/utils/url-state';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { NewRepairModal } from '../../shared/components/new-repair-modal/new-repair-modal';
 import { pageMinHeight } from '../../shared/components/pagination/page-min-height';
@@ -25,7 +26,7 @@ const HISTORY_PAGE_SIZE = 5;
 
 @Component({
   selector: 'app-client-detail',
-  imports: [RouterLink, DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, PaymentEditModal, ClientFormModal, NewRepairModal, Pagination],
+  imports: [DatePipe, CopCurrencyPipe, Time12Pipe, StatusBadge, PaymentMethodSelector, PaymentEditModal, ClientFormModal, NewRepairModal, Pagination],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.css',
 })
@@ -35,6 +36,13 @@ export class ClientDetail implements OnInit {
   private readonly paymentService = inject(PaymentService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
+  private readonly location = inject(Location);
+  private readonly router = inject(Router);
+
+  /** Se llegó desde otra pantalla de la app: "Volver" regresa a ella tal como estaba (página, búsqueda). */
+  private readonly cameFromApp = !!(this.router.currentNavigation() ?? this.router.lastSuccessfulNavigation())?.previousNavigation;
+  /** La URL ya trae la página del historial (p. ej. al recargar): se respeta en vez de calcularla. */
+  private readonly pageFromUrl = inject(ActivatedRoute).snapshot.queryParamMap.has('pagina');
 
   /** Parámetro de ruta :id (enlazado con withComponentInputBinding). */
   readonly id = input.required<string>();
@@ -57,7 +65,7 @@ export class ClientDetail implements OnInit {
       const requested = this.clientRepairs().find((r) => r.id === Number(this.arreglo()));
       const toOpen = requested ?? this.clientRepairs().find((r) => r.status !== 'entregado');
       if (toOpen) {
-        this.showPageOf(toOpen);
+        if (requested || !this.pageFromUrl) this.showPageOf(toOpen);
         this.expand(toOpen);
       }
       if (requested) {
@@ -68,6 +76,12 @@ export class ClientDetail implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** Vuelve atrás en el historial (conserva la página de la lista); si se abrió directo, va a /clientes. */
+  protected goBack(): void {
+    if (this.cameFromApp) this.location.back();
+    else this.router.navigate(['/clientes']);
   }
 
   // ---------- Nuevo arreglo (modal en esta misma página) ----------
@@ -117,10 +131,11 @@ export class ClientDetail implements OnInit {
   });
 
   // ---------- Filtros ----------
-  protected readonly searchId = signal('');
-  protected readonly statusFilter = signal<RepairStatus | 'all'>('all');
-  protected readonly dateFrom = signal('');
-  protected readonly dateTo = signal('');
+  // Filtros y página del historial en la URL, para conservarlos al recargar o volver.
+  protected readonly searchId = urlParam('buscar', '');
+  protected readonly statusFilter = urlParam<RepairStatus | 'all'>('estado', 'all', ['all', 'pendiente', 'en_proceso', 'listo', 'entregado']);
+  protected readonly dateFrom = urlParam('desde', '');
+  protected readonly dateTo = urlParam('hasta', '');
 
   protected readonly filteredRepairs = computed(() => {
     const term = this.searchId().trim().toLowerCase();
@@ -139,10 +154,7 @@ export class ClientDetail implements OnInit {
   // ---------- Paginación del historial ----------
   protected readonly historyPageSize = HISTORY_PAGE_SIZE;
   /** Vuelve a la página 1 cada vez que cambia algún filtro. */
-  protected readonly historyPage = linkedSignal({
-    source: () => [this.searchId(), this.statusFilter(), this.dateFrom(), this.dateTo()],
-    computation: () => 1,
-  });
+  protected readonly historyPage = urlPage('pagina', () => [this.searchId(), this.statusFilter(), this.dateFrom(), this.dateTo()]);
   protected readonly pagedRepairs = computed(() => paginate(this.filteredRepairs(), this.historyPage(), HISTORY_PAGE_SIZE));
 
   private readonly historyList = viewChild<ElementRef<HTMLElement>>('historyList');
