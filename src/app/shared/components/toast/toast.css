@@ -25,7 +25,7 @@
   box-shadow: 0 18px 40px -12px rgb(15 23 42 / 0.45), 0 4px 12px -4px rgb(15 23 42 / 0.25);
   color: var(--color-white);
   pointer-events: auto;
-  animation: toast-in 0.28s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+  animation: toast-in 0.15s cubic-bezier(0.21, 1.02, 0.73, 1) both;
 }
 .toast--success { background-color: var(--color-green-600); }
 .toast--error   { background-color: var(--color-red-600); }

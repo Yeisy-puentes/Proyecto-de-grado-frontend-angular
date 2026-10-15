@@ -6,6 +6,7 @@ import { RepairService } from '../../core/services/repair.service';
 import { ToastService } from '../../core/services/toast.service';
 import { fromDateKey, toDateKey, todayKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
+import { urlPage, urlParam } from '../../core/utils/url-state';
 import { Pagination, paginate } from '../../shared/components/pagination/pagination';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { Time12Pipe } from '../../shared/pipes/time12.pipe';
@@ -64,8 +65,9 @@ export class Dashboard implements OnInit {
   /** Pantalla angosta: las listas se paginan en vez de desplazarse por dentro. */
   protected readonly compact = signal(false);
   protected readonly compactPageSize = COMPACT_PAGE_SIZE;
-  protected readonly page = signal(1);
-  protected readonly upcomingPage = signal(1);
+  // Páginas y grupo elegido en la URL, para conservarlos al volver del detalle de un cliente.
+  protected readonly page = urlPage('pagina');
+  protected readonly upcomingPage = urlPage('proximas');
 
   constructor() {
     const destroyRef = inject(DestroyRef);
@@ -107,7 +109,7 @@ export class Dashboard implements OnInit {
   });
 
   /** Grupo que muestra la tarjeta principal; cambia al hacer clic en las tarjetas de arriba. */
-  protected readonly activeGroup = signal<DeliveryGroup>('hoy');
+  protected readonly activeGroup = urlParam<DeliveryGroup>('grupo', 'hoy', ['hoy', 'manana', 'listos']);
 
   protected selectGroup(group: DeliveryGroup): void {
     this.activeGroup.set(group);

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, ElementRef, OnDestroy, OnInit, computed, inject, linkedSignal, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Client, ClientFormData } from '../../core/models/client.model';
@@ -21,6 +21,7 @@ import { EmailNotification, RepairService } from '../../core/services/repair.ser
 import { ToastService } from '../../core/services/toast.service';
 import { fromDateKey, nowTime, todayKey } from '../../core/utils/date.utils';
 import { apiErrorMessage } from '../../core/utils/http-error';
+import { urlPage, urlParam } from '../../core/utils/url-state';
 import { ClientFormModal } from '../../shared/components/client-form-modal/client-form-modal';
 import { DatePickerDialog } from '../../shared/components/date-picker-dialog/date-picker-dialog';
 import { FieldError } from '../../shared/forms/field-error/field-error';
@@ -135,8 +136,9 @@ export class Repairs implements OnInit, OnDestroy {
   }
 
   // ---------- Filtros ----------
-  protected readonly search = signal('');
-  protected readonly statusFilter = signal<StatusFilter>('all');
+  // Búsqueda, filtro y página se guardan en la URL para conservarlos al volver de otra pantalla.
+  protected readonly search = urlParam('buscar', '');
+  protected readonly statusFilter = urlParam<StatusFilter>('estado', 'all', ['all', 'pendiente', 'en_proceso', 'listo', 'entregado']);
 
   protected readonly pillFilters: { value: StatusFilter; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -175,10 +177,7 @@ export class Repairs implements OnInit, OnDestroy {
 
   // ---------- Paginación ----------
   /** Vuelve a la página 1 cada vez que cambia la búsqueda (texto o fecha) o el filtro por estado. */
-  protected readonly page = linkedSignal({
-    source: () => [this.search(), this.statusFilter()],
-    computation: () => 1,
-  });
+  protected readonly page = urlPage('pagina', () => [this.search(), this.statusFilter()]);
 
   private readonly rowsBody = viewChild<ElementRef<HTMLElement>>('rowsBody');
 
