@@ -13,7 +13,7 @@ export interface Toast {
 }
 
 /** Cuánto dura cada tipo en pantalla antes de cerrarse sola. */
-const DURATION: Record<ToastType, number> = { success: 5000, info: 6000, error: 5000 };
+const DURATION: Record<ToastType, number> = { success: 1000, info: 1000, error: 1000 };
 /** Máximo de alertas a la vez; si llegan más, se quita la más antigua. */
 const MAX_TOASTS = 4;
 
