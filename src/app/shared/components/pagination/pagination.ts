@@ -1,7 +1,19 @@
-import { Component, computed, input, model } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, model } from '@angular/core';
 
 /** Registros por página en las listas paginadas. */
 export const PAGE_SIZE = 20;
+
+/** Espacio que queda sobre el inicio de la lista al subir. */
+const SCROLL_MARGIN = 16;
+
+/** Contenedor con scroll más cercano (en el layout es .page-content, no window). */
+function scrollParent(el: HTMLElement): HTMLElement {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const { overflowY } = getComputedStyle(node);
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) return node;
+  }
+  return (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+}
 
 /** Cantidad máxima de números de página visibles a la vez. */
 const MAX_VISIBLE_PAGES = 10;
@@ -42,6 +54,10 @@ export class Pagination {
   readonly total = input.required<number>();
   readonly pageSize = input(PAGE_SIZE);
   readonly page = model(1);
+  /** Inicio de la lista al que se sube al cambiar de página (por defecto, el contenedor de la paginación). */
+  readonly scrollAnchor = input<HTMLElement>();
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly totalPages = computed(() => totalPagesFor(this.total(), this.pageSize()));
   protected readonly current = computed(() => clampPage(this.page(), this.total(), this.pageSize()));
@@ -71,6 +87,22 @@ export class Pagination {
 
   protected goTo(page: number): void {
     const target = clampPage(page, this.total(), this.pageSize());
-    if (target !== this.current()) this.page.set(target);
+    if (target === this.current()) return;
+    this.page.set(target);
+    this.scrollToListStart();
+  }
+
+  /**
+   * Solo al cambiar de página con los botones (no al restaurarla desde la URL): si el inicio de la lista
+   * quedó por encima de lo visible, sube suavemente hasta él para leer la nueva página desde arriba.
+   */
+  private scrollToListStart(): void {
+    const anchor = this.scrollAnchor() ?? this.host.nativeElement.parentElement;
+    if (!anchor) return;
+    const container = scrollParent(anchor);
+    const isRoot = container === document.scrollingElement || container === document.documentElement;
+    const viewTop = isRoot ? 0 : container.getBoundingClientRect().top;
+    const offset = anchor.getBoundingClientRect().top - viewTop - SCROLL_MARGIN;
+    if (offset < 0) container.scrollTo({ top: Math.max(0, container.scrollTop + offset), behavior: 'smooth' });
   }
 }

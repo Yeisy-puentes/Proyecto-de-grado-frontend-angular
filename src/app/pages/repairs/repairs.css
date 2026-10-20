@@ -385,9 +385,11 @@
 
   .repairs-table tbody tr.repair-row {
     display: grid;
-    grid-template-columns: 1fr auto;
+    /* minmax(0, 1fr): un nombre o descripción largos no ensanchan la tarjeta más allá de la pantalla */
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      'ref     status'
+      'code    status'
+      'client  client'
       'desc    desc'
       'date    pay'
       'actions actions';
@@ -406,23 +408,43 @@
 
   .repairs-table td {
     display: block;
+    min-width: 0;
     padding: 0;
     border: none;
   }
-  .repairs-table .cell-ref { grid-area: ref; }
+  /* Código junto al estado y el nombre del cliente debajo, a todo el ancho de la tarjeta */
+  .repairs-table .cell-ref { display: contents; }
+  .repairs-table .cell-ref > :first-child { grid-area: code; align-self: center; }
+  .repairs-table .cell-client {
+    grid-area: client;
+    min-width: 0;
+    margin-top: calc(var(--space-2) - var(--space-3));
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .repairs-table .cell-status { grid-area: status; justify-self: end; }
+  /* El badge de estado siempre completo (ícono + texto), sin empujar la cabecera */
+  .repairs-table .status-trigger { flex-shrink: 0; white-space: nowrap; }
   .repairs-table .cell-description {
     grid-area: desc;
     max-width: none;
     white-space: normal;
+    overflow-wrap: anywhere;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     color: var(--color-slate-600);
   }
   .repairs-table .cell-delivery { grid-area: date; }
-  .repairs-table .cell-pay { grid-area: pay; justify-self: end; text-align: right; min-width: 7.5rem; }
+  .repairs-table .cell-delivery .cell-time { white-space: nowrap; }
+  /* Columna de pago de ancho fijo: la barra de abono mide lo mismo en todas las tarjetas
+     (solo cambia el relleno), sin importar el monto, el método de pago o el "de $X". */
+  .repairs-table .cell-pay { grid-area: pay; justify-self: end; width: 9rem; text-align: right; }
   .repairs-table .cell-pay > div { align-items: flex-end; }
+  .repairs-table .cell-pay > div > span:first-child { justify-content: flex-end; }
+  .repairs-table .cell-pay .cell-amount { min-width: 0; overflow-wrap: anywhere; }
+  .repairs-table .cell-pay .badge { flex-shrink: 0; }
+  .repairs-table .cell-pay .progress-bar { align-self: stretch; }
   .repairs-table .cell-pay .debt-chip { align-self: flex-end; }
   .repairs-table .cell-actions {
     grid-area: actions;

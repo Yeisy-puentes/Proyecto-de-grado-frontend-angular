@@ -88,7 +88,7 @@
     </div>
 
     <!-- Historial de arreglos -->
-    <div class="card" id="history">
+    <div class="card" id="history" #historyCard>
       <div class="u-p-6 u-border-b">
         <div class="u-flex u-items-center u-justify-between u-mb-6">
           <div class="u-flex u-items-center u-gap-3">
@@ -253,7 +253,7 @@
 
       @if (filteredRepairs().length > 0) {
         <div class="history-pagination">
-          <app-pagination [total]="filteredRepairs().length" [pageSize]="historyPageSize" [(page)]="historyPage" (pageChange)="scrollToHistory()" />
+          <app-pagination [total]="filteredRepairs().length" [pageSize]="historyPageSize" [(page)]="historyPage" [scrollAnchor]="historyCard" />
         </div>
       }
     </div>

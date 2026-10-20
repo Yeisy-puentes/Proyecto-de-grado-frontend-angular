@@ -166,11 +166,6 @@ export class ClientDetail implements OnInit {
     items: this.pagedRepairs,
   });
 
-  /** Al cambiar de página, sube al inicio del historial para leer la nueva página desde arriba. */
-  protected scrollToHistory(): void {
-    document.getElementById('history')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
   /** Cambia a la página donde está ese arreglo (al abrirlo desde otra pantalla o al crearlo). */
   private showPageOf(repair: Repair): void {
     const index = this.filteredRepairs().findIndex((r) => r.id === repair.id);
